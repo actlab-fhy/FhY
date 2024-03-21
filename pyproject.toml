@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=67.6.1"]
+build-backend = "setuptools.build_meta"
+
+# [tool.setuptools.packages.find]
+# where = ["."]
+# include = ["compiler*"]
+# exclude = [test*]
+
+[project]
+name = "compiler"
+version = "0.1.0"
+description = "Cross Domain Compiler for Accelerators"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+   {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
+]
+maintainers = [
+   {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
+]
+requires-python = ">=3.8"
+keywords = ["Compiler", "Cross-Compiler", "ML", "Accelerator"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+   "Programming Language :: Python :: 3",
+]
+dynamic = ["version", "readme", "dependencies"]
+
+# [options.entry_points]
+# console_scripts = 
+
+[tool.setuptools.dynamic]
+version = {attr = "__version__" }
+readme = {file = ["README.md"], content-type = "text/markdown"}
+dependencies = {file = ["requirements.txt"]}
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "tox", "flake8", "mypy", "sphinx", "wheel"]
+test = ["pytest", "pytest-cov", "tox"]
+lint = ["flake8"]
+type = ["mypy"]
+docs = ["sphinx"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-rA --cov=compiler --cov-report term-missing --cov-fail-under=90"
+
+[tool.mypy]
+pretty = true
