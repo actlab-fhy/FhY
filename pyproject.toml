@@ -2,16 +2,9 @@
 requires = ["setuptools>=67.6.1"]
 build-backend = "setuptools.build_meta"
 
-# [tool.setuptools.packages.find]
-# where = ["."]
-# include = ["compiler*"]
-# exclude = [test*]
-
 [project]
 name = "compiler"
-version = "0.1.0"
 description = "Cross Domain Compiler for Accelerators"
-readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
    {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
@@ -27,24 +20,30 @@ classifiers = [
 ]
 dynamic = ["version", "readme", "dependencies"]
 
-# [options.entry_points]
-# console_scripts = 
-
 [tool.setuptools.dynamic]
-version = {attr = "__version__" }
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "tox", "flake8", "mypy", "sphinx", "wheel"]
-test = ["pytest", "pytest-cov", "tox"]
-lint = ["flake8"]
+dev = ["pytest", "pytest-cov", "pytest-xdist", "tox", "ruff", "mypy", "sphinx", "wheel", "setuptools>=67.6.1"]
+test = ["pytest", "pytest-cov", "pytest-xdist"]
+lint = ["ruff"]
 type = ["mypy"]
 docs = ["sphinx"]
+build = ["wheel", "setuptools>=67.6.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-rA --cov=compiler --cov-report term-missing --cov-fail-under=90"
+addopts = "-n auto -rA --cov=compiler --cov-report term-missing --cov-fail-under=90"
 
 [tool.mypy]
 pretty = true
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
