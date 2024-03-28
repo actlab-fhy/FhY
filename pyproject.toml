@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=67.6.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "FhY"
+description = "Cross Domain Compiler for Accelerators"
+license = {file = "LICENSE"}
+authors = [
+   {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
+]
+maintainers = [
+   {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
+]
+requires-python = ">=3.8"
+keywords = ["Compiler", "Cross-Compiler", "ML", "Accelerator"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+   "Programming Language :: Python :: 3",
+]
+dynamic = ["version", "readme", "dependencies"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+dependencies = {file = ["requirements.txt"]}
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "pytest-xdist", "tox", "ruff", "mypy", "sphinx>=5.0.2", "wheel", "setuptools>=67.6.1"]
+test = ["pytest", "pytest-cov", "pytest-xdist"]
+lint = ["ruff"]
+type = ["mypy"]
+docs = ["sphinx>=5.0.2"]
+build = ["wheel", "setuptools>=67.6.1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-n auto -rA --cov=FhY --cov-report term-missing --cov-fail-under=90"
+
+[tool.mypy]
+pretty = true
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "D300"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
