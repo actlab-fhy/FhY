@@ -3,7 +3,7 @@ requires = ["setuptools>=67.6.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "compiler"
+name = "FhY"
 description = "Cross Domain Compiler for Accelerators"
 license = {file = "LICENSE"}
 authors = [
@@ -34,7 +34,7 @@ build = ["wheel", "setuptools>=67.6.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-n auto -rA --cov=compiler --cov-report term-missing --cov-fail-under=90"
+addopts = "-n auto -rA --cov=FhY --cov-report term-missing --cov-fail-under=90"
 
 [tool.mypy]
 pretty = true
@@ -42,6 +42,9 @@ pretty = true
 [tool.ruff]
 line-length = 88
 indent-width = 4
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "D300"]
 
 [tool.ruff.format]
 quote-style = "double"
