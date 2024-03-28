@@ -25,11 +25,11 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-cov", "pytest-xdist", "tox", "ruff", "mypy", "sphinx", "wheel", "setuptools>=67.6.1"]
+dev = ["pytest", "pytest-cov", "pytest-xdist", "tox", "ruff", "mypy", "sphinx>=5.0.2", "wheel", "setuptools>=67.6.1"]
 test = ["pytest", "pytest-cov", "pytest-xdist"]
 lint = ["ruff"]
 type = ["mypy"]
-docs = ["sphinx"]
+docs = ["sphinx>=5.0.2"]
 build = ["wheel", "setuptools>=67.6.1"]
 
 [tool.pytest.ini_options]
