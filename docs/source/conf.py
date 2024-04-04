@@ -16,7 +16,7 @@ import os
 import sys
 
 # https://sphinx-rtd-tutorial.readthedocs.io/en/latest/sphinx-config.html#autodoc-configuration
-sys.path.insert(0, os.path.abspath(f"../{project}/"))  # Required for autosummary + autodoc
+sys.path.insert(0, os.path.abspath(f"../../{project}/"))  # Required for autosummary + autodoc
 
 extensions = [
     "sphinx.ext.duration",  # Benchmarks Sphinx Build Times
@@ -37,3 +37,10 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "alabaster"
 html_static_path = ["_static"]
+html_theme_options = {
+    "description": "A Language for Modeling Physical Things",
+    "logo": "img/fhy_logo.png",
+    "logo_name": True,
+    "github_user": "actlab-fhy",
+    "github_repo": "fhy",
+}
