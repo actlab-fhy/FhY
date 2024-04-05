@@ -234,13 +234,11 @@ We must update the weights and biases of the neural network based on the current
 This requires stateful computations that are not present in the previous matrix-matrix multiplication example.
 Additionally, the Python code initializes the weights and biases randomly, which is not something that *FhY* can achieve out of the box.
 Therefore, *FhY* supports additional constructs like the ``state`` type qualifier and ``op`` / ``native`` routines.
-In the current ``proc`` routines, all assignments are *non-blocking*.
-This means that the assignments are executed in parallel and the order of execution is not guaranteed.
-However, in ``op`` routines, all assignments are *blocking*.
-This means that the assignments are executed sequentially and the order of execution is guaranteed.
-Moving on, the ``state`` type qualifier acts in the same way as a ``static`` variable in a C/C++ function.
+The ``state`` type qualifier acts in the same way as a ``static`` variable in a C/C++ function.
 The value of a ``state`` variable is preserved across invocations of the procedure.
-Finally, the ``native`` routine is used to define operations that are not implemented in *FhY* and are implemented in another language (e.g., C/C++).
+Additionally, the ``native`` routine is used to define operations that are not implemented in *FhY* and are implemented in another language (e.g., C/C++).
+Finally, the ``op`` construct in *FhY* is used to conveniently define pure functions that return one value.
+``op`` routines are used to define simple computations that are used in more complex procedures.
 
 Using these constructs, we can implement this training loop in *FhY* as follows:
 
