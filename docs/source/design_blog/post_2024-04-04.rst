@@ -110,7 +110,7 @@ To solve this, we propose *FhY*, a domain-specific language based on mathematica
 Additionally, due to the inherent high-level nature of mathematical notation, opportunities for parallelism are not explicitly defined and can be explored by the compiler.
 Here is an example of how you might write the matrix-matrix multiplication algorithm in *FhY*:
 
-.. code-block:: text
+.. code-block:: FhY
 
    proc matmul(input int32[m, n], input int32[n, p] B, output int32[m, p] C){
       temp index[1:m] i;
@@ -234,33 +234,31 @@ We must update the weights and biases of the neural network based on the current
 This requires stateful computations that are not present in the previous matrix-matrix multiplication example.
 Additionally, the Python code initializes the weights and biases randomly, which is not something that *FhY* can achieve out of the box.
 Therefore, *FhY* supports additional constructs like the ``state`` type qualifier and ``op`` / ``native`` routines.
-In the current ``proc`` routines, all assignments are *non-blocking*.
-This means that the assignments are executed in parallel and the order of execution is not guaranteed.
-However, in ``op`` routines, all assignments are *blocking*.
-This means that the assignments are executed sequentially and the order of execution is guaranteed.
-Moving on, the ``state`` type qualifier acts in the same way as a ``static`` variable in a C/C++ function.
+The ``state`` type qualifier acts in the same way as a ``static`` variable in a C/C++ function.
 The value of a ``state`` variable is preserved across invocations of the procedure.
-Finally, the ``native`` routine is used to define operations that are not implemented in *FhY* and are implemented in another language (e.g., C/C++).
+Additionally, the ``native`` routine is used to define operations that are not implemented in *FhY* and are implemented in another language (e.g., C/C++).
+Finally, the ``op`` construct in *FhY* is used to conveniently define pure functions that return one value.
+``op`` routines are used to define simple computations that are used in more complex procedures.
 
 Using these constructs, we can implement this training loop in *FhY* as follows:
 
-.. code-block:: text
+.. code-block:: FhY
 
-   /* --- Declared in another file --- */
+   // --- Declared in another file ---
 
    native initialize_weights(input int32 m, input int32 n) -> output float32[m, n];
    native initialize_bias(input int32 m) -> output float32[m];
 
-   /* --- Declared in primary file --- */
+   // --- Declared in primary file ---
 
    op sigmoid(input float32[m] x) -> output float32[m] {
-      temp index [1:m] i;
+      temp index[1:m] i;
       return 1 / (1 + exp(-x[i]));
    }
 
    op forward(input float32[n] x, input float32[m, n] W, input float32[m] b) -> output float32[m] {
-      temp index [1:m] i;
-      temp index [1:n] j;
+      temp index[1:m] i;
+      temp index[1:n] j;
       temp float32[m] FC_out;
 
       FC_out[i] = sum[j](W[i, j] * x[j]) + b[i];
@@ -268,15 +266,15 @@ Using these constructs, we can implement this training loop in *FhY* as follows:
    }
 
    op backward_propagation(input float32[n] x, input float32[m, n] W, input float32[m] b, input float32[m] y) -> output (float32[m, n], float32[m]) {
-      temp index [1:m] i;
-      temp index [1:n] j;
+      temp index[1:m] i;
+      temp index[1:n] j;
 
       temp float32[m] y_hat = forward(x, W, b);
       temp float32[m, n] dW;
       temp float32[m] db;
 
-      dW[i, j] = (2 / m) * x[j] * y_hat[i] * (y_hat[i] - y[i]) * (1 - y_hat[i]);
-      db[i] = (2 / m) * y_hat[i] * (y_hat[i] - y[i]) * (1 - y_hat[i]);
+      dW[i, j] = (2.0 / m) * x[j] * y_hat[i] * (y_hat[i] - y[i]) * (1.0 - y_hat[i]);
+      db[i] = (2.0 / m) * y_hat[i] * (y_hat[i] - y[i]) * (1.0 - y_hat[i]);
       return (dW, db);
    }
 
@@ -290,8 +288,8 @@ Using these constructs, we can implement this training loop in *FhY* as follows:
       temp float32[m, n] dW;
       temp float32[m] db;
 
-      temp index [1:m] i;
-      temp index [1:n] j;
+      temp index[1:m] i;
+      temp index[1:n] j;
 
       forall (e) {
          derivatives = backward_propagation(X[e], W_state, b_state, Y[e]);
