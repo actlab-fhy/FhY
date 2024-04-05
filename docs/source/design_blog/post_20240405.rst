@@ -1,0 +1,120 @@
+========================
+Import Systems & Modules
+========================
+
+As with any coding language, we need the ability to work
+with multiple files, modules, and use standard and external libraries. Controlling
+the namespace therefore becomes important to defining access to other code.
+
+Imagine we have a Python or Rust Package, with the given project structure:
+
+.. code-block:: text
+
+    ExampleProject/
+    ├── {pyproject | cargo}.toml
+    └── src/
+        ├── __init__.py
+        ├── main.{py | rs}
+        ├── subDirectoryA/
+        │   ├── __init__.py | mod.rs
+        │   └── file_a.{py | rs}
+        └── subDirectoryB/
+            ├── __init__.py | mod.rs
+            └── file_b.{py | rs}
+
+In python we could access information in file_a from the main file in the root directory, as shown:
+
+.. code-block:: python
+
+    # subDirectoryA.file_a.py contents:
+    def fancy_function():
+        print("I is a Fancy Function A")
+
+    # main.py contents:
+    from ExampleProject.subDirectoryA import file_a
+
+    file_a.fancy_function()
+
+And in rust, it would be accessed as shown:
+
+.. code-block:: text
+    // subDirectoryA.mod.rs contents:
+    pub mod file_a;
+
+    // subDirectoryA.file_a.rs contents:
+    pub fn fancy_function() {
+        println!("I is a Fancy Function A")
+    }
+
+    // main.rs contents:
+    mod subDirectoryA;
+    use ExampleProject::subDirectoryA::file_a;
+
+    file_a::fancy_function()
+
+
+A Comparison between Rust and Python Import and Namespace Systems
+=================================================================
+We provide a table for convenience to compare and highlight differences in jargon, syntax, features,
+and control of the namespace and import systems.
+
+.. table::
+   :widths: auto
+
+   +----------------+------------------------------------------+-------------------------------+
+   | Properties     | Rust                                     | Python                        | 
+   +================+==========================================+===============================+
+   | Package        | Crates                                   | Package                       |
+   +----------------+------------------------------------------+-------------------------------+
+   | Files          | Modules                                  | Modules                       |
+   +----------------+------------------------------------------+-------------------------------+
+   | Modules        | Declared using `mod` keyword             | Files                         |
+   +----------------+------------------------------------------+-------------------------------+
+   | Visibility     | Modules are Private by Default           | Everything is Public (__all__)|
+   +----------------+------------------------------------------+-------------------------------+
+   | Dependencies   | Gloablly Available without importing     | Must Be imported where used   | 
+   +----------------+------------------------------------------+-------------------------------+
+   | Aliasing       | Yes: `as` keyword syntax                 | Yes: `as` keyword syntax      |
+   +----------------+------------------------------------------+-------------------------------+
+   | External Libs  | Yes: `extern use` keyword syntax         | *Yes: `import` keyword syntax |
+   +----------------+------------------------------------------+-------------------------------+
+
+
+Python: Properties of the Import System
+---------------------------------------
+1. Files are Modules (1:1), which compose the Package.
+2. All Objects within modules are Public (i.e. accessible via importing).
+    A. Methods and variables named with a leading underscore, are generally considered private, but there is no mechanism to stop the user from actually doing so.
+    B. The Special Method \__all__ can be used to control what is exported from a module, when a user imports like so: `from package.module import *`, but does not limit access when the module itself is imported routinely: `import package.module`.
+    C. Nested objects are effectively private because they are not within an accessible namespace (e.g. code nested within a function block).
+3. Dependecies must be imported into to every module (file) that needs to use them.
+4. Imports can be aliased, using the `as` keyword syntax: `import package.module as alias`
+
+
+Rust: Properties of the Import System
+-------------------------------------
+1. Rust Projects are called `Crates` which is comprised of Modules.
+2. Files are Modules, but not exclusively.
+    A. Modules are declared within files by the developer via the `mod` keyword, to define contained namespaces.
+    B. Other Files can be declared as modules from another file via the `mod` keyword.
+3. Modules are private by default, unless otherwise made public using the `pub` keyword.
+4. Crate Dependencies (declared within the cargo.toml) are globally available, and do not need to be imported to be used.
+5. Imports can be aliased, using the `as` keyword syntax: `use crate::name as alias`
+
+
+Compiling a Rust Crate: The Search Path
+=======================================
+Since python is not a compiled language, we will only look at Rust here:
+
+1. Compiler searches for the Crate Root (src/main.rs)
+2. If a Module is declared at the Crate Root, we search:
+    A. inline (the module may be defined here within curly braces)
+    B. File within Crate Root (src/module_name.rs)
+    C. File within Directory in Crate Root (src/module_name/mod.rs)
+3. Submodules: Modules declared outside of the Crate Root (src/main.rs), search:
+    A. inline (the module may be defined here within curly braces)
+    B. File From File Root (src/file_name/module_name.rs)
+    C. File within Directory in File Root (src/file_name/module_name/mod.rs)
+
+This recursive process helps glob what files (and modules) are needed during compilation.
+Each Object within this path is hashed using DefPathHash during construction of the High Level IR.
