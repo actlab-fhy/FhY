@@ -2,9 +2,10 @@
 Import Systems & Modules
 ========================
 
-As with any coding language, we need the ability to work
-with multiple files, modules, and use standard and external libraries. Controlling
-the namespace therefore becomes important to defining access to other code.
+As with any coding language, we need the ability to work with multiple files, modules, 
+and use standard and external libraries. Controlling the namespace therefore becomes 
+important to defining access to other code. Here, we compare the implementation of two
+coding languages - Python and Rust. Then use what we learned to build the FhY Language.
 
 Imagine we have a Python or Rust Package, with the given project structure:
 
@@ -22,7 +23,7 @@ Imagine we have a Python or Rust Package, with the given project structure:
             ├── __init__.py | mod.rs
             └── file_b.{py | rs}
 
-In python we could access information in file_a from the main file in the root directory, as shown:
+In python we could access information in file\_a from the main file in the root directory, as shown:
 
 .. code-block:: python
 
@@ -37,7 +38,8 @@ In python we could access information in file_a from the main file in the root d
 
 And in rust, it would be accessed as shown:
 
-.. code-block:: text
+.. code-block:: Rust
+
     // subDirectoryA.mod.rs contents:
     pub mod file_a;
 
@@ -50,7 +52,9 @@ And in rust, it would be accessed as shown:
     mod subDirectoryA;
     use ExampleProject::subDirectoryA::file_a;
 
-    file_a::fancy_function()
+    fn main() {
+       file_a::fancy_function()
+    }
 
 
 A Comparison between Rust and Python Import and Namespace Systems
@@ -85,7 +89,7 @@ Python: Properties of the Import System
 1. Files are Modules (1:1), which compose the Package.
 2. All Objects within modules are Public (i.e. accessible via importing).
     A. Methods and variables named with a leading underscore, are generally considered private, but there is no mechanism to stop the user from actually doing so.
-    B. The Special Method \__all__ can be used to control what is exported from a module, when a user imports like so: `from package.module import *`, but does not limit access when the module itself is imported routinely: `import package.module`.
+    B. The Special Method \__all__ can be used to control what is exported from a module, when a user imports using glob syntax: `from package.module import *`, but does not limit access when the module itself is imported normally: `import package.module`.
     C. Nested objects are effectively private because they are not within an accessible namespace (e.g. code nested within a function block).
 3. Dependecies must be imported into to every module (file) that needs to use them.
 4. Imports can be aliased, using the `as` keyword syntax: `import package.module as alias`
@@ -118,3 +122,70 @@ Since python is not a compiled language, we will only look at Rust here:
 
 This recursive process helps glob what files (and modules) are needed during compilation.
 Each Object within this path is hashed using DefPathHash during construction of the High Level IR.
+
+
+How does this Information Impact Syntax of the FhY Language?
+============================================================
+There are elements from both theses coding languages that we would like to use within FhY,
+as well as complications we would like to avoid.
+
+1. FhY Packaging
+    A. Directories should contain a ```_root.fhy``` file to define package or subpackage Root, or entry points.
+    B. A Package Configuration File called `fhyproject.toml` should be placed in parent directory of source code.
+        1. TODO: Defining package metadata fields.
+
+.. code-block:: text
+
+    ExampleProject/
+    ├── fhyproject.toml
+    └── src/
+        ├── _root.fhy
+        ├── main.fhy
+        ├── other_file.fhy
+        └── subDirectoryA/
+            ├── _root.fhy
+            └── module_a.fhy
+
+2. Defining Modules in FhY
+    A. Files and Nested Directories are Modules, but not exclusively.
+        1. Support Module (Namespaces) as well within Files using `module` keyword:
+            a. `module name {...}`
+    B. We will not be supporting public / private syntax, which means modules will be public.
+        1. Rationale: The FhY Language is designed to be flexible but simple to use.
+            a. Controlling access rights is just yet another layer of encapsulation developers need not worry about.
+            b. Simplifies context-aware Scope permissions.
+    C. Nested Directories are considered a part of the package if they contain the _root.fhy file.
+
+3. Import Syntax
+    A. Use `import` keyword to access modules within package root, standard Library, and External Package Dependencies.
+        1. TODO: Think about Native Imports
+    B. Use Python `.` accessor Syntax to follow a module path.
+    C. Support Aliasing imports using the same `as` keyword syntax
+    D. Unlike both Rust and Python, We will not Support a glob or wildcard (\*) import syntax.
+
+.. code-block:: FhY
+
+   // src/main.fhy
+   import ExampleProject.other_file.special as sp
+
+   proc main<T>(input int8[2, 2] A, input int8[2, 2], output int8[2, 2] C) {
+      C = sp.matmul(A, B);
+   }
+
+   // src/other_file.fhy
+   module special {
+      op matmul<T>(input T[m, n] A, input T[n, p] B) -> output T[m, p] {
+         temp index[1:m] i;
+         temp index[1:p] j;
+         temp index[1:n] k;
+         temp T[m, p] C;
+
+         C[i, j] = sum[k](A[i, k] * B[k, j]);
+         return C;
+        }
+   }
+
+
+- **Release Date**: 5th April 2024
+- **Last Updated**: 5th April 2024
+- **Post Author(s)**: Jason C Del Rio
