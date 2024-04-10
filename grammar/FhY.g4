@@ -1,0 +1,418 @@
+grammar FhY;
+
+/*
+ * Module Rules
+ */
+
+program
+    : component*
+    ;
+
+component
+    : function_declaration
+    | function_definition
+    ;
+
+/*
+ * Function Rules
+ */
+
+function_declaration
+    : function_header SEMICOLON
+    ;
+
+function_definition
+    : function_header OPEN_BRACE function_body CLOSE_BRACE
+    ;
+
+function_header
+    : function_type=FUNCTION_KEYWORD name=IDENTIFIER (LESS_THAN identifier_list GREATER_THAN)? (OPEN_BRACKET function_args CLOSE_BRACKET)? OPEN_PARENTHESES function_args CLOSE_PARENTHESES (ARROW qualified_type)?
+    ;
+
+identifier_list
+    : (IDENTIFIER (COMMA IDENTIFIER)*)?
+    ;
+
+function_args
+    : (function_arg (COMMA function_arg)*)?
+    ;
+
+function_arg
+    : qualified_type (name=IDENTIFIER)?
+    ;
+
+function_body
+    : statement*
+    ;
+
+/*
+ * Statement Rules
+ */
+
+statement
+    : declaration_statement
+    | expression_statement
+    | selection_statement
+    | iteration_statement
+    | return_statement
+    ;
+
+declaration_statement
+    : qualified_type name=IDENTIFIER (EQUALS_SIGN expression)? SEMICOLON
+    ;
+
+expression_statement
+    : (name=IDENTIFIER (OPEN_BRACKET expression_list CLOSE_BRACKET)? EQUALS_SIGN)? expression SEMICOLON
+    ;
+
+selection_statement
+    : IF OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement* CLOSE_BRACE (ELSE OPEN_BRACE statement* CLOSE_BRACE)?
+    ;
+
+iteration_statement
+    : FORALL OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement* CLOSE_BRACE
+    ;
+
+return_statement
+    : RETURN expression SEMICOLON
+    ;
+
+/*
+ * Type Rules
+ */
+
+qualified_type
+    : (type_qualifier=IDENTIFIER)? type
+    ;
+
+type
+    : tuple_type
+    | numerical_type
+    | index_type
+    ;
+
+tuple_type
+    : OPEN_PARENTHESES ((type COMMA) | (type (COMMA type)+))? CLOSE_PARENTHESES
+    ;
+
+numerical_type
+    : dtype (OPEN_BRACKET shape CLOSE_BRACKET)?
+    ;
+
+dtype
+    : base_dtype=IDENTIFIER (LESS_THAN expression_list GREATER_THAN)?
+    ;
+
+shape
+    : (expression (COMMA expression)*)?
+    ;
+
+index_type
+    : IDENTIFIER OPEN_BRACKET range CLOSE_BRACKET
+    ;
+
+range
+    : expression COLON expression (COLON expression)?
+    ;
+
+/*
+ * Expression Rules
+ */
+
+expression
+    : nested_expression=OPEN_PARENTHESES expression CLOSE_PARENTHESES
+    | unary_expression=(SUBTRACTION | BITWISE_NOT | LOGICAL_NOT) expression
+    | multiplicative_expression=expression (MULTIPLICATION | DIVISION) expression
+    | additive_expression=expression (ADDITION | SUBTRACTION) expression
+    | shift_expression=expression (LEFT_SHIFT | RIGHT_SHIFT)expression
+    | relational_expression=expression (LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL) expression
+    | equality_expression=expression (EQUAL_TO | NOT_EQUAL_TO) expression
+    | and_expression=expression AND expression
+    | exclusive_or_expression=expression EXCLUSIVE_OR expression
+    | or_expression=expression OR expression
+    | logical_and_expression=expression LOGICAL_AND expression
+    | logical_or_expression=expression LOGICAL_OR expression
+    | ternary_expression=expression QUESTION_MARK expression COLON expression
+    | primary_expression
+    ;
+
+expression_list
+    : (expression (COMMA expression)*)?
+    ;
+
+primary_expression
+    : tuple_access_expression=primary_expression DOT INT_LITERAL
+    | function_expression=primary_expression (LESS_THAN expression_list GREATER_THAN)? (OPEN_BRACKET expression_list CLOSE_BRACKET)? OPEN_PARENTHESES expression_list CLOSE_PARENTHESES
+    | tensor_access_expression=primary_expression OPEN_BRACKET expression_list CLOSE_BRACKET
+    | atom
+    ;
+
+atom
+    : tuple=OPEN_PARENTHESES ((expression COMMA) | (expression (COMMA expression)+))? CLOSE_PARENTHESES
+    | identifier=IDENTIFIER
+    | literal
+    ;
+
+/*
+ * Literal Rules
+ */
+
+literal
+    : INT_LITERAL
+    | float_literal
+    ;
+
+float_literal
+    : decimal_float_literal
+    ;
+
+decimal_float_literal
+    : fraction_part EXPONENT_PART?
+    | DIGIT_SEQUENCE EXPONENT_PART
+    ;
+
+fraction_part
+    : DIGIT_SEQUENCE? DOT DIGIT_SEQUENCE
+    | DIGIT_SEQUENCE DOT
+    ;
+
+/*
+ * Keyword Tokens
+ */
+
+FUNCTION_KEYWORD
+    : PROCEDURE
+    | OPERATION
+    | NATIVE
+    ;
+
+PROCEDURE
+    : 'proc'
+    ;
+
+OPERATION
+    : 'op'
+    ;
+
+REDUCTION
+    : 'reduc'
+    ;
+
+NATIVE
+    : 'native'
+    ;
+
+FORALL
+    : 'forall'
+    ;
+
+IF
+    : 'if'
+    ;
+
+ELSE
+    : 'else'
+    ;
+
+RETURN
+    : 'return'
+    ;
+
+/*
+ * Foundational Tokens
+ */
+
+OPEN_PARENTHESES
+    : '('
+    ;
+
+CLOSE_PARENTHESES
+    : ')'
+    ;
+
+OPEN_BRACKET
+    : '['
+    ;
+
+CLOSE_BRACKET
+    : ']'
+    ;
+
+OPEN_BRACE
+    : '{'
+    ;
+
+CLOSE_BRACE
+    : '}'
+    ;
+
+ARROW
+    : '->'
+    ;
+
+EQUALS_SIGN
+    : '='
+    ;
+
+QUESTION_MARK
+    : '?'
+    ;
+
+COMMA
+    : ','
+    ;
+
+DOT
+    : '.'
+    ;
+
+SEMICOLON
+    : ';'
+    ;
+
+COLON
+    : ':'
+    ;
+
+LOGICAL_NOT
+    : '!'
+    ;
+
+BITWISE_NOT
+    : '~'
+    ;
+
+MULTIPLICATION
+    : '*'
+    ;
+
+DIVISION
+    : '/'
+    ;
+
+ADDITION
+    : '+'
+    ;
+
+SUBTRACTION
+    : '-'
+    ;
+
+LEFT_SHIFT
+    : '<<'
+    ;
+
+RIGHT_SHIFT
+    : '>>'
+    ;
+
+GREATER_THAN
+    : '>'
+    ;
+
+LESS_THAN
+    : '<'
+    ;
+
+GREATER_THAN_OR_EQUAL
+    : '>='
+    ;
+
+LESS_THAN_OR_EQUAL
+    : '<='
+    ;
+
+EQUAL_TO
+    : '=='
+    ;
+
+NOT_EQUAL_TO
+    : '!='
+    ;
+
+AND
+    : '&'
+    ;
+
+EXCLUSIVE_OR
+    : '^'
+    ;
+
+OR
+    : '|'
+    ;
+
+LOGICAL_AND
+    : '&&'
+    ;
+
+LOGICAL_OR
+    : '||'
+    ;
+
+/*
+ * Fundamental Tokens
+ */
+
+IDENTIFIER
+    : IDENTIFIER_NON_DIGIT (IDENTIFIER_NON_DIGIT | DIGIT)*
+    ;
+
+fragment IDENTIFIER_NON_DIGIT
+    : NONDIGIT
+    ;
+
+fragment NONDIGIT
+    : [a-zA-Z_]
+    ;
+
+INT_LITERAL
+    : BINARY_INT_LITERAL
+    | OCTAL_INT_LITERAL
+    | DECIMAL_INT_LITERAL
+    | HEXADECIMAL_INT_LITERAL
+    ;
+
+fragment BINARY_INT_LITERAL
+    : '0' [bB] [01_]+
+    ;
+
+fragment OCTAL_INT_LITERAL
+    : '0' [oO] [0-7_]+
+    ;
+
+fragment DECIMAL_INT_LITERAL
+    : DIGIT_SEQUENCE
+    ;
+
+fragment HEXADECIMAL_INT_LITERAL
+    : '0' [xX] [0-9a-fA-F][0-9a-fA-F_]*
+    ;
+
+EXPONENT_PART
+    : [eE] SIGN? DIGIT_SEQUENCE
+    ;
+
+fragment SIGN
+    : [+-]
+    ;
+
+DIGIT_SEQUENCE
+    : [0-9][0-9_]*
+    ;
+
+fragment DIGIT
+    : [0-9]
+    ;
+
+WHITESPACE
+    : [ \t]+ -> skip
+    ;
+
+NEWLINE
+    : ('\r' '\n'? | '\n') -> skip
+    ;
+
+LINECOMMENT
+    : '//' ~ [\r\n]* -> skip
+    ;

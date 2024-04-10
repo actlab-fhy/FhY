@@ -4,7 +4,7 @@
 """
 import pytest
 
-from FhY.lang.ast import base
+from fhy.lang.ast import base
 
 
 @pytest.mark.parametrize("name", [
