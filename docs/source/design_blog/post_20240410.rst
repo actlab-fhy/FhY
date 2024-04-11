@@ -36,7 +36,7 @@ Design Decisions Made or Discussed During the Meeting:
         when we traverse subsequent child nodes, the depth of current position correctly indents the serialized data representation output.
     4. `Type Qualifiers <#Where-to-Define-Supported-Type-Qualifiers>`: We currently define supported Type Qualifiers using an enumeration in our code.
         A. Small Note: We currently only support a single Type Qualifier. but we will need to Support a list of Type Qualifiers.
-    5. Type Registration: We lightly touched on the subject of registering new data types and type qualifiers. We will need a reliable way for clients to register new type definitions, much like the `Bring Your Own DataType <https://tvm.apache.org/2020/09/26/bring-your-own-datatypes#:~:text=The%20Bring%20Your%20Own%20Datatypes%20framework%20allows%20users%20to%20claim,alongside%20TVM's%20normal%20datatype%20facilities.>` Model.
+    5. Type Registration: We lightly touched on the subject of registering new data types and type qualifiers. We will need a reliable way for clients to register new type definitions, much like the `Bring Your Own DataType <https://tvm.apache.org/2020/09/26/bring-your-own-datatypes#:~:text=The%20Bring%20Your%20Own%20Datatypes%20framework%20allows%20users%20to%20claim,alongside%20TVM's%20normal%20datatype%20facilities.>`_ Model.
 
 
 Where to Define Supported Type Qualifiers
