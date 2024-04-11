@@ -1,0 +1,62 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python package
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Set up JDK 11 for x64
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: 11
+
+    - name: Generate Files Using Antlr
+      run: |
+        python -m pip install -U pip setuptools wheel
+        python -m pip install antlr4-tools==0.2.1
+        # Build Files
+        antlr4 -Dlanguage=python3 grammar/FhY.g4
+        mv grammar/FhYLexer.py fhy/lang/parser/FhYLexer.py
+        mv grammar/FhYParser.py fhy/lang/parser/FhYParser.py
+        mv grammar/FhYListener.py fhy/lang/parser/FhYListener.py
+        
+    - name: Install dependencies
+      run: |
+        pip install -e .[dev]
+  
+    - name: Code Linting
+      run: |
+        ruff check .
+  
+    - name: Static Type Checking
+      run: |
+        mypy .
+
+    - name: Unit Testing
+      run: |
+        pytest .
+
+    - name: Doc Generation
+      run: |
+        make docs/ html
