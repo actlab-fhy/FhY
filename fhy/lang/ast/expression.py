@@ -2,8 +2,7 @@
 from abc import ABC
 from enum import StrEnum
 from typing import List
-from .base import Expression
-from .identifier import Identifier
+from .base import Expression, Identifier
 from .type import Type
 
 
@@ -98,7 +97,7 @@ class TernaryExpression(Expression):
 
     Args:
         _condition (Expression): Expression to Evaluate Truth
-        _true_expression (Expression):
+        _true_expression (Expression): 
         _false_expression (Expression):
 
     Notes:

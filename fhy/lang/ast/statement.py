@@ -1,8 +1,8 @@
 # TODO Jason: Add docstring
 from typing import List, Optional
+from .expression import Identifier
 from .base import Statement
 from .expression import Expression
-from .identifier import Identifier
 from .type import Type, TypeQualifier
 
 
@@ -12,7 +12,7 @@ class DeclarationStatement(Statement):
     Args:
         _variable_name (Identifier):
         _variable_type (Type):
-        _variable_type_qual (TypeQualifier):
+        _variable_type_qual (TypeQualifier): 
         _expression (Optional[Expression]):
 
     """
@@ -55,7 +55,7 @@ class ExpressionStatement(Statement):
         self._left = _left
         self._index = _index
         self._right = _right
-
+    
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
         attrs.extend(["_left", "_index", "_right"])

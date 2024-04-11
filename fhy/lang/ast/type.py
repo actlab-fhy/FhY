@@ -17,29 +17,27 @@ class Type(ASTNode, ABC):
 
 
 # TODO: Remove StrEnum, Find another Way
-class PrimitiveDataType(StrEnum):
+class PrimitiveType(StrEnum):
     """Core Supported Primitive Types"""
-    INT32 = "int32"
-    FLOAT32 = "float32"
+    INTEGER = "int"
+    FLOAT = "float"
+    COMPLEX = "complex"
 
 
 class DataType:
     """Data Type Defines Core Type Primitive, but of Flexible Bit Width.
 
     Args:
-        _primitive_type: (PrimitiveType):
+        _primitive_type: (PrimitiveType): 
+        _bit_width (Optional[int]): Flexible Bit Width Specification
 
     """
-    _primitive_data_type: PrimitiveDataType
-
     def __init__(self,
-                 _primitive_data_type: PrimitiveDataType,
+                 _primitive_type: PrimitiveType,
+                 _bit_width: Optional[int],
                  ) -> None:
-        self._primitive_data_type = _primitive_data_type
-
-    @property
-    def primitive_data_type(self) -> PrimitiveDataType:
-        return self._primitive_data_type
+        self._primitive_type = _primitive_type
+        self._bit_width = _bit_width
 
     # TODO Jason: Implement the functionality of this class
 
@@ -52,8 +50,6 @@ class NumericalType(Type):
         _shape (List[Expression]): Shape of vector
 
     """
-    _data_type: DataType
-    _shape: List[Expression]
 
     def __init__(self,
                  _data_type: DataType,
@@ -62,14 +58,6 @@ class NumericalType(Type):
         super().__init__()
         self._data_type = _data_type
         self._shape = _shape
-
-    @property
-    def data_type(self) -> DataType:
-        return self._data_type
-
-    @property
-    def shape(self) -> List[Expression]:
-        return self._shape
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -116,38 +104,3 @@ class TypeQualifier(StrEnum):
     STATE = "state"
     PARAMETER = "param"
     TEMPORARY = "temp"
-
-
-class QualifiedType(ASTNode):
-    """Qualified Type Container
-
-    Args:
-        _base_type (Type): Primitive or Generic Type (e.g. float, int, T)
-        _type_qualifier (Optional[TypeQualifier]): Qualifying Type, (i.e. input, output, param, state)
-
-    e.g. Return Types are not assigned a proper name
-
-    """
-    _base_type: Type
-    _type_qualifier: Optional[TypeQualifier]
-
-    def __init__(self,
-                 base_type: Type,
-                 type_qualifier: Optional[TypeQualifier] = None
-                 ) -> None:
-        super().__init__()
-        self._base_type = base_type
-        self._type_qualifier = type_qualifier
-
-    @property
-    def base_type(self) -> Type:
-        return self._base_type
-
-    @property
-    def type_qualifier(self) -> Optional[TypeQualifier]:
-        return self._type_qualifier
-
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
-        attrs.extend(["_base_type", "_type_qualifier"])
-        return attrs
