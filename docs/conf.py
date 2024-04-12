@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "FhY"
+project = "fhy"
 copyright = "2024, Christopher Priebe, Jason Del Rio"
 author = "Christopher Priebe, Jason Del Rio"
 

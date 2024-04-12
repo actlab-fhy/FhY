@@ -3,7 +3,7 @@ requires = ["setuptools>=67.6.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "FhY"
+name = "fhy"
 description = "Cross Domain Compiler for Accelerators"
 license = {file = "LICENSE"}
 authors = [
@@ -34,7 +34,7 @@ build = ["wheel", "setuptools>=67.6.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-n auto -rA --cov=FhY --cov-report term-missing --cov-fail-under=90"
+addopts = "-n auto -rA --cov=fhy --cov-report term-missing --cov-fail-under=90"
 
 [tool.mypy]
 pretty = true
