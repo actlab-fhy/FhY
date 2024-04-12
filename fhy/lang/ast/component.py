@@ -11,7 +11,7 @@ from .statement import Statement
 class Argument(ASTNode):
     # TODO Jason: Add docstring
     name: Optional[Identifier] = field(default=None)
-    qualified_type: QualifiedType
+    qualified_type: Optional[QualifiedType] = field(default=None)
 
     def visit_attrs(self) -> List[str]:
         return ["name", "qualified_type"]

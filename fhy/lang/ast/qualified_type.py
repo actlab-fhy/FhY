@@ -13,11 +13,11 @@ class QualifiedType(ASTNode):
     e.g. Return Types are not assigned a proper name
 
     """
-    _base_type: Type
+    _base_type: Optional[Type]
     _type_qualifier: Optional[TypeQualifier]
 
     def __init__(self,
-                 base_type: Type,
+                 base_type: Optional[Type] = None,
                  type_qualifier: Optional[TypeQualifier] = None
                  ) -> None:
         super().__init__()

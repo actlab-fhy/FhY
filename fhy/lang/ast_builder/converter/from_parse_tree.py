@@ -1,7 +1,8 @@
 from typing import Optional
 from antlr4 import ParseTreeWalker
 from fhy.lang.parser import FhYListener, FhYParser
-from fhy.lang.ast import ASTNode
+
+from fhy.lang.ast import Argument, ASTNode, QualifiedType
 from ..builder import ASTBuilder
 
 
@@ -40,26 +41,20 @@ class ParseTreeConverter(FhYListener):
         if function_keyword == "proc":
             self._builder.add_procedure(function_name)
         elif function_keyword == "op":
-            raise NotImplementedError()
+            raise NotImplementedError("Operations Not Supported Yet...")
         else:
             raise NotImplementedError()
 
     def enterFunction_arg(self, ctx: FhYParser.Function_argContext):
-        self._builder.add_argument()
-
-        argument_builder: ASTArgumentBuilder = self._builder.get_current_node()
         argument_name: str = ctx.IDENTIFIER().getText()
-        argument_builder.set_name_hint(argument_name)
+        self._builder.add_argument(argument_name)
 
     def exitFunction_arg(self, ctx: FhYParser.Function_argContext):
         self._builder.close_argument_building()
 
     def enterQualified_type(self, ctx: FhYParser.Qualified_typeContext):
-        self._builder.add_qualified_type()
-
-        qualified_type_builder: ASTQualifiedTypeBuilder = self._builder.get_current_node()
         type_qualifier_name: str = ctx.IDENTIFIER().getText()
-        qualified_type_builder.set_type_qualifier(type_qualifier_name)
+        self._builder.add_qualified_type(type_qualifier_name)
 
     def exitQualified_type(self, ctx: FhYParser.Qualified_typeContext):
         self._builder.close_qualified_type_building()
@@ -68,9 +63,9 @@ class ParseTreeConverter(FhYListener):
         self._builder.add_numerical_type()
 
     def enterDtype(self, ctx: FhYParser.DtypeContext):
-        numerical_type_builder: ASTNumericalTypeBuilder = self._builder.get_current_node()
+        # We need to remove the node, to make changes to the underlying data
         numerical_type_name: str = ctx.IDENTIFIER().getText()
-        numerical_type_builder.set_primitive_data_type_name(numerical_type_name)
+        self._builder.add_dtype(numerical_type_name)
 
     def enterIndex_type(self, ctx: FhYParser.Index_typeContext):
         self._builder.add_index_type()
@@ -88,7 +83,9 @@ def from_parse_tree(parse_tree: FhYParser.ModuleContext) -> ASTNode:
     converter = ParseTreeConverter()
     walker = ParseTreeWalker()
     walker.walk(converter, parse_tree)
+    assert len(converter._builder._node_stack) == 0, "Incomplete AST Build."
     if converter.ast is None:
         # TODO Jason: Implement a better error for this ast conversion failure
         raise Exception()
+
     return converter.ast

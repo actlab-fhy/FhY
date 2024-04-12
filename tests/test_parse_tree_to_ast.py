@@ -4,7 +4,7 @@ from antlr4.error.ErrorListener import ErrorListener
 from fhy.lang.ast import Argument, ASTNode, Component, Module, Procedure, QualifiedType
 from fhy.lang.ast_builder import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
-from fhy.ir import DataType, PrimitiveDataType, NumericalType, TypeQualifier
+from fhy.ir import DataType, Identifier, NumericalType, PrimitiveDataType, TypeQualifier
 
 
 class ThrowingErrorListener(ErrorListener):
@@ -69,7 +69,7 @@ def test_empty_procedure_with_a_qualified_argument(parser):
     """Test that an empty procedure with a single qualified argument is converted correctly."""
     source_file_content = "proc foo(input int32 x){}"
     parse_tree = parser(source_file_content).module()
-    assert parse_tree is not None
+    assert parse_tree is not None, "Expected Parse Tree in Module Context"
 
     ast: ASTNode = from_parse_tree(parse_tree)
 
@@ -77,9 +77,11 @@ def test_empty_procedure_with_a_qualified_argument(parser):
     assert len(ast.components) == 1, "Expected 1 component"
     procedure: Component = ast.components[0]
     assert isinstance(procedure, Procedure), "Expected Procedure AST node"
+    assert isinstance(procedure.name, Identifier), "Expected Procedure Name to be an Identifier"
     assert procedure.name.name_hint == "foo", "Expected procedure name to be 'foo'"
     assert len(procedure.args) == 1, "Expected 1 argument"
     arg: Argument = procedure.args[0]
+    assert isinstance(arg.name, Identifier), "Expected Argument Name to be an Identifier"
     assert arg.name.name_hint == "x", "Expected argument name to be 'x'"
     arg_type: QualifiedType = arg.qualified_type
     assert arg_type.type_qualifier == TypeQualifier.INPUT, "Expected argument type qualifier to be INPUT"

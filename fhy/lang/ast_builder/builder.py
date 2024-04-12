@@ -1,7 +1,8 @@
 # TODO Jason: Add docstring
 from dataclasses import replace
+from enum import StrEnum
 from typing import List, Optional, Union
-from fhy.lang.ast import Argument, ASTNode, Component, Expression, Module, Procedure, QualifiedType, Statement
+from fhy.lang.ast import Argument, ASTNode, Component, Expression, Function, Module, Procedure, QualifiedType, Statement
 from fhy.ir import DataType, Identifier, IndexType, NumericalType, PrimitiveDataType, Type, TypeQualifier
 from fhy.utils import Stack
 
@@ -169,6 +170,16 @@ from fhy.utils import Stack
 #         self._stride = stride
 
 
+def validate(name: str, enumeration: StrEnum) -> StrEnum:
+    try:
+        val: StrEnum = enumeration[name.upper()]
+        assert val.value == name  # Make Keyword Case Sensitive
+    except (KeyError, AssertionError):
+        raise ValueError(f"Unsupported {enumeration.__name__}: {name}")
+
+    return val
+
+
 class ASTBuilder(object):
     # TODO Jason: Add docstring
     _node_stack: Stack[ASTNode]
@@ -182,11 +193,10 @@ class ASTBuilder(object):
     def ast(self) -> Optional[ASTNode]:
         return self._ast
 
-    def get_current_node(self) -> ASTNode:
+    def get_current_node(self) -> Optional[ASTNode]:
         if len(self._node_stack) == 0:
             return None
-        else:
-            return self._node_stack.peek()
+        return self._node_stack.peek()
 
     def add_module(self) -> None:
         self._node_stack.push(Module())
@@ -207,43 +217,59 @@ class ASTBuilder(object):
         if not isinstance(component_node, Component) and not isinstance(module_node, Module):
             # TODO Jason: Improve exception
             raise Exception("Cannot close component context when not in component context")
-        new_module_node: Module = replace(module_node, components=module_node.components + [component_node])
+        components: List[Component] = module_node.components
+        components.append(component_node)
+        new_module_node: Module = replace(module_node, components=components)
         self._node_stack.push(new_module_node)
 
-    def add_argument(self) -> None:
-        self._node_stack.push(Argument())
+    def add_argument(self, arg_name: str) -> None:
+        self._node_stack.push(Argument(name=Identifier(arg_name)))
 
     def close_argument_building(self) -> None:
         argument_node: ASTNode = self._node_stack.pop()
         function_node: ASTNode = self._node_stack.pop()
-        if not isinstance(argument_node, Argument) and not isinstance(function_node, Component):  # TODO: Make new function base class and change here to that instead of component
+        if not isinstance(argument_node, Argument) and not isinstance(function_node, Function):
             # TODO Jason: Improve exception
             raise Exception("Cannot close argument builder context when not in argument context")
-        new_function_node: Component = replace(function_node, args=function_node.args + [argument_node.argument])
+        args: List[Argument] = function_node.args[:]
+        args.append(argument_node)
+        new_function_node: Component = replace(function_node, args=args)
         self._node_stack.push(new_function_node)
 
-    def add_qualified_type(self) -> None:
-        self._node_stack.push(QualifiedType())
+    def add_qualified_type(self, name: str) -> None:
+        qualified_type: TypeQualifier = validate(name, TypeQualifier)
+        self._node_stack.push(QualifiedType(type_qualifier=qualified_type))
 
     def close_qualified_type_building(self) -> None:
-        qualified_type_node: ASTNode= self._node_stack.pop()
+        qualified_type_node: ASTNode = self._node_stack.pop()
         argument_node: ASTNode = self._node_stack.pop()
         if not isinstance(qualified_type_node, QualifiedType) and not isinstance(argument_node, Argument):
             # TODO Jason: Improve exception
-            raise Exception("Cannot close qualified type builder context when not in qualified type context")
-        new_argument_node: Argument = argument_node.replace(qualified_type=qualified_type_node.qualified_type)
+            raise Exception(
+                f"Cannot close Qualified Type: {qualified_type_node} | Argument Type: {argument_node}"
+                )
+
+        new_argument_node: Argument = replace(argument_node, qualified_type=qualified_type_node)
         self._node_stack.push(new_argument_node)
 
+    def add_dtype(self, dtype):
+        node: ASTNode = self.get_current_node()
+        if not isinstance(node, Type):
+            raise Exception("Node is not of type Type")
+
+        data_type: PrimitiveDataType = validate(dtype, PrimitiveDataType)
+        node._primitive_data_type = DataType(data_type)
+
     def add_numerical_type(self) -> None:
-        self._node_stack.push(NumericalType())
+        self._node_stack.push(NumericalType(None, []))
 
     def add_index_type(self) -> None:
-        self._node_stack.push(ASTIndexTypeBuilder())
+        self._node_stack.push(IndexType(None, None))
 
     def close_type_building(self) -> None:
-        type_builder: ASTNodeBuilder = self._node_stack.pop()
-        qualified_type_builder: ASTNodeBuilder = self.get_current_node()
-        if not isinstance(type_builder, ASTTypeBuilder) and not isinstance(qualified_type_builder, ASTQualifiedTypeBuilder):
+        type_node: Type = self._node_stack.pop()
+        qualified_type_node: QualifiedType = self.get_current_node()
+        if not isinstance(type_node, Type) and not isinstance(qualified_type_node, QualifiedType):
             # TODO Jason: Improve exception
-            raise Exception("Cannot close type builder context when not in type context")
-        qualified_type_builder.set_base_type(type_builder.type)
+            raise Exception("Cannot close type node context when not in type context")
+        qualified_type_node._base_type = type_node
