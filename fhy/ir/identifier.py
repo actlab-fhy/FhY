@@ -21,6 +21,7 @@ class Identifier(object):
 
     @property
     def name_hint(self) -> str:
+        # TODO Jason: Add docstring
         return self._name_hint
 
     def __eq__(self, other: Any) -> bool:
@@ -29,5 +30,4 @@ class Identifier(object):
     def __hash__(self) -> int:
         return hash(self._id)
 
-    # TODO Jason: Implement the functionality of this class
     # TODO Jason: Resolve how this identifier class can handle identifiers used in different scopes

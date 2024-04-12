@@ -1,9 +1,4 @@
-"""
-    FhY/lang/ast/type.py
-
-    Define Core AST Data Types
-
-"""
+# TODO Jason: Add docstring
 from abc import ABC
 from enum import StrEnum
 from typing import List, Optional

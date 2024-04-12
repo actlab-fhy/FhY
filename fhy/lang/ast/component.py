@@ -1,70 +1,36 @@
 # TODO Jason: Add docstring
-from typing import List
-from .base import Component
+from dataclasses import dataclass, field
+from typing import List, Optional
+from .base import ASTNode, Function
 from .expression import Identifier
 from .qualified_type import QualifiedType
 from .statement import Statement
 
 
-class Argument(object):
-    """Function Argument Container Node
-
-    Args:
-        name (Identifier): Argument Name
-
-    """
-    _name: Identifier
-    _qualified_type: QualifiedType
-
-    def __init__(self,
-                 name: Identifier,
-                 qualified_type: QualifiedType,
-                 ) -> None:
-        self._name = name
-        self._qualified_type = qualified_type
-
-    @property
-    def name(self) -> Identifier:
-        return self._name
-
-    @property
-    def qualified_type(self) -> QualifiedType:
-        return self._qualified_type
+@dataclass(frozen=True, kw_only=True)
+class Argument(ASTNode):
+    # TODO Jason: Add docstring
+    name: Optional[Identifier] = field(default=None)
+    qualified_type: QualifiedType
 
     def visit_attrs(self) -> List[str]:
-        return ["_name", "_qualified_type"]
-
-    # TODO Jason: Implement the functionality of this class
+        return ["name", "qualified_type"]
 
 
-class Procedure(Component):
-    """Fhy Procedure Node"""
-
-    def __init__(self,
-                 name: Identifier,
-                 _args: List[Argument],
-                 _body: List[Statement]
-                 ) -> None:
-        super().__init__(name)
-        self._args = _args
-        self._body = _body
-
-    @property
-    def args(self) -> List[Argument]:
-        return self._args
-
-    @property
-    def body(self) -> List[Statement]:
-        return self._body
+@dataclass(frozen=True, kw_only=True)
+class Procedure(Function):
+    """FhY procedure node"""
+    args: List[Argument] = field(default_factory=list)
+    body: List[Statement] = field(default_factory=list)
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
-        attrs.extend(["_args", "_body"])
+        attrs: List[str] = super().visit_attrs()
+        attrs.extend(["args", "body"])
         return attrs
 
 
-class Operation(Component):
+class Operation(Function):
     """Operation
 
     Args:
@@ -92,7 +58,7 @@ class Operation(Component):
         return attrs
 
 
-class Native(Component):
+class Native(Function):
     def __init__(self, name: Identifier, _args: List[Argument]) -> None:
         super().__init__(name)
         self._args = _args

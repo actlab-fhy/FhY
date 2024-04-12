@@ -1,245 +1,248 @@
 # TODO Jason: Add docstring
-from abc import ABC, abstractmethod
+from dataclasses import replace
 from typing import List, Optional, Union
 from fhy.lang.ast import Argument, ASTNode, Component, Expression, Module, Procedure, QualifiedType, Statement
 from fhy.ir import DataType, Identifier, IndexType, NumericalType, PrimitiveDataType, Type, TypeQualifier
 from fhy.utils import Stack
 
 
-class ASTNodeBuilder(ABC):
-    # TODO Jason: Add docstring
-    pass
+# class ASTNodeBuilder(ABC):
+#     # TODO Jason: Add docstring
+#     pass
 
 
-class ASTModuleBuilder(ASTNodeBuilder):
-    # TODO Jason: Add docstring
-    _components: List[Component]
+# class ASTModuleBuilder(ASTNodeBuilder):
+#     # TODO Jason: Add docstring
+#     _components: List[Component]
 
-    def __init__(self) -> None:
-        self._components = []
+#     def __init__(self) -> None:
+#         self._components = []
 
-    @property
-    def module(self) -> Module:
-        return Module(components=self._components.copy())
+#     @property
+#     def module(self) -> Module:
+#         return Module(components=self._components.copy())
 
-    def append_component(self, component: ASTNode) -> None:
-        self._components.append(component)
-
-
-class ASTComponentBuilder(ASTNodeBuilder):
-    @property
-    @abstractmethod
-    def component(self) -> Component:
-        ...
+#     def append_component(self, component: ASTNode) -> None:
+#         self._components.append(component)
 
 
-class ASTFunctionBuilder(ASTComponentBuilder, ABC):
-    _name_hint: str
-    _args: List[Argument]
-
-    def __init__(self) -> None:
-        self._name_hint = ""
-        self._args = []
-
-    def set_name_hint(self, name_hint: str) -> None:
-        self._name_hint = name_hint
-
-    def append_arg(self, argument: Argument) -> None:
-        self._args.append(argument)
+# class ASTComponentBuilder(ASTNodeBuilder):
+#     @property
+#     @abstractmethod
+#     def component(self) -> Component:
+#         ...
 
 
-class ASTProcedureBuilder(ASTFunctionBuilder):
-    # TODO Jason: Add docstring
-    _body: List[Statement]
+# class ASTFunctionBuilder(ASTComponentBuilder, ABC):
+#     _name_hint: str
+#     _args: List[Argument]
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._body = []
+#     def __init__(self) -> None:
+#         self._name_hint = ""
+#         self._args = []
 
-    @property
-    def component(self) -> Component:
-        return Procedure(Identifier(self._name_hint), self._args, self._body)
+#     def set_name_hint(self, name_hint: str) -> None:
+#         self._name_hint = name_hint
 
-    def append_statement(self) -> None:
-        pass
-
-
-class ASTArgumentBuilder(ASTNodeBuilder):
-    # TODO Jason: Add docstring
-    _name_hint: str
-    _qualified_type: Optional[QualifiedType]
-
-    def __init__(self) -> None:
-        self._name_hint = ""
-        self._qualified_type = None
-
-    @property
-    def argument(self) -> Argument:
-        if self._qualified_type is None:
-            raise Exception("Qualified type must be set before creating an argument")
-        return Argument(Identifier(self._name_hint), self._qualified_type)
-
-    def set_name_hint(self, name_hint: str) -> None:
-        self._name_hint = name_hint
-
-    def set_qualified_type(self, qualified_type: QualifiedType) -> None:
-        self._qualified_type = qualified_type
+#     def append_arg(self, argument: Argument) -> None:
+#         self._args.append(argument)
 
 
-class ASTQualifiedTypeBuilder(ASTNodeBuilder):
-    # TODO Jason: Add docstring
-    _base_type: Optional[Type]
-    _type_qualifier: Optional[TypeQualifier]
+# class ASTProcedureBuilder(ASTFunctionBuilder):
+#     # TODO Jason: Add docstring
+#     _body: List[Statement]
 
-    def __init__(self) -> None:
-        self._base_type = None
-        self._type_qualifier = None
+#     def __init__(self) -> None:
+#         super().__init__()
+#         self._body = []
 
-    @property
-    def qualified_type(self) -> QualifiedType:
-        if self._base_type is None:
-            raise Exception("Base type must be set before creating a qualified type")
-        if self._type_qualifier is None:
-            raise Exception("Type qualifier must be set before creating a qualified type")
-        return QualifiedType(self._base_type, self._type_qualifier)
+#     @property
+#     def component(self) -> Component:
+#         return Procedure(Identifier(self._name_hint), self._args, self._body)
 
-    def set_base_type(self, base_type: Type) -> None:
-        self._base_type = base_type
-
-    def set_type_qualifier(self, type_qualifier: TypeQualifier) -> None:
-        self._type_qualifier = type_qualifier
+#     def append_statement(self) -> None:
+#         pass
 
 
-class ASTTypeBuilder(ASTNodeBuilder, ABC):
-    # TODO Jason: Add docstring
-    @property
-    @abstractmethod
-    def type(self) -> Type:
-        ...
+# class ASTArgumentBuilder(ASTNodeBuilder):
+#     # TODO Jason: Add docstring
+#     _name_hint: str
+#     _qualified_type: Optional[QualifiedType]
+
+#     def __init__(self) -> None:
+#         self._name_hint = ""
+#         self._qualified_type = None
+
+#     @property
+#     def argument(self) -> Argument:
+#         if self._qualified_type is None:
+#             raise Exception("Qualified type must be set before creating an argument")
+#         return Argument(Identifier(self._name_hint), self._qualified_type)
+
+#     def set_name_hint(self, name_hint: str) -> None:
+#         self._name_hint = name_hint
+
+#     def set_qualified_type(self, qualified_type: QualifiedType) -> None:
+#         self._qualified_type = qualified_type
 
 
-class ASTNumericalTypeBuilder(ASTNodeBuilder):
-    # TODO Jason: Add docstring
-    _primitive_data_type_name: str
-    _shape: List[Expression]
+# class ASTQualifiedTypeBuilder(ASTNodeBuilder):
+#     # TODO Jason: Add docstring
+#     _base_type: Optional[Type]
+#     _type_qualifier: Optional[TypeQualifier]
 
-    def __init__(self) -> None:
-        self._primitive_data_type_name = ""
-        self._shape = []
+#     def __init__(self) -> None:
+#         self._base_type = None
+#         self._type_qualifier = None
 
-    @property
-    def type(self) -> Type:
-        if self._primitive_data_type_name == "":
-            raise Exception("Primitive data type name must be set before creating a numerical type")
-        return NumericalType(DataType(PrimitiveDataType(self._primitive_data_type_name)), self._shape)
+#     @property
+#     def qualified_type(self) -> QualifiedType:
+#         if self._base_type is None:
+#             raise Exception("Base type must be set before creating a qualified type")
+#         if self._type_qualifier is None:
+#             raise Exception("Type qualifier must be set before creating a qualified type")
+#         return QualifiedType(self._base_type, self._type_qualifier)
 
-    def set_primitive_data_type_name(self, primitive_data_type_name: str) -> None:
-        self._primitive_data_type_name = primitive_data_type_name
+#     def set_base_type(self, base_type: Type) -> None:
+#         self._base_type = base_type
 
-    def append_shape(self, shape: Expression) -> None:
-        self._shape.append(shape)
+#     def set_type_qualifier(self, type_qualifier: TypeQualifier) -> None:
+#         self._type_qualifier = type_qualifier
 
 
-class ASTIndexTypeBuilder(ASTNodeBuilder):
-    # TODO Jason: Add docstring
-    _lower_bound: Optional[Expression]
-    _upper_bound: Optional[Expression]
-    _stride: Optional[Expression]
+# class ASTTypeBuilder(ASTNodeBuilder, ABC):
+#     # TODO Jason: Add docstring
+#     @property
+#     @abstractmethod
+#     def type(self) -> Type:
+#         ...
 
-    def __init__(self) -> None:
-        self._lower_bound = None
-        self._upper_bound = None
-        self._stride = None
 
-    @property
-    def type(self) -> Type:
-        if self._lower_bound is None:
-            raise Exception("Lower bound must be set before creating an index type")
-        if self._upper_bound is None:
-            raise Exception("Upper bound must be set before creating an index type")
-        return IndexType(self._lower_bound, self._upper_bound, self._stride)
+# class ASTNumericalTypeBuilder(ASTNodeBuilder):
+#     # TODO Jason: Add docstring
+#     _primitive_data_type_name: str
+#     _shape: List[Expression]
 
-    def set_lower_bound(self, lower_bound: Expression) -> None:
-        self._lower_bound = lower_bound
+#     def __init__(self) -> None:
+#         self._primitive_data_type_name = ""
+#         self._shape = []
 
-    def set_upper_bound(self, upper_bound: Expression) -> None:
-        self._upper_bound = upper_bound
+#     @property
+#     def type(self) -> Type:
+#         if self._primitive_data_type_name == "":
+#             raise Exception("Primitive data type name must be set before creating a numerical type")
+#         return NumericalType(DataType(PrimitiveDataType(self._primitive_data_type_name)), self._shape)
 
-    def set_stride(self, stride: Expression) -> None:
-        self._stride = stride
+#     def set_primitive_data_type_name(self, primitive_data_type_name: str) -> None:
+#         self._primitive_data_type_name = primitive_data_type_name
+
+#     def append_shape(self, shape: Expression) -> None:
+#         self._shape.append(shape)
+
+
+# class ASTIndexTypeBuilder(ASTNodeBuilder):
+#     # TODO Jason: Add docstring
+#     _lower_bound: Optional[Expression]
+#     _upper_bound: Optional[Expression]
+#     _stride: Optional[Expression]
+
+#     def __init__(self) -> None:
+#         self._lower_bound = None
+#         self._upper_bound = None
+#         self._stride = None
+
+#     @property
+#     def type(self) -> Type:
+#         if self._lower_bound is None:
+#             raise Exception("Lower bound must be set before creating an index type")
+#         if self._upper_bound is None:
+#             raise Exception("Upper bound must be set before creating an index type")
+#         return IndexType(self._lower_bound, self._upper_bound, self._stride)
+
+#     def set_lower_bound(self, lower_bound: Expression) -> None:
+#         self._lower_bound = lower_bound
+
+#     def set_upper_bound(self, upper_bound: Expression) -> None:
+#         self._upper_bound = upper_bound
+
+#     def set_stride(self, stride: Expression) -> None:
+#         self._stride = stride
 
 
 class ASTBuilder(object):
     # TODO Jason: Add docstring
-    _builder_stack: Stack[ASTNodeBuilder]
+    _node_stack: Stack[ASTNode]
     _ast: Optional[ASTNode]
 
     def __init__(self):
-        self._builder_stack = Stack[ASTNodeBuilder]()
+        self._node_stack = Stack[ASTNode]()
         self._ast = None
 
     @property
     def ast(self) -> Optional[ASTNode]:
         return self._ast
 
-    def get_current_builder(self) -> Optional[ASTNodeBuilder]:
-        if len(self._builder_stack) == 0:
+    def get_current_node(self) -> ASTNode:
+        if len(self._node_stack) == 0:
             return None
         else:
-            return self._builder_stack.peek()
+            return self._node_stack.peek()
 
-    def open_module_context(self) -> None:
-        self._builder_stack.push(ASTModuleBuilder())
+    def add_module(self) -> None:
+        self._node_stack.push(Module())
 
-    def close_module_context(self) -> None:
-        module_builder: ASTNodeBuilder = self._builder_stack.pop()
-        if not isinstance(module_builder, ASTModuleBuilder):
+    def close_module_building(self) -> None:
+        module_node: ASTNode = self._node_stack.pop()
+        if not isinstance(module_node, Module):
             # TODO Jason: Improve exception
-            raise Exception("Cannot close module builder context when not in module context")
-        self._ast = module_builder.module
+            raise Exception("Cannot close module context when not in module context")
+        self._ast = module_node
 
-    def open_procedure_context(self) -> None:
-        self._builder_stack.push(ASTProcedureBuilder())
+    def add_procedure(self, procedure_name: str) -> None:
+        self._node_stack.push(Procedure(name=Identifier(procedure_name)))
 
-    def close_component_context(self) -> None:
-        component_builder: ASTNodeBuilder = self._builder_stack.pop()
-        module_builder: ASTNodeBuilder = self.get_current_builder()
-        if not isinstance(component_builder, ASTComponentBuilder) and not isinstance(module_builder, ASTModuleBuilder):
+    def close_component_building(self) -> None:
+        component_node: ASTNode = self._node_stack.pop()
+        module_node: ASTNode = self._node_stack.pop()
+        if not isinstance(component_node, Component) and not isinstance(module_node, Module):
             # TODO Jason: Improve exception
-            raise Exception("Cannot close component builder context when not in component context")
-        module_builder.append_component(component_builder.component)
+            raise Exception("Cannot close component context when not in component context")
+        new_module_node: Module = replace(module_node, components=module_node.components + [component_node])
+        self._node_stack.push(new_module_node)
 
-    def open_argument_context(self) -> None:
-        self._builder_stack.push(ASTArgumentBuilder())
+    def add_argument(self) -> None:
+        self._node_stack.push(Argument())
 
-    def close_argument_context(self) -> None:
-        argument_builder: ASTNodeBuilder = self._builder_stack.pop()
-        function_builder: ASTNodeBuilder = self.get_current_builder()
-        if not isinstance(argument_builder, ASTArgumentBuilder) and not isinstance(function_builder, ASTFunctionBuilder):
+    def close_argument_building(self) -> None:
+        argument_node: ASTNode = self._node_stack.pop()
+        function_node: ASTNode = self._node_stack.pop()
+        if not isinstance(argument_node, Argument) and not isinstance(function_node, Component):  # TODO: Make new function base class and change here to that instead of component
             # TODO Jason: Improve exception
             raise Exception("Cannot close argument builder context when not in argument context")
-        function_builder.append_arg(argument_builder.argument)
+        new_function_node: Component = replace(function_node, args=function_node.args + [argument_node.argument])
+        self._node_stack.push(new_function_node)
 
-    def open_qualified_type_context(self) -> None:
-        self._builder_stack.push(ASTQualifiedTypeBuilder())
+    def add_qualified_type(self) -> None:
+        self._node_stack.push(QualifiedType())
 
-    def close_qualified_type_context(self) -> None:
-        qualified_type_builder: ASTNodeBuilder = self._builder_stack.pop()
-        argument_builder: ASTNodeBuilder = self.get_current_builder()
-        if not isinstance(qualified_type_builder, ASTQualifiedTypeBuilder) and not isinstance(argument_builder, ASTArgumentBuilder):
+    def close_qualified_type_building(self) -> None:
+        qualified_type_node: ASTNode= self._node_stack.pop()
+        argument_node: ASTNode = self._node_stack.pop()
+        if not isinstance(qualified_type_node, QualifiedType) and not isinstance(argument_node, Argument):
             # TODO Jason: Improve exception
             raise Exception("Cannot close qualified type builder context when not in qualified type context")
-        argument_builder.set_qualified_type(qualified_type_builder.qualified_type)
+        new_argument_node: Argument = argument_node.replace(qualified_type=qualified_type_node.qualified_type)
+        self._node_stack.push(new_argument_node)
 
-    def open_numerical_type_context(self) -> None:
-        self._builder_stack.push(ASTNumericalTypeBuilder())
+    def add_numerical_type(self) -> None:
+        self._node_stack.push(NumericalType())
 
-    def open_index_type_context(self) -> None:
-        self._builder_stack.push(ASTIndexTypeBuilder())
+    def add_index_type(self) -> None:
+        self._node_stack.push(ASTIndexTypeBuilder())
 
-    def close_type_context(self) -> None:
-        type_builder: ASTNodeBuilder = self._builder_stack.pop()
-        qualified_type_builder: ASTNodeBuilder = self.get_current_builder()
+    def close_type_building(self) -> None:
+        type_builder: ASTNodeBuilder = self._node_stack.pop()
+        qualified_type_builder: ASTNodeBuilder = self.get_current_node()
         if not isinstance(type_builder, ASTTypeBuilder) and not isinstance(qualified_type_builder, ASTQualifiedTypeBuilder):
             # TODO Jason: Improve exception
             raise Exception("Cannot close type builder context when not in type context")
