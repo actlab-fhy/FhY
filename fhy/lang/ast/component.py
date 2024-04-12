@@ -1,58 +1,38 @@
 # TODO Jason: Add docstring
-from abc import ABC
-from typing import Any, List, Optional
+from typing import List
 from .base import Component
 from .expression import Identifier
-from .base import ASTNode
+from .qualified_type import QualifiedType
 from .statement import Statement
-from .type import Type, TypeQualifier
 
 
-class QualifiedType(ASTNode):
-    """Qualified Type Container
-
-    Args:
-        _type (Type): Primitive or Generic Type (e.g. float, int, T)
-        _type_qualifier (Optional[TypeQualifier]): Qualifying Type, (i.e. input, output, param, state)
-
-    e.g. Return Types are not assigned a proper name
-
-    """
-    def __init__(self,
-                 _type: Type,
-                 _type_qualifier: Optional[TypeQualifier] = None
-                 ) -> None:
-        super().__init__()
-        self._type = _type
-        self._type_qualifier = _type_qualifier
-
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
-        attrs.extend(["_type", "_type_qualifier"])
-        return attrs
-
-
-class Argument(QualifiedType):
+class Argument(object):
     """Function Argument Container Node
 
     Args:
-        _name (Identifier): Argument Name
-        _type (Type): Primitive or Generic Type (e.g. float, int, T)
-        _type_qualifier (Optional[TypeQualifier]): Qualifying Type, (i.e. input, output, param, state)
+        name (Identifier): Argument Name
 
     """
+    _name: Identifier
+    _qualified_type: QualifiedType
+
     def __init__(self,
-                 _name: Identifier,
-                 _type: Type,
-                 _type_qualifier: Optional[TypeQualifier] = None,
+                 name: Identifier,
+                 qualified_type: QualifiedType,
                  ) -> None:
-        super().__init__(_type, _type_qualifier)
-        self._name = _name
+        self._name = name
+        self._qualified_type = qualified_type
+
+    @property
+    def name(self) -> Identifier:
+        return self._name
+
+    @property
+    def qualified_type(self) -> QualifiedType:
+        return self._qualified_type
 
     def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
-        attrs.extend(["_name"])
-        return attrs
+        return ["_name", "_qualified_type"]
 
     # TODO Jason: Implement the functionality of this class
 
@@ -68,6 +48,14 @@ class Procedure(Component):
         super().__init__(name)
         self._args = _args
         self._body = _body
+
+    @property
+    def args(self) -> List[Argument]:
+        return self._args
+
+    @property
+    def body(self) -> List[Statement]:
+        return self._body
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -86,7 +74,7 @@ class Operation(Component):
         _ret_type (QualifiedType): Type information of the Returned Value
 
     """
-    def __init__(self, 
+    def __init__(self,
                  name: Identifier,
                  _args: List[Argument],
                  _body: List[Statement],

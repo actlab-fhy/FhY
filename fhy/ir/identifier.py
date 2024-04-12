@@ -2,7 +2,7 @@
 from typing import Any
 
 
-class Identifier:
+class Identifier(object):
     """Abstracted identifier node for providing a unique ID.
 
     Args:

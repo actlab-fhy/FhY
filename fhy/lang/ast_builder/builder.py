@@ -1,7 +1,8 @@
 # TODO Jason: Add docstring
 from abc import ABC, abstractmethod
 from typing import List, Optional, Union
-from fhy.lang.ast import Argument, ASTNode, Component, DataType, Expression, Identifier, IndexType, Module, NumericalType, PrimitiveDataType, Procedure, QualifiedType, Statement, Type, TypeQualifier
+from fhy.lang.ast import Argument, ASTNode, Component, Expression, Module, Procedure, QualifiedType, Statement
+from fhy.ir import DataType, Identifier, IndexType, NumericalType, PrimitiveDataType, Type, TypeQualifier
 from fhy.utils import Stack
 
 
@@ -19,7 +20,7 @@ class ASTModuleBuilder(ASTNodeBuilder):
 
     @property
     def module(self) -> Module:
-        return Module(*self._components)
+        return Module(components=self._components.copy())
 
     def append_component(self, component: ASTNode) -> None:
         self._components.append(component)

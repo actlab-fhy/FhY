@@ -15,10 +15,10 @@ class ParseTreeConverter(FhYListener):
         self._builder = ASTBuilder()
         self._ast = None
 
-    def enterProgram(self, ctx: FhYParser.ProgramContext) -> None:
+    def enterModule(self, ctx: FhYParser.ModuleContext) -> None:
         self._builder.open_module_context()
 
-    def exitProgram(self, ctx: FhYParser.ProgramContext) -> None:
+    def exitModule(self, ctx: FhYParser.ModuleContext) -> None:
         self._builder.close_module_context()
         self._ast = self._builder.ast
 
@@ -86,7 +86,7 @@ class ParseTreeConverter(FhYListener):
         return self._ast
 
 
-def from_parse_tree(parse_tree: FhYParser.ProgramContext) -> ASTNode:
+def from_parse_tree(parse_tree: FhYParser.ModuleContext) -> ASTNode:
     # TODO Jason: Add docstring
     converter = ParseTreeConverter()
     walker = ParseTreeWalker()

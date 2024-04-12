@@ -4,7 +4,7 @@ grammar FhY;
  * Module Rules
  */
 
-program
+module
     : component*
     ;
 

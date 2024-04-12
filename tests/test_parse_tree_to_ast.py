@@ -1,9 +1,10 @@
 import pytest
 from antlr4 import InputStream, CommonTokenStream, RecognitionException, BailErrorStrategy
 from antlr4.error.ErrorListener import ErrorListener
-from fhy.lang.ast import Argument, ASTNode, Component, DataType, Module, NumericalType, PrimitiveDataType, Procedure, QualifiedType, TypeQualifier
+from fhy.lang.ast import Argument, ASTNode, Component, Module, Procedure, QualifiedType
 from fhy.lang.ast_builder import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
+from fhy.ir import DataType, PrimitiveDataType, NumericalType, TypeQualifier
 
 
 class ThrowingErrorListener(ErrorListener):
@@ -38,7 +39,7 @@ def parser(lexer):
 def test_empty_file(parser):
     """Test that an empty file is converted correctly."""
     source_file_content = ""
-    parse_tree = parser(source_file_content).program()
+    parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
 
     ast: ASTNode = from_parse_tree(parse_tree)
@@ -50,7 +51,7 @@ def test_empty_file(parser):
 def test_empty_procedure(parser):
     """Test that an empty procedure is converted correctly."""
     source_file_content = "proc foo(){}"
-    parse_tree = parser(source_file_content).program()
+    parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
 
     ast: ASTNode = from_parse_tree(parse_tree)
@@ -67,7 +68,7 @@ def test_empty_procedure(parser):
 def test_empty_procedure_with_a_qualified_argument(parser):
     """Test that an empty procedure with a single qualified argument is converted correctly."""
     source_file_content = "proc foo(input int32 x){}"
-    parse_tree = parser(source_file_content).program()
+    parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
 
     ast: ASTNode = from_parse_tree(parse_tree)

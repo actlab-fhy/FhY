@@ -7,37 +7,38 @@
 from abc import ABC
 from enum import StrEnum
 from typing import List, Optional
-from .base import ASTNode
 from .expression import Expression
 
 
-class Type(ASTNode, ABC):
+class Type(ABC):
     """Abstract Node Used to Define Data Types."""
     ...
 
 
 # TODO: Remove StrEnum, Find another Way
-class PrimitiveType(StrEnum):
+class PrimitiveDataType(StrEnum):
     """Core Supported Primitive Types"""
-    INTEGER = "int"
-    FLOAT = "float"
-    COMPLEX = "complex"
+    INT32 = "int32"
+    FLOAT32 = "float32"
 
 
-class DataType:
+class DataType(object):
     """Data Type Defines Core Type Primitive, but of Flexible Bit Width.
 
     Args:
-        _primitive_type: (PrimitiveType): 
-        _bit_width (Optional[int]): Flexible Bit Width Specification
+        _primitive_type: (PrimitiveType):
 
     """
+    _primitive_data_type: PrimitiveDataType
+
     def __init__(self,
-                 _primitive_type: PrimitiveType,
-                 _bit_width: Optional[int],
+                 _primitive_data_type: PrimitiveDataType,
                  ) -> None:
-        self._primitive_type = _primitive_type
-        self._bit_width = _bit_width
+        self._primitive_data_type = _primitive_data_type
+
+    @property
+    def primitive_data_type(self) -> PrimitiveDataType:
+        return self._primitive_data_type
 
     # TODO Jason: Implement the functionality of this class
 
@@ -50,6 +51,8 @@ class NumericalType(Type):
         _shape (List[Expression]): Shape of vector
 
     """
+    _data_type: DataType
+    _shape: List[Expression]
 
     def __init__(self,
                  _data_type: DataType,
@@ -59,11 +62,13 @@ class NumericalType(Type):
         self._data_type = _data_type
         self._shape = _shape
 
-    # TODO Jason: Implement the functionality of this class
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
-        attrs.extend(["_data_type", "_shape"])
-        return attrs
+    @property
+    def data_type(self) -> DataType:
+        return self._data_type
+
+    @property
+    def shape(self) -> List[Expression]:
+        return self._shape
 
 
 class IndexType(Type):
@@ -86,11 +91,6 @@ class IndexType(Type):
         self._lower_bound = _lower_bound
         self._upper_bound = _upper_bound
         self._stride = _stride
-
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
-        attrs.extend(["_lower_bound", "_upper_bound", "_stride"])
-        return attrs
 
     # TODO Jason: Implement the functionality of this class
 
