@@ -63,7 +63,6 @@ class ParseTreeConverter(FhYListener):
         self._builder.add_numerical_type()
 
     def enterDtype(self, ctx: FhYParser.DtypeContext):
-        # We need to remove the node, to make changes to the underlying data
         numerical_type_name: str = ctx.IDENTIFIER().getText()
         self._builder.add_dtype(numerical_type_name)
 

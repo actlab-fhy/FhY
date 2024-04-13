@@ -254,14 +254,16 @@ class ASTBuilder(object):
 
     def add_dtype(self, dtype):
         node: ASTNode = self.get_current_node()
+
         if not isinstance(node, Type):
             raise Exception("Node is not of type Type")
 
         data_type: PrimitiveDataType = validate(dtype, PrimitiveDataType)
-        node._primitive_data_type = DataType(data_type)
+        node._data_type = DataType(data_type)
 
     def add_numerical_type(self) -> None:
-        self._node_stack.push(NumericalType(None, []))
+        _placeholder = DataType(PrimitiveDataType._PLACEHOLDER)
+        self._node_stack.push(NumericalType(_placeholder, []))
 
     def add_index_type(self) -> None:
         self._node_stack.push(IndexType(None, None))

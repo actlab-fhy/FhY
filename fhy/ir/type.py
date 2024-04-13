@@ -15,6 +15,7 @@ class PrimitiveDataType(StrEnum):
     """Core Supported Primitive Types"""
     INT32 = "int32"
     FLOAT32 = "float32"
+    _PLACEHOLDER = "_placeholder"
 
 
 class DataType(object):
