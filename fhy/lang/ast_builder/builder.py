@@ -19,12 +19,14 @@ from fhy.lang.ast import (
     Expression,
     Function,
     Module,
+    Operation,
     Procedure,
     QualifiedType,
     Statement,
 )
 from fhy.lang.ast.expression import IdentifierExpression, IntLiteral
 from fhy.utils import Stack
+from copy import copy
 
 # class ASTNodeBuilder(ABC):
 #     # TODO Jason: Add docstring
@@ -225,6 +227,12 @@ class ContextError(Exception):
         return cls(msg)
 
 
+# Simple Mock Types, to Temporarily instantiate a Placeholder Type
+_MockType = PrimitiveDataType._PLACEHOLDER
+_MockQual = TypeQualifier._PLACEHOLDER
+MockQualifiedType = QualifiedType(base_type=_MockType, type_qualifier=_MockQual)
+
+
 class ASTBuilder(object):
     """Controls the Stack of Nodes to construct a Proper AST Representation."""
     # TODO: Static Typing of this Class is a Little Funny Right Now.
@@ -259,8 +267,14 @@ class ASTBuilder(object):
 
         self._ast = module_node
 
-    def add_procedure(self, procedure_name: str) -> None:
-        self._node_stack.push(Procedure(name=Identifier(procedure_name)))
+    def add_procedure(self, name: str) -> None:
+        self._node_stack.push(Procedure(name=Identifier(name)))
+
+    def add_operation(self, name: str) -> None:
+        self._node_stack.push(Operation(
+            name=Identifier(name), 
+            ret_type=copy(MockQualifiedType)
+            ))
 
     def close_component_building(self) -> None:
         component_node: ASTNode = self._node_stack.pop()
@@ -299,20 +313,29 @@ class ASTBuilder(object):
 
         # TODO: We are pushing a Type onto the stack, instead of an AST Node
         #       Can we / Should we Instead modify the previous node?
-        self._node_stack.push(QualifiedType(type_qualifier=qualified_type))
+        self._node_stack.push(QualifiedType(base_type=_MockType, type_qualifier=qualified_type))
 
     def close_qualified_type_building(self) -> None:
         qualified_type_node: ASTNode = self._node_stack.pop()
         if not isinstance(qualified_type_node, QualifiedType):
             raise ContextError.message("qualified type", QualifiedType.keyname(), qualified_type_node)
 
-        argument_node: Argument = self._node_stack.pop()  # type: ignore[assignment,arg-type]
-        if not isinstance(argument_node, Argument):
-            raise ContextError.message("qualified type", Argument.keyname(), argument_node)
+        # Support Return Types on Operations
+        argument_node: Union[Operation, Argument] = self._node_stack.pop()  # type: ignore[assignment,arg-type]
+        if isinstance(argument_node, Operation):
+            kwargs = dict(ret_type=qualified_type_node)
 
-        new_argument_node: Argument = replace(
-            argument_node, qualified_type=qualified_type_node
-        )  # type: ignore[arg-type]
+        elif isinstance(argument_node, Argument):
+            kwargs = dict(qualified_type=qualified_type_node)
+
+        else:
+            raise ContextError.message(
+                "qualified type", f"({Argument.keyname()} | {Operation.keyname()})", argument_node
+                )
+
+        new_argument_node: Union[Operation, Argument] = replace(
+                argument_node, **kwargs
+            )  # type: ignore[arg-type]
         self._node_stack.push(new_argument_node)
 
     def add_dtype(self, dtype):
@@ -325,8 +348,7 @@ class ASTBuilder(object):
         node._data_type = DataType(data_type)
 
     def add_numerical_type(self) -> None:
-        _placeholder = DataType(PrimitiveDataType._PLACEHOLDER)
-        self._node_stack.push(NumericalType(_placeholder, []))
+        self._node_stack.push(NumericalType(_MockType, []))
 
     def add_shape(self, shapes: List[str]):
         node: Type = self.get_current_node()

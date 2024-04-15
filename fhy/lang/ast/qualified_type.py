@@ -12,8 +12,6 @@ class QualifiedType(ASTNode):
         _base_type (Type): Primitive or Generic Type (e.g. float, int, T)
         _type_qualifier (Optional[TypeQualifier]): Qualifying Type, (i.e. input, output, param, state)
 
-    e.g. Return Types are not assigned a proper name
-
     """
 
     _base_type: Optional[Type]

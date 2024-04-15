@@ -7,7 +7,7 @@ from .expression import Expression
 
 
 class Type(ABC):
-    """Abstract Node Used to Define Data Types."""
+    """Abstract Node Defining Data Types."""
 
     ...
 
@@ -106,3 +106,4 @@ class TypeQualifier(StrEnum):
     STATE = "state"
     PARAM = "param"
     TEMP = "temp"
+    _PLACEHOLDER = "_placeholder"

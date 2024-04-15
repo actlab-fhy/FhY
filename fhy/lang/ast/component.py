@@ -32,33 +32,25 @@ class Procedure(Function):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class Operation(Function):
-    """Operation
+    """FhY Operation Node
 
     Args:
         name (Identifier): variable Name
-        _args (List[Argument]): list of Arguments
-        _body (List[Statement]): list of Statements, defining the body of the function
-        _ret_type (QualifiedType): Type information of the Returned Value
+        args (List[Argument]): list of Arguments
+        body (List[Statement]): list of Statements, defining the body of the function
+        ret_type (QualifiedType): Type information of the Returned Value
 
     """
-
-    def __init__(
-        self,
-        name: Identifier,
-        _args: List[Argument],
-        _body: List[Statement],
-        _ret_type: QualifiedType,
-    ) -> None:
-        super().__init__(name)  # type: ignore[misc]
-        self._args = _args
-        self._body = _body
-        self._ret_type = _ret_type
+    args: List[Argument] = field(default_factory=list)
+    body: List[Statement] = field(default_factory=list)
+    ret_type: QualifiedType
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_args", "_body", "_ret_type"])
+        attrs.extend(["args", "body", "ret_type"])
         return attrs
 
 
