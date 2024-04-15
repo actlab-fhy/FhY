@@ -60,6 +60,9 @@ indent-width = 4
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "D300"]
+ignore = [
+   "F401",  # Unused Imports
+   ]
 
 [tool.ruff.format]
 quote-style = "double"
