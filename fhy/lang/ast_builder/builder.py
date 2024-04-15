@@ -227,6 +227,10 @@ class ContextError(Exception):
 
 class ASTBuilder(object):
     """Controls the Stack of Nodes to construct a Proper AST Representation."""
+    # TODO: Static Typing of this Class is a Little Funny Right Now.
+    #       A Subclassed ASTNode violates Typing Assignment.
+    #       TypeVar["node", base_class=ASTNode] Doesn't work without explicitly defining
+    #       Functions to return correct subclasses.
     # TODO Jason: Add docstring
     _node_stack: Stack[ASTNode]
     _ast: Optional[ASTNode]
@@ -331,7 +335,9 @@ class ASTBuilder(object):
         if not hasattr(node, "_shape") or not isinstance(node._shape, list):
             node._shape = []
 
-        # TODO: Do we allow mixed Shape Identification?
+        # NOTE: We Support Mixed Identification of Shape. Consider the
+        #       Following Variations: [n, m] vs [2, 4] vs [2, n]
+        # TODO: Consider and Implement this Variant: [n + m, n - 1]
         for s in shapes:
             if s.isnumeric():
                 obj = IntLiteral(int(s))
