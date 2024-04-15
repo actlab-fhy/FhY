@@ -7,9 +7,11 @@ name = "fhy"
 description = "Cross Domain Compiler for Accelerators"
 license = {file = "LICENSE"}
 authors = [
+   {name = "Christopher Priebe", email = "cpriebe@ucsd.edu"},
    {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
 ]
 maintainers = [
+   {name = "Christopher Priebe", email = "cpriebe@ucsd.edu"},
    {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
 ]
 requires-python = ">=3.8"
@@ -24,6 +26,9 @@ dynamic = ["version", "readme", "dependencies"]
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 
+[tool.setuptools.packages.find]
+exclude = ["grammar", "docs", "tests"]
+
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov", "pytest-xdist", "tox", "ruff", "mypy", "sphinx>=5.0.2", "wheel", "setuptools>=67.6.1"]
 test = ["pytest", "pytest-cov", "pytest-xdist"]
@@ -36,10 +41,20 @@ build = ["wheel", "setuptools>=67.6.1"]
 testpaths = ["tests"]
 addopts = "-n auto -rA --cov=fhy --cov-report term-missing --cov-fail-under=90"
 
+[tool.coverage.report]
+omit = [
+   "fhy/lang/parser/*.py"
+]
+
 [tool.mypy]
-pretty = true
+pretty = false
+
+[[tool.mypy.overrides]]
+module = ["fhy.lang.parser.*"]
+ignore_errors = true
 
 [tool.ruff]
+extend-exclude = ["grammar/*", "docs/*", "fhy/lang/parser/*.py"]
 line-length = 88
 indent-width = 4
 
