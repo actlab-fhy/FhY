@@ -2,12 +2,15 @@
 from abc import ABC
 from enum import StrEnum
 from typing import List
+
 from fhy.ir import Type
+
 from .base import Expression, Identifier
 
 
 class UnaryOperation(StrEnum):
     """Unary (Single) Operators"""
+
     NEGATIVE = "-"
     BITWISE_NOT = "~"
     LOGICAL_NOT = "!"
@@ -22,10 +25,11 @@ class UnaryExpression(Expression):
 
     """
 
-    def __init__(self,
-                 _operation: UnaryOperation,
-                 _expression: Expression,
-                 ) -> None:
+    def __init__(
+        self,
+        _operation: UnaryOperation,
+        _expression: Expression,
+    ) -> None:
         super().__init__()
         self._operation = _operation
         self._expression = _expression
@@ -75,11 +79,12 @@ class BinaryExpression(Expression):
 
     """
 
-    def __init__(self,
-                 _operation: BinaryOperation,
-                 _left_expression: Expression,
-                 _right_expression: Expression,
-                 ) -> None:
+    def __init__(
+        self,
+        _operation: BinaryOperation,
+        _left_expression: Expression,
+        _right_expression: Expression,
+    ) -> None:
         super().__init__()
         self._operation = _operation
         self._left_expression = _left_expression
@@ -105,11 +110,12 @@ class TernaryExpression(Expression):
 
     """
 
-    def __init__(self,
-                 _condition: Expression,
-                 _true_expression: Expression,
-                 _false_expression: Expression
-                 ) -> None:
+    def __init__(
+        self,
+        _condition: Expression,
+        _true_expression: Expression,
+        _false_expression: Expression,
+    ) -> None:
         super().__init__()
         self._condition = _condition
         self._true_expression = _true_expression
@@ -129,10 +135,8 @@ class TupleAccessExpression(Expression):
         _element_index (int): Tuple Index
 
     """
-    def __init__(self,
-                 _expression: Expression,
-                 _element_index: int
-                 ) -> None:
+
+    def __init__(self, _expression: Expression, _element_index: int) -> None:
         super().__init__()
         self._expression = _expression
         self._element_index = _element_index
@@ -146,12 +150,13 @@ class TupleAccessExpression(Expression):
 class FunctionExpression(Expression):
     """Option"""
 
-    def __init__(self,
-                 _template_types: List[Type],
-                 _indices: List[Expression],
-                 _args: List[Expression],
-                 _return_type: Type
-                 ) -> None:
+    def __init__(
+        self,
+        _template_types: List[Type],
+        _indices: List[Expression],
+        _args: List[Expression],
+        _return_type: Type,
+    ) -> None:
         super().__init__()
         self._template_types = _template_types
         self._indices = _indices
@@ -175,10 +180,9 @@ class TensorAccessExpression(Expression):
 
     """
 
-    def __init__(self,
-                 _expressions: List[Expression],
-                 _indices: List[Expression]
-                 ) -> None:
+    def __init__(
+        self, _expressions: List[Expression], _indices: List[Expression]
+    ) -> None:
         super().__init__()
         self._expressions = _expressions
         self._indices = _indices
@@ -205,9 +209,10 @@ class TupleExpression(Expression):
 
 class IdentifierExpression(Expression):
     """Unclear... Is this meant to be a declaration without value assignment?
-        e.g. int i;
+    e.g. int i;
 
     """
+
     def __init__(self, _identifier: Identifier) -> None:
         super().__init__()
         self._identifier = _identifier
@@ -216,6 +221,7 @@ class IdentifierExpression(Expression):
         attrs = super().visit_attrs()
         attrs.extend(["_identifier"])
         return attrs
+
     # TODO Jason: Implement the functionality of this class
 
 
@@ -249,7 +255,8 @@ class FloatLiteral(Literal):
 
 class ComplexLiteral(Literal):
     """Complex Number value Node"""
-    _value: float
+
+    _value: complex
 
     def __init__(self, value: complex) -> None:
         self._value = value

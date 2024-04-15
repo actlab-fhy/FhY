@@ -1,5 +1,7 @@
 from typing import List, Optional
+
 from fhy.ir import Type, TypeQualifier
+
 from .base import ASTNode
 
 
@@ -13,19 +15,21 @@ class QualifiedType(ASTNode):
     e.g. Return Types are not assigned a proper name
 
     """
+
     _base_type: Optional[Type]
     _type_qualifier: Optional[TypeQualifier]
 
-    def __init__(self,
-                 base_type: Optional[Type] = None,
-                 type_qualifier: Optional[TypeQualifier] = None
-                 ) -> None:
+    def __init__(
+        self,
+        base_type: Optional[Type] = None,
+        type_qualifier: Optional[TypeQualifier] = None,
+    ) -> None:
         super().__init__()
         self._base_type = base_type
         self._type_qualifier = type_qualifier
 
     @property
-    def base_type(self) -> Type:
+    def base_type(self) -> Optional[Type]:
         return self._base_type
 
     @property

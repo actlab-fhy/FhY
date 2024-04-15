@@ -1,6 +1,7 @@
 # TODO Jason: Add docstring
 from dataclasses import dataclass, field
 from typing import List, Optional
+
 from .base import ASTNode, Function
 from .expression import Identifier
 from .qualified_type import QualifiedType
@@ -20,6 +21,7 @@ class Argument(ASTNode):
 @dataclass(frozen=True, kw_only=True)
 class Procedure(Function):
     """FhY procedure node"""
+
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
 
@@ -40,13 +42,15 @@ class Operation(Function):
         _ret_type (QualifiedType): Type information of the Returned Value
 
     """
-    def __init__(self,
-                 name: Identifier,
-                 _args: List[Argument],
-                 _body: List[Statement],
-                 _ret_type: QualifiedType
-                 ) -> None:
-        super().__init__(name)
+
+    def __init__(
+        self,
+        name: Identifier,
+        _args: List[Argument],
+        _body: List[Statement],
+        _ret_type: QualifiedType,
+    ) -> None:
+        super().__init__(name)  # type: ignore[misc]
         self._args = _args
         self._body = _body
         self._ret_type = _ret_type
@@ -60,7 +64,7 @@ class Operation(Function):
 
 class Native(Function):
     def __init__(self, name: Identifier, _args: List[Argument]) -> None:
-        super().__init__(name)
+        super().__init__(name)  # type: ignore[misc]
         self._args = _args
 
     # TODO Jason: Implement the functionality of this class

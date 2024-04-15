@@ -2,17 +2,20 @@
 from abc import ABC
 from enum import StrEnum
 from typing import List, Optional
+
 from .expression import Expression
 
 
 class Type(ABC):
     """Abstract Node Used to Define Data Types."""
+
     ...
 
 
 # TODO: Remove StrEnum, Find another Way
 class PrimitiveDataType(StrEnum):
     """Core Supported Primitive Types"""
+
     INT32 = "int32"
     FLOAT32 = "float32"
     _PLACEHOLDER = "_placeholder"
@@ -25,11 +28,13 @@ class DataType(object):
         _primitive_type: (PrimitiveType):
 
     """
+
     _primitive_data_type: PrimitiveDataType
 
-    def __init__(self,
-                 _primitive_data_type: PrimitiveDataType,
-                 ) -> None:
+    def __init__(
+        self,
+        _primitive_data_type: PrimitiveDataType,
+    ) -> None:
         self._primitive_data_type = _primitive_data_type
 
     @property
@@ -47,13 +52,11 @@ class NumericalType(Type):
         _shape (List[Expression]): Shape of vector
 
     """
+
     _data_type: DataType
     _shape: List[Expression]
 
-    def __init__(self,
-                 _data_type: DataType,
-                 _shape: List[Expression]
-                 ) -> None:
+    def __init__(self, _data_type: DataType, _shape: List[Expression]) -> None:
         super().__init__()
         self._data_type = _data_type
         self._shape = _shape
@@ -79,11 +82,13 @@ class IndexType(Type):
         * Grammatically similar to a python slice or range(start, stop, step)
 
     """
-    def __init__(self,
-                 _lower_bound: Expression,
-                 _upper_bound: Expression,
-                 _stride: Optional[Expression]
-                 ) -> None:
+
+    def __init__(
+        self,
+        _lower_bound: Expression,
+        _upper_bound: Expression,
+        _stride: Optional[Expression],
+    ) -> None:
         self._lower_bound = _lower_bound
         self._upper_bound = _upper_bound
         self._stride = _stride
@@ -94,9 +99,10 @@ class IndexType(Type):
 # TODO: Again, Replace Usage of StrEnum, or something.
 class TypeQualifier(StrEnum):
     """Variables Have Type Qualifiers which Define Permisions."""
+
     # TODO Jason: Add docstring
     INPUT = "input"
     OUTPUT = "output"
     STATE = "state"
-    PARAMETER = "param"
-    TEMPORARY = "temp"
+    PARAM = "param"
+    TEMP = "temp"
