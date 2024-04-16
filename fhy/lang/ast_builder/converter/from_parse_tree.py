@@ -1,8 +1,10 @@
-from typing import Optional
+from typing import List, Optional
+
 from antlr4 import ParseTreeWalker
+
+from fhy.lang.ast import ASTNode
 from fhy.lang.parser import FhYListener, FhYParser
 
-from fhy.lang.ast import Argument, ASTNode, QualifiedType
 from ..builder import ASTBuilder
 
 
@@ -41,7 +43,7 @@ class ParseTreeConverter(FhYListener):
         if function_keyword == "proc":
             self._builder.add_procedure(function_name)
         elif function_keyword == "op":
-            raise NotImplementedError("Operations Not Supported Yet...")
+            self._builder.add_operation(function_name)
         else:
             raise NotImplementedError()
 
@@ -58,6 +60,15 @@ class ParseTreeConverter(FhYListener):
 
     def exitQualified_type(self, ctx: FhYParser.Qualified_typeContext):
         self._builder.close_qualified_type_building()
+
+    def enterShape(self, ctx: FhYParser.ShapeContext):
+        # TODO: This is a little Wonky, and Won't support Expressions.
+        shapes: List[str] = ctx.getText().split(",")
+        self._builder.add_shape(shapes)
+
+    # def enterAtom(self, ctx: FhYParser.AtomContext):
+    #     # Will likely need this instead of enterShape
+    #     return super().enterAtom(ctx)
 
     def enterNumerical_type(self, ctx: FhYParser.Numerical_typeContext):
         self._builder.add_numerical_type()
