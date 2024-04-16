@@ -9,6 +9,7 @@ class Identifier(object):
         name_hint (str): Variable Name
 
     """
+
     _next_id: int = 0
     _id: int
     _name_hint: str

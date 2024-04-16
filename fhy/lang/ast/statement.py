@@ -1,9 +1,9 @@
 # TODO Jason: Add docstring
 from typing import List, Optional
-from fhy.ir import Type, TypeQualifier
-from .expression import Identifier
+
 from .base import Statement
-from .expression import Expression
+from .expression import Expression, Identifier
+from .qualified_type import QualifiedType
 
 
 class DeclarationStatement(Statement):
@@ -17,23 +17,22 @@ class DeclarationStatement(Statement):
 
     """
 
-    def __init__(self,
-                 _variable_name: Identifier,
-                 _variable_type: Type,
-                 _variable_type_qual: TypeQualifier,
-                 _expression: Optional[Expression] = None
-                 ) -> None:
+    def __init__(
+        self,
+        _variable_name: Identifier,
+        _variable_type: QualifiedType,
+        _expression: Optional[Expression] = None,
+    ) -> None:
         super().__init__()
         self._variable_name = _variable_name
         self._variable_type = _variable_type
-        self._variable_type_qual = _variable_type_qual
         self._expression = _expression
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend([
-            "_variable_name", "_variable_type", "_variable_type_qual", "_expression"
-        ])
+        attrs.extend(
+            ["_variable_name", "_variable_type", "_variable_type_qual", "_expression"]
+        )
         return attrs
 
     # TODO Jason: Implement the functionality of this class
@@ -41,16 +40,18 @@ class DeclarationStatement(Statement):
 
 class ExpressionStatement(Statement):
     """Expression Statement"""
+
     # TODO Jason: Add docstring
     _left: Optional[Identifier] = None
     _index: List[Expression] = []  # Avoid a Mutable Default Arg
     _right: Expression
 
-    def __init__(self,
-                 _index: List[Expression],
-                 _right: Expression,
-                 _left: Optional[Identifier] = None,
-                 ) -> None:
+    def __init__(
+        self,
+        _index: List[Expression],
+        _right: Expression,
+        _left: Optional[Identifier] = None,
+    ) -> None:
         super().__init__()
         self._left = _left
         self._index = _index
@@ -67,10 +68,7 @@ class ExpressionStatement(Statement):
 class ForAllStatement(Statement):
     """For Loop Node"""
 
-    def __init__(self,
-                 _index: Expression,
-                 _body: List[Statement]
-                 ) -> None:
+    def __init__(self, _index: Expression, _body: List[Statement]) -> None:
         super().__init__()
         self._index = _index
         self._body = _body
@@ -93,11 +91,12 @@ class BranchStatement(Statement):
 
     """
 
-    def __init__(self,
-                 _predicate: Expression,
-                 _true_body: List[Statement],
-                 _false_body: List[Statement],
-                 ) -> None:
+    def __init__(
+        self,
+        _predicate: Expression,
+        _true_body: List[Statement],
+        _false_body: List[Statement],
+    ) -> None:
         super().__init__()
         self._predicate = _predicate
         self._true_body = _true_body

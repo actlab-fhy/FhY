@@ -1,7 +1,6 @@
 # TODO Jason: Add docstring
 from typing import Generic, Iterator, List, TypeVar
 
-
 T = TypeVar("T")
 
 

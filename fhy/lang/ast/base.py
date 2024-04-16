@@ -2,13 +2,16 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional
+
 from fhy.ir import Expression as IRExpression
 from fhy.ir import Identifier
+
 from ..span import Span
 
 
 class ASTNode(ABC):
     """Core abstract AST node."""
+
     _span: Span
 
     # TODO: is this method necessary?
