@@ -413,8 +413,9 @@ class ASTBuilder(object):
     def close_declaration_statement(self):
         express: ASTNode = self._node_stack.pop()
 
-        # What if there are no Expressions? Then Bypass this method
+        # Declaration Statment May Not Assign a Value.
         if isinstance(express, DeclarationStatement):
+            self._node_stack.push(express)
             return
 
         if not isinstance(express, Expression):
@@ -429,17 +430,37 @@ class ASTBuilder(object):
 
     def open_branch_statement(self):
         node = BranchStatement(Expression, [], [])
+        self._node_stack.push(node)
 
     def open_iteration_statement(self):
         node = ForAllStatement(Expression, [])
+        self._node_stack.push(node)
 
     def open_return_statement(self):
-        node = ReturnStatement(_expression=None)
+        node = ReturnStatement(_expression=Expression)
         self._node_stack.push(node)
+
+    def close_return_statement(self):
+        express: ASTNode = self._node_stack.pop()
+
+        # Return Statement May Not Have a Value.
+        if isinstance(express, ReturnStatement):
+            self._node_stack.push(express)
+            return
+
+        if not isinstance(express, Expression):
+            raise ContextError.message("return_statement", Expression.keyname(), express)
+
+        current: ASTNode = self._node_stack.pop()
+        if not isinstance(current, ReturnStatement):
+            raise ContextError.message("return_statement", ReturnStatement.keyname(), current)
+
+        new_node = replace(current, _expression=express)
+        self._node_stack.push(new_node)
 
     def close_statement(self):
         # NOTE: This is a General Close of Any Statement. 
-        #       Each Statement Type Needs it's Own Prep to Close.
+        #       Each Statement Type Needs it's Own Prep to Close Correctly.
         _statement: ASTNode = self._node_stack.pop()
         if not isinstance(_statement, Statement):
             raise ContextError.message("statement", Statement.keyname(), _statement)

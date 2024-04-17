@@ -23,7 +23,7 @@ class ParseTreeConverter(FhYListener):
 
     def exitModule(self, ctx: FhYParser.ModuleContext) -> None:
         self._builder.close_module_building()
-        self._ast = self._builder.ast
+        self._ast: ASTNode = self._builder.ast
 
     def enterComponent(self, ctx: FhYParser.ComponentContext) -> None:
         if ctx.function_declaration() is not None:
@@ -216,31 +216,17 @@ class ParseTreeConverter(FhYListener):
         elif ctx.unary_expression is not None:
             self._builder.close_unary_expression()
 
-        elif ctx.multiplicative_expression is not None:
-            self._builder.close_binary_expression()
-
-        elif (add := ctx.additive_expression) is not None:
-            self._builder.close_binary_expression()
-
-        elif (shift := ctx.shift_expression) is not None:
-            self._builder.close_binary_expression()
-
-        elif (relate := ctx.relational_expression) is not None:
-            self._builder.close_binary_expression()
-
-        elif (equal := ctx.equality_expression) is not None:
-            self._builder.close_binary_expression()
-
-        elif (ands := ctx.and_expression) is not None:
-            self._builder.close_binary_expression()
-    
-        elif (ors := ctx.or_expression) is not None:
-            self._builder.close_binary_expression()
-    
-        elif (logic_and := ctx.logical_and_expression) is not None:
-            self._builder.close_binary_expression()
-
-        elif (logic_or := ctx.logical_or_expression) is not None:
+        elif any(i is not None for i in (
+            ctx.multiplicative_expression,
+            ctx.additive_expression,
+            ctx.shift_expression,
+            ctx.relational_expression,
+            ctx.equality_expression,
+            ctx.and_expression,
+            ctx.or_expression,
+            ctx.logical_and_expression,
+            ctx.logical_or_expression,
+            )):
             self._builder.close_binary_expression()
 
         elif (ternary := ctx.ternary_expression) is not None:
@@ -271,7 +257,6 @@ class ParseTreeConverter(FhYListener):
     # LITERALS
     def enterLiteral(self, ctx:FhYParser.LiteralContext):
         # TODO: Capturing Floats is Not Working Here...
-        print("Entering Literal:", ctx.getText())
         if (floats := ctx.float_literal()) is not None:
             value = float(floats.getText())
 

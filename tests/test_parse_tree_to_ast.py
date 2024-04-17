@@ -307,7 +307,8 @@ def test_return_statement(parser):
 
     # TODO: Variable has been Declared. We don't want to create a different Identifier
     #       for the Expression `i` during this process.
-    # assert statement.value == "i", "Unexpected Return Statement Value"
+    # TODO: Need to handle atom.identifier... I think?
+    # assert statement._expression == "i", "Unexpected Return Statement Value"
 
 
 def test_unary_expressions(parser):
@@ -357,10 +358,11 @@ def test_binary_expressions(parser):
 
     binary = statement._expression
     assert isinstance(binary, BinaryExpression), "Expected an BinaryExpression"
-    assert binary._operation == BinaryOperation.MULTIPLICATION, "Expected * BinaryOperator Operation"
-
-    print("What is the Left Expression: ", binary._left_expression)
+    assert binary._operation == BinaryOperation.MULTIPLICATION, "Expected `*` BinaryOperator Operation"
 
     # TODO: This part is Failing, since we are not Accurately Assigning Float Literals.
     assert isinstance(binary._left_expression, FloatLiteral), "Expected FloatLiteral Expression"
     assert binary._left_expression.value == 5.0, "Expected FloatLiteral Value of float(5.0)"
+
+    assert isinstance(binary._right_expression, FloatLiteral), "Expected FloatLiteral Expression"
+    assert binary._right_expression.value == 6.0, "Expected FloatLiteral Value of float(5.0)"
