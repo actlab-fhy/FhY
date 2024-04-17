@@ -18,7 +18,19 @@ from fhy.lang.ast import (
     Procedure,
     QualifiedType,
 )
-from fhy.lang.ast.expression import IdentifierExpression, IntLiteral
+from fhy.lang.ast.expression import (
+    BinaryExpression,
+    BinaryOperation,
+    FloatLiteral,
+    IdentifierExpression,
+    IntLiteral,
+    UnaryExpression,
+    UnaryOperation
+)
+from fhy.lang.ast.statement import (
+    DeclarationStatement,
+    ReturnStatement
+)
 from fhy.lang.ast_builder import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
 
@@ -245,3 +257,110 @@ def test_empty_operation_return_type(parser):
     assert isinstance(op.ret_type, QualifiedType)
     base_ret = _test_qual_type(op.ret_type, TypeQualifier.OUTPUT, NumericalType, PrimitiveDataType.INT32)
     _test_shape(base_ret.shape, expected_arg_shape)
+
+
+def test_declaration_statement(parser):
+    """Tests a single statement."""
+    source_file_content = "proc foo(){temp int32 i;}"
+    parse_tree = parser(source_file_content).module()
+    assert parse_tree is not None
+
+    ast: ASTNode = from_parse_tree(parse_tree)
+    assert isinstance(ast, Module), "Expected Module AST node"
+    assert len(ast.components) == 1, "Expected 1 component"
+
+    procedure: Component = ast.components[0]
+    assert isinstance(procedure, Procedure), "Expected Procedure AST node"
+    assert len(procedure.body) == 1, "Expected Procedure to contain 1 statement"
+
+    statement = procedure.body[0]
+    assert isinstance(statement, DeclarationStatement), "Expected Statement to be a Declaration"
+    assert isinstance(statement._variable_name, Identifier), "Expected Variable Name to be an Identifier"
+    assert statement._variable_name.name_hint == "i", "Expected Variable Name Hint to be `i`"
+
+    assert isinstance(statement._variable_type, QualifiedType), "Expected Statement._variable_type to be a QualifiedType"
+    base = _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.INT32)
+    assert (
+        len(base.shape) == 0
+    ), "Expected argument data type to have an empty shape (i.e., scalar)"
+
+
+def test_return_statement(parser):
+    source_file_content = "op foo() -> temp int32 {temp int32 i = 5; return i;}"
+    parse_tree = parser(source_file_content).module()
+    assert parse_tree is not None
+
+    ast: ASTNode = from_parse_tree(parse_tree)
+    assert isinstance(ast, Module), "Expected Module AST node"
+    assert len(ast.components) == 1, "Expected 1 component"
+
+    procedure: Component = ast.components[0]
+    assert isinstance(procedure, Operation), "Expected Operation AST node"
+    assert len(procedure.body) == 2, "Expected Procedure to contain 2 statements"
+
+    first, statement = procedure.body
+    assert isinstance(first, DeclarationStatement), "Expected Declaration Statement"
+    assert first._variable_name.name_hint == "i", "Expected DecalrationStatement.name_hint == `i`"
+    print("First: ", first._variable_type.base_type)
+
+    assert isinstance(statement, ReturnStatement), "Expected Return Statement"
+
+    # TODO: Variable has been Declared. We don't want to create a different Identifier
+    #       for the Expression `i` during this process.
+    # assert statement.value == "i", "Unexpected Return Statement Value"
+
+
+def test_unary_expressions(parser):
+    source_file_content = "op foo() -> temp int32 {temp int32 i = -5;}"
+    parse_tree = parser(source_file_content).module()
+    assert parse_tree is not None
+
+    ast: ASTNode = from_parse_tree(parse_tree)
+    assert isinstance(ast, Module), "Expected Module AST node"
+    assert len(ast.components) == 1, "Expected 1 component"
+
+    func: Component = ast.components[0]
+    assert isinstance(func, Operation), "Expected Operation AST node"
+    assert len(func.body) == 1, "Expected Procedure to contain 1 statement"
+
+    statement = func.body[0]
+    assert isinstance(statement, DeclarationStatement), "Expected Declaration Statement"
+    assert isinstance(statement._variable_name, Identifier), "Statement Variable Must be an Identifier"
+    assert statement._variable_name.name_hint == "i"
+    _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.INT32)
+
+    unary = statement._expression
+    assert isinstance(unary, UnaryExpression), "Expected an UnaryExpression"
+    assert unary._operation == UnaryOperation.NEGATIVE, "Expected Negative UnaryOperator Operation"
+    assert isinstance(unary._expression, IntLiteral), "Expected IntLiteral Expression"
+    assert unary._expression.value == 5, "Expected IntLiteral Value of int(5)"
+
+
+def test_binary_expressions(parser):
+    source_file_content = "op foo() -> temp float32 {temp float32 i = 5.0 * 6.0;}"
+    parse_tree = parser(source_file_content).module()
+    assert parse_tree is not None
+
+    ast: ASTNode = from_parse_tree(parse_tree)
+    assert isinstance(ast, Module), "Expected Module AST node"
+    assert len(ast.components) == 1, "Expected 1 component"
+
+    func: Component = ast.components[0]
+    assert isinstance(func, Operation), "Expected Operation AST node"
+    assert len(func.body) == 1, "Expected Procedure to contain 1 statement"
+
+    statement = func.body[0]
+    assert isinstance(statement, DeclarationStatement), "Expected Declaration Statement"
+    assert isinstance(statement._variable_name, Identifier), "Statement Variable Must be an Identifier"
+    assert statement._variable_name.name_hint == "i"
+    _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.FLOAT32)
+
+    binary = statement._expression
+    assert isinstance(binary, BinaryExpression), "Expected an BinaryExpression"
+    assert binary._operation == BinaryOperation.MULTIPLICATION, "Expected * BinaryOperator Operation"
+
+    print("What is the Left Expression: ", binary._left_expression)
+
+    # TODO: This part is Failing, since we are not Accurately Assigning Float Literals.
+    assert isinstance(binary._left_expression, FloatLiteral), "Expected FloatLiteral Expression"
+    assert binary._left_expression.value == 5.0, "Expected FloatLiteral Value of float(5.0)"

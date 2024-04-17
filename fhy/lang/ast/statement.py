@@ -1,4 +1,5 @@
 # TODO Jason: Add docstring
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from .base import Statement
@@ -6,56 +7,38 @@ from .expression import Expression, Identifier
 from .qualified_type import QualifiedType
 
 
+@dataclass(frozen=True, kw_only=True)
 class DeclarationStatement(Statement):
     """Declaration Statements Are Declaration or Assignment to a Variable Name.
 
     Args:
         _variable_name (Identifier):
-        _variable_type (Type):
-        _variable_type_qual (TypeQualifier):
+        _variable_type (QualifiedType):
         _expression (Optional[Expression]):
 
     """
-
-    def __init__(
-        self,
-        _variable_name: Identifier,
-        _variable_type: QualifiedType,
-        _expression: Optional[Expression] = None,
-    ) -> None:
-        super().__init__()
-        self._variable_name = _variable_name
-        self._variable_type = _variable_type
-        self._expression = _expression
+    _variable_name: Identifier
+    _variable_type: QualifiedType
+    _expression: Optional[Expression] = field(default=None)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
         attrs.extend(
-            ["_variable_name", "_variable_type", "_variable_type_qual", "_expression"]
+            ["_variable_name", "_variable_type", "_expression"]
         )
         return attrs
 
     # TODO Jason: Implement the functionality of this class
 
 
+@dataclass(frozen=True, kw_only=True)
 class ExpressionStatement(Statement):
     """Expression Statement"""
 
     # TODO Jason: Add docstring
-    _left: Optional[Identifier] = None
-    _index: List[Expression] = []  # Avoid a Mutable Default Arg
+    _left: Optional[Identifier] = field(default=None)
+    _index: List[Expression] = field(default_factory=list)
     _right: Expression
-
-    def __init__(
-        self,
-        _index: List[Expression],
-        _right: Expression,
-        _left: Optional[Identifier] = None,
-    ) -> None:
-        super().__init__()
-        self._left = _left
-        self._index = _index
-        self._right = _right
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -65,13 +48,11 @@ class ExpressionStatement(Statement):
     # TODO Jason: Implement the functionality of this class
 
 
+@dataclass(frozen=True, kw_only=True)
 class ForAllStatement(Statement):
     """For Loop Node"""
-
-    def __init__(self, _index: Expression, _body: List[Statement]) -> None:
-        super().__init__()
-        self._index = _index
-        self._body = _body
+    _index: Expression
+    _body: List[Statement] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -81,6 +62,7 @@ class ForAllStatement(Statement):
     # TODO Jason: Implement the functionality of this class
 
 
+@dataclass(frozen=True, kw_only=True)
 class BranchStatement(Statement):
     """A Branch (Conditional) Statement Block Node.
 
@@ -90,17 +72,9 @@ class BranchStatement(Statement):
         _false_body (List[Statement]): Body of Statements Evaluated if False
 
     """
-
-    def __init__(
-        self,
-        _predicate: Expression,
-        _true_body: List[Statement],
-        _false_body: List[Statement],
-    ) -> None:
-        super().__init__()
-        self._predicate = _predicate
-        self._true_body = _true_body
-        self._false_body = _false_body
+    _predicate: Expression
+    _true_body: List[Statement] = field(default_factory=list)
+    _false_body: List[Statement] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -108,3 +82,13 @@ class BranchStatement(Statement):
         return attrs
 
     # TODO Jason: Implement the functionality of this class
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReturnStatement(Statement):
+    _expression: Expression
+    
+    def visit_attrs(self) -> List[str]:
+        attrs = super().visit_attrs()
+        attrs.extend(["_expression"])
+        return attrs

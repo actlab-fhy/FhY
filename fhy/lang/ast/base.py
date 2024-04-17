@@ -50,6 +50,7 @@ class Module(ASTNode):
         return ["components"]
 
 
+@dataclass(frozen=True, kw_only=True)
 class Statement(ASTNode, ABC):
     # TODO Jason: Add docstring
     ...

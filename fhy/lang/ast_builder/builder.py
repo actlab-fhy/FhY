@@ -24,7 +24,24 @@ from fhy.lang.ast import (
     QualifiedType,
     Statement,
 )
-from fhy.lang.ast.expression import IdentifierExpression, IntLiteral
+from fhy.lang.ast.expression import (
+    BinaryExpression,
+    BinaryOperation,
+    ComplexLiteral,
+    FloatLiteral,
+    IdentifierExpression,
+    IntLiteral,
+    UnaryExpression,
+    UnaryOperation
+)
+from fhy.lang.ast.statement import (
+    BranchStatement,
+    DeclarationStatement,
+    ExpressionStatement,
+    ForAllStatement,
+    ReturnStatement,
+)
+
 from fhy.utils import Stack
 from copy import copy
 
@@ -207,13 +224,11 @@ def validate(name: str, enumeration: StrEnum) -> StrEnum:
 
     """
     try:
-        val: StrEnum = enumeration[name.upper()]  # type: ignore
-        assert val.value == name  # Make Keyword Case Sensitive
-        assert name.upper() != "_PLACEHOLDER"  # Temporary value
-    except (KeyError, AssertionError):
+        value = enumeration(name)
+    except ValueError:
         raise ValueError(f"Unsupported {enumeration.__name__}: {name}")  # type: ignore[attr-defined]
 
-    return val
+    return value
 
 
 class ContextError(Exception):
@@ -228,6 +243,9 @@ class ContextError(Exception):
 
 
 # Simple Mock Types, to Temporarily instantiate a Placeholder Type
+# NOTE: This may not be the best Strategy Here. The corrolary, is 
+#       that it might not be a good Idea to make AST Node Fields
+#       Optional, since that is only true during build, not after creation.
 _MockType = PrimitiveDataType._PLACEHOLDER
 _MockQual = TypeQualifier._PLACEHOLDER
 MockQualifiedType = QualifiedType(base_type=_MockType, type_qualifier=_MockQual)
@@ -281,7 +299,7 @@ class ASTBuilder(object):
         if not isinstance(component_node, Component):
             raise ContextError.message("component", Component.keyname(), component_node)
 
-        module_node: Module = self._node_stack.pop()  # type: ignore[assignment]
+        module_node: ASTNode = self._node_stack.pop()
         if not isinstance(module_node, Module):
             raise ContextError.message("component", Module.keyname(), module_node)
 
@@ -294,12 +312,11 @@ class ASTBuilder(object):
         self._node_stack.push(Argument(name=Identifier(arg_name)))
 
     def close_argument_building(self) -> None:
-        argument_node: Argument = self._node_stack.pop()  # type: ignore[assignment]
+        argument_node: ASTNode = self._node_stack.pop()
         if not isinstance(argument_node, Argument):
-            # TODO Jason: Improve exception
             raise ContextError.message("argument", Argument.keyname(), argument_node)
 
-        function_node: Function = self._node_stack.pop()  # type: ignore[assignment]
+        function_node: ASTNode = self._node_stack.pop()
         if not isinstance(function_node, Function):
             raise ContextError.message("argument", Function.keyname(), function_node)
 
@@ -320,29 +337,34 @@ class ASTBuilder(object):
         if not isinstance(qualified_type_node, QualifiedType):
             raise ContextError.message("qualified type", QualifiedType.keyname(), qualified_type_node)
 
+        previous_node: ASTNode = self._node_stack.pop()
+
         # Support Return Types on Operations
-        argument_node: Union[Operation, Argument] = self._node_stack.pop()  # type: ignore[assignment,arg-type]
-        if isinstance(argument_node, Operation):
+        if isinstance(previous_node, Operation):
             kwargs = dict(ret_type=qualified_type_node)
 
-        elif isinstance(argument_node, Argument):
+        elif isinstance(previous_node, Argument):
             kwargs = dict(qualified_type=qualified_type_node)
+
+        elif isinstance(previous_node, Statement):
+            if isinstance(previous_node, DeclarationStatement):
+                kwargs = dict(_variable_type=qualified_type_node)
+            else:
+                raise NotImplementedError(f"Other Statements Not Implemented Yet: {previous_node}")
 
         else:
             raise ContextError.message(
-                "qualified type", f"({Argument.keyname()} | {Operation.keyname()})", argument_node
+                "qualified type", f"({Argument.keyname()} | {Operation.keyname()})", previous_node
                 )
 
-        new_argument_node: Union[Operation, Argument] = replace(
-                argument_node, **kwargs
-            )  # type: ignore[arg-type]
-        self._node_stack.push(new_argument_node)
+        new_node: ASTNode = replace(previous_node, **kwargs)  # type: ignore[arg-type]
+        self._node_stack.push(new_node)
 
     def add_dtype(self, dtype):
         node: ASTNode = self.get_current_node()
 
         if not isinstance(node, Type):
-            raise ContextError(f"Adding dtype. Current Node is not of type Type. Received: {node}")
+            raise ContextError(f"Adding dtype. Current Node is not of type `Type`. Received: {node}")
 
         data_type: PrimitiveDataType = validate(dtype, PrimitiveDataType)
         node._data_type = DataType(data_type)
@@ -353,7 +375,7 @@ class ASTBuilder(object):
     def add_shape(self, shapes: List[str]):
         node: Type = self.get_current_node()
         if not isinstance(node, Type):
-            raise ContextError(f"Adding Shape. Current Node is not of type Type. Received: {node}")
+            raise ContextError(f"Adding Shape. Current Node is not of type `Type`. Received: {node}")
         if not hasattr(node, "_shape") or not isinstance(node._shape, list):
             node._shape = []
 
@@ -380,3 +402,109 @@ class ASTBuilder(object):
             raise ContextError.message("type", "QualifiedType", qualified_type_node)
 
         qualified_type_node._base_type = type_node
+
+    def open_declaration_statement(self, name: str):
+        node = DeclarationStatement(
+            _variable_name=Identifier(name),
+            _variable_type=MockQualifiedType,
+        )
+        self._node_stack.push(node)
+ 
+    def close_declaration_statement(self):
+        express: ASTNode = self._node_stack.pop()
+
+        # What if there are no Expressions? Then Bypass this method
+        if isinstance(express, DeclarationStatement):
+            return
+
+        if not isinstance(express, Expression):
+            raise ContextError.message("declaration_statement", Expression.keyname(), express)
+
+        current: ASTNode = self._node_stack.pop()
+        if not isinstance(current, DeclarationStatement):
+            raise ContextError.message("declaration_statement", DeclarationStatement.keyname(), current)
+
+        new_node = replace(current, _expression=express)
+        self._node_stack.push(new_node)
+
+    def open_branch_statement(self):
+        node = BranchStatement(Expression, [], [])
+
+    def open_iteration_statement(self):
+        node = ForAllStatement(Expression, [])
+
+    def open_return_statement(self):
+        node = ReturnStatement(_expression=None)
+        self._node_stack.push(node)
+
+    def close_statement(self):
+        # NOTE: This is a General Close of Any Statement. 
+        #       Each Statement Type Needs it's Own Prep to Close.
+        _statement: ASTNode = self._node_stack.pop()
+        if not isinstance(_statement, Statement):
+            raise ContextError.message("statement", Statement.keyname(), _statement)
+
+        current: ASTNode = self._node_stack.pop()
+        if not isinstance(current, Function):
+            raise ContextError.message("statement", Function.keyname(), current)
+
+        body: List[Statement] = []
+        if hasattr(current, "body") and current.body is not None:
+            body.extend(current.body)
+        body.append(_statement)
+
+        new_node: Function = replace(current, body=body)
+        self._node_stack.push(new_node)
+
+    def add_literal(self, value: Union[int, float, complex]):
+        if isinstance(value, complex):
+            node = ComplexLiteral(value)
+        elif isinstance(value, float):
+            node = FloatLiteral(value)
+        elif isinstance(value, int):
+            node = IntLiteral(value)
+        else:
+            raise NotImplementedError("Unknown Literal")
+        self._node_stack.push(node)
+
+    def add_unary_expression(self, operator: str):
+        op = validate(operator, UnaryOperation)
+        node = UnaryExpression(_operation=op, _expression=None)
+        self._node_stack.push(node)
+    
+    def close_unary_expression(self):
+        expression_node: ASTNode = self._node_stack.pop()
+        if not isinstance(expression_node, Expression):
+            raise ContextError.message("unary_expression", Expression.keyname(), expression_node)
+    
+        current: ASTNode = self.get_current_node()
+        if not isinstance(current, UnaryExpression):
+            raise ContextError.message("unary_expression", UnaryExpression.keyname(), current)
+
+        current._expression = expression_node
+
+    def add_binary_expression(self, operator: str):
+        op = validate(operator, BinaryOperation)
+        node = BinaryExpression(
+            _operation=op, 
+            _left_expression=None, 
+            _right_expression=None
+        )
+
+        self._node_stack.push(node)
+
+    def close_binary_expression(self):
+        right: ASTNode = self._node_stack.pop()
+        if not isinstance(right, Expression):
+            raise ContextError.message("binary_expression", Expression.keyname(), right)
+
+        left: ASTNode = self._node_stack.pop()
+        if not isinstance(left, Expression):
+            raise ContextError.message("binary_expression", Expression.keyname(), left)
+
+        binary: ASTNode = self.get_current_node()
+        if not isinstance(binary, BinaryExpression):
+            raise ContextError.message("binary_expression", BinaryExpression.keyname(), binary)
+
+        binary._left_expression = left
+        binary._right_expression = right
