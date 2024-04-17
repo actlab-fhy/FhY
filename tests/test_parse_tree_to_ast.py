@@ -24,6 +24,7 @@ from fhy.lang.ast.expression import (
     FloatLiteral,
     IdentifierExpression,
     IntLiteral,
+    TernaryExpression,
     UnaryExpression,
     UnaryOperation
 )
@@ -366,3 +367,34 @@ def test_binary_expressions(parser):
 
     assert isinstance(binary._right_expression, FloatLiteral), "Expected FloatLiteral Expression"
     assert binary._right_expression.value == 6.0, "Expected FloatLiteral Value of float(5.0)"
+
+
+def test_ternary_expressions(parser):
+    source_file_content = "op foo() {temp float32 i = 5.0 < 6.0 ? 7.0 / 8.0 : 4.0 - 3.0;}"
+    parse_tree = parser(source_file_content).module()
+    assert parse_tree is not None
+
+    ast: ASTNode = from_parse_tree(parse_tree)
+    assert isinstance(ast, Module), "Expected Module AST node"
+    assert len(ast.components) == 1, "Expected 1 component"
+
+    func: Component = ast.components[0]
+    assert isinstance(func, Operation), "Expected Operation AST node"
+    assert len(func.body) == 1, "Expected Procedure to contain 1 statement"
+
+    statement = func.body[0]
+    assert isinstance(statement, DeclarationStatement), "Expected Declaration Statement"
+    assert isinstance(statement._variable_name, Identifier), "Statement Variable Must be an Identifier"
+    assert statement._variable_name.name_hint == "i"
+    _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.FLOAT32)
+
+    tern = statement._expression
+    assert isinstance(tern, TernaryExpression), "Expected Ternary Expression"
+    assert isinstance(tern._condition, BinaryExpression), "Expected BinaryExpression Condition  "
+    assert tern._condition._operation == BinaryOperation.LESS_THAN, "Expected `<` Operator in Condition"
+    assert tern._condition._left_expression
+
+    assert isinstance(tern._true_expression, BinaryExpression), "Expected BinaryExpression True Expression"
+    assert tern._true_expression._operation == BinaryOperation.DIVISION, "Expected `/` Operator in True Expression"
+    assert isinstance(tern._false_expression, BinaryExpression), "Expected BinaryExpression False Expression"
+    assert tern._false_expression._operation == BinaryOperation.SUBTRACTION, "Expected `/` Operator in False Expression"

@@ -198,8 +198,8 @@ class ParseTreeConverter(FhYListener):
             self._builder.add_binary_expression(ctx.LOGICAL_OR().getText())
 
         elif (ternary := ctx.ternary_expression) is not None:
-            # value = ctx.QUESTION_MARK().getText()
-            raise NotImplementedError("Ternary Expressions Not Implemented Yet.")
+            assert ctx.QUESTION_MARK().getText() == "?"
+            self._builder.open_ternary_expression()
 
         else:
             raise NotImplementedError("Unknown Expression Not Implemented")
@@ -230,7 +230,7 @@ class ParseTreeConverter(FhYListener):
             self._builder.close_binary_expression()
 
         elif (ternary := ctx.ternary_expression) is not None:
-            raise NotImplementedError("Ternary Expressions Not Implemented Yet.")
+            self._builder.close_ternary_expression()
 
         else:
             raise NotImplementedError("Unknown Expression Not Implemented")

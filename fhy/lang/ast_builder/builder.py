@@ -31,6 +31,7 @@ from fhy.lang.ast.expression import (
     FloatLiteral,
     IdentifierExpression,
     IntLiteral,
+    TernaryExpression,
     UnaryExpression,
     UnaryOperation
 )
@@ -529,3 +530,32 @@ class ASTBuilder(object):
 
         binary._left_expression = left
         binary._right_expression = right
+
+    def open_ternary_expression(self):
+        node = TernaryExpression(
+            _condition=Expression,
+            _true_expression=Expression,
+            _false_expression=Expression
+            )
+        self._node_stack.push(node)
+
+    def close_ternary_expression(self):
+        _false = self._node_stack.pop()
+        if not isinstance(_false, Expression):
+            raise ContextError.message("ternary_expression", f"false {Expression.keyname()}", _false)
+
+        _true = self._node_stack.pop()
+        if not isinstance(_true, Expression):
+            raise ContextError.message("ternary_expression", f"true {Expression.keyname()}", _true)
+
+        _condition = self._node_stack.pop()
+        if not isinstance(_condition, Expression):
+            raise ContextError.message("ternary_expression", f"condition {Expression.keyname()}", _condition)
+
+        current = self.get_current_node()
+        if not isinstance(current, TernaryExpression):
+            raise ContextError.message("ternary_expression", TernaryExpression.keyname(), current)
+
+        current._condition = _condition
+        current._true_expression = _true
+        current._false_expression = _false
