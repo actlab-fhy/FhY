@@ -150,7 +150,7 @@ class ParseTreeConverter(FhYListener):
 
     # EXPRESSION CONTEXTS
     def enterExpression(self, ctx: FhYParser.ExpressionContext):
-        if (primary := ctx.primary_expression()) is not None:
+        if ctx.primary_expression() is not None:
             ...
 
         elif ctx.nested_expression is not None:
@@ -161,19 +161,19 @@ class ParseTreeConverter(FhYListener):
         elif (unary := ctx.unary_expression) is not None:
             self._builder.add_unary_expression(unary.text)
 
-        elif (mult := ctx.multiplicative_expression) is not None:
+        elif ctx.multiplicative_expression is not None:
             op = ctx.DIVISION() or ctx.MULTIPLICATION()
             self._builder.add_binary_expression(op.getText())
 
-        elif (add := ctx.additive_expression) is not None:
+        elif ctx.additive_expression is not None:
             op = ctx.ADDITION() or ctx.SUBTRACTION()
             self._builder.add_binary_expression(op.getText())
 
-        elif (shift := ctx.shift_expression) is not None:
+        elif ctx.shift_expression is not None:
             op = ctx.LEFT_SHIFT() or ctx.RIGHT_SHIFT()
             self._builder.add_binary_expression(op.getText())
 
-        elif (relate := ctx.relational_expression) is not None:
+        elif ctx.relational_expression is not None:
             op = (
                 ctx.LESS_THAN()
                 or ctx.LESS_THAN_OR_EQUAL()
@@ -182,26 +182,26 @@ class ParseTreeConverter(FhYListener):
             )
             self._builder.add_binary_expression(op.getText())
 
-        elif (equal := ctx.equality_expression) is not None:
+        elif ctx.equality_expression is not None:
             op = ctx.EQUAL_TO() or ctx.NOT_EQUAL_TO()
             self._builder.add_binary_expression(op.getText())
 
-        elif (ands := ctx.and_expression) is not None:
+        elif ctx.and_expression is not None:
             self._builder.add_binary_expression(ctx.AND().getText())
 
-        elif (excl_or := ctx.exclusive_or_expression) is not None:
+        elif ctx.exclusive_or_expression is not None:
             self._builder.add_binary_expression(ctx.EXCLUSIVE_OR().getText())
 
-        elif (ors := ctx.or_expression) is not None:
+        elif ctx.or_expression is not None:
             self._builder.add_binary_expression(ctx.OR().getText())
 
-        elif (logic_and := ctx.logical_and_expression) is not None:
+        elif ctx.logical_and_expression is not None:
             self._builder.add_binary_expression(ctx.LOGICAL_AND().getText())
 
-        elif (logic_or := ctx.logical_or_expression) is not None:
+        elif ctx.logical_or_expression is not None:
             self._builder.add_binary_expression(ctx.LOGICAL_OR().getText())
 
-        elif (ternary := ctx.ternary_expression) is not None:
+        elif ctx.ternary_expression is not None:
             assert ctx.QUESTION_MARK().getText() == "?"
             self._builder.open_ternary_expression()
 
@@ -209,7 +209,7 @@ class ParseTreeConverter(FhYListener):
             raise NotImplementedError("Unknown Expression Not Implemented")
 
     def exitExpression(self, ctx: FhYParser.ExpressionContext):
-        if (primary := ctx.primary_expression()) is not None:
+        if ctx.primary_expression() is not None:
             ...
 
         elif ctx.nested_expression is not None:
@@ -236,7 +236,7 @@ class ParseTreeConverter(FhYListener):
         ):
             self._builder.close_binary_expression()
 
-        elif (ternary := ctx.ternary_expression) is not None:
+        elif ctx.ternary_expression is not None:
             self._builder.close_ternary_expression()
 
         else:

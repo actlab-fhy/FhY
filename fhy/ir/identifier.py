@@ -31,4 +31,5 @@ class Identifier(object):
     def __hash__(self) -> int:
         return hash(self._id)
 
-    # TODO Jason: Resolve how this identifier class can handle identifiers used in different scopes
+    # TODO: Jason: Resolve how this identifier class 
+    #       can handle identifiers used in different scopes
