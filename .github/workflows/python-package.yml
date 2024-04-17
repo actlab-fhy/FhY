@@ -40,16 +40,17 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -e .[dev]
-  
+
     - name: Code Linting
       run: |
-        ruff check .
+        ruff check fhy/ --config pyproject.toml
   
     - name: Static Type Checking
       run: |
-        mypy .
-
+        mypy fhy/ --config-file pyproject.toml
+  
     - name: Unit Testing
+      if: always()
       run: |
         pytest .
 

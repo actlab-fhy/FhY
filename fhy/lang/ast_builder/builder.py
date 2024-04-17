@@ -1,4 +1,5 @@
 # TODO Jason: Add docstring
+from copy import copy
 from dataclasses import replace
 from enum import StrEnum
 from typing import List, Optional, Union
@@ -33,7 +34,7 @@ from fhy.lang.ast.expression import (
     IntLiteral,
     TernaryExpression,
     UnaryExpression,
-    UnaryOperation
+    UnaryOperation,
 )
 from fhy.lang.ast.statement import (
     BranchStatement,
@@ -42,9 +43,7 @@ from fhy.lang.ast.statement import (
     ForAllStatement,
     ReturnStatement,
 )
-
 from fhy.utils import Stack
-from copy import copy
 
 # class ASTNodeBuilder(ABC):
 #     # TODO Jason: Add docstring
