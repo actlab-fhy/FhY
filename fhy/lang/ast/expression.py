@@ -239,6 +239,11 @@ class IntLiteral(Literal):
     def value(self) -> int:
         """Value of Integer"""
         return self._value
+    
+    def visit_attrs(self) -> List[str]:
+        attrs = super().visit_attrs()
+        attrs.extend(["_value"])
+        return attrs
 
 
 class FloatLiteral(Literal):
@@ -251,6 +256,11 @@ class FloatLiteral(Literal):
     def value(self) -> float:
         """Value of Floating Point number"""
         return self._value
+    
+    def visit_attrs(self) -> List[str]:
+        attrs = super().visit_attrs()
+        attrs.extend(["_value"])
+        return attrs
 
 
 class ComplexLiteral(Literal):
@@ -265,3 +275,8 @@ class ComplexLiteral(Literal):
     def value(self) -> complex:
         """Value of complex number"""
         return self._value
+    
+    def visit_attrs(self) -> List[str]:
+        attrs = super().visit_attrs()
+        attrs.extend(["_value"])
+        return attrs
