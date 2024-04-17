@@ -235,7 +235,9 @@ class ContextError(Exception):
     """Unexpected Context Error"""
 
     @classmethod
-    def message(cls, context: str, node: str, obj: Union[ASTNode, Type]) -> "ContextError":
+    def message(
+        cls, context: str, node: str, obj: Union[ASTNode, Type]
+    ) -> "ContextError":
         """Constructs General Context Closing Message"""
         msg = f"Cannot close {context} context. "
         msg += f"Expected {node} Node type, received: {obj}"
@@ -243,7 +245,7 @@ class ContextError(Exception):
 
 
 # Simple Mock Types, to Temporarily instantiate a Placeholder Type
-# NOTE: This may not be the best Strategy Here. The corrolary, is 
+# NOTE: This may not be the best Strategy Here. The corrolary, is
 #       that it might not be a good Idea to make AST Node Fields
 #       Optional, since that is only true during build, not after creation.
 _MockType = PrimitiveDataType._PLACEHOLDER
@@ -253,6 +255,7 @@ MockQualifiedType = QualifiedType(base_type=_MockType, type_qualifier=_MockQual)
 
 class ASTBuilder(object):
     """Controls the Stack of Nodes to construct a Proper AST Representation."""
+
     # TODO: Static Typing of this Class is a Little Funny Right Now.
     #       A Subclassed ASTNode violates Typing Assignment.
     #       TypeVar["node", base_class=ASTNode] Doesn't work without explicitly defining
@@ -289,10 +292,9 @@ class ASTBuilder(object):
         self._node_stack.push(Procedure(name=Identifier(name)))
 
     def add_operation(self, name: str) -> None:
-        self._node_stack.push(Operation(
-            name=Identifier(name), 
-            ret_type=copy(MockQualifiedType)
-            ))
+        self._node_stack.push(
+            Operation(name=Identifier(name), ret_type=copy(MockQualifiedType))
+        )
 
     def close_component_building(self) -> None:
         component_node: ASTNode = self._node_stack.pop()
@@ -322,7 +324,7 @@ class ASTBuilder(object):
 
         args: List[Argument] = function_node.args[:]  # type: ignore[attr-defined]
         args.append(argument_node)
-        new_function_node: Component = replace(function_node, args=args) # type: ignore[call-arg]
+        new_function_node: Component = replace(function_node, args=args)  # type: ignore[call-arg]
         self._node_stack.push(new_function_node)
 
     def add_qualified_type(self, name: str) -> None:
@@ -330,12 +332,16 @@ class ASTBuilder(object):
 
         # TODO: We are pushing a Type onto the stack, instead of an AST Node
         #       Can we / Should we Instead modify the previous node?
-        self._node_stack.push(QualifiedType(base_type=_MockType, type_qualifier=qualified_type))
+        self._node_stack.push(
+            QualifiedType(base_type=_MockType, type_qualifier=qualified_type)
+        )
 
     def close_qualified_type_building(self) -> None:
         qualified_type_node: ASTNode = self._node_stack.pop()
         if not isinstance(qualified_type_node, QualifiedType):
-            raise ContextError.message("qualified type", QualifiedType.keyname(), qualified_type_node)
+            raise ContextError.message(
+                "qualified type", QualifiedType.keyname(), qualified_type_node
+            )
 
         previous_node: ASTNode = self._node_stack.pop()
 
@@ -350,12 +356,16 @@ class ASTBuilder(object):
             if isinstance(previous_node, DeclarationStatement):
                 kwargs = dict(_variable_type=qualified_type_node)
             else:
-                raise NotImplementedError(f"Other Statements Not Implemented Yet: {previous_node}")
+                raise NotImplementedError(
+                    f"Other Statements Not Implemented Yet: {previous_node}"
+                )
 
         else:
             raise ContextError.message(
-                "qualified type", f"({Argument.keyname()} | {Operation.keyname()})", previous_node
-                )
+                "qualified type",
+                f"({Argument.keyname()} | {Operation.keyname()})",
+                previous_node,
+            )
 
         new_node: ASTNode = replace(previous_node, **kwargs)  # type: ignore[arg-type]
         self._node_stack.push(new_node)
@@ -364,7 +374,9 @@ class ASTBuilder(object):
         node: ASTNode = self.get_current_node()
 
         if not isinstance(node, Type):
-            raise ContextError(f"Adding dtype. Current Node is not of type `Type`. Received: {node}")
+            raise ContextError(
+                f"Adding dtype. Current Node is not of type `Type`. Received: {node}"
+            )
 
         data_type: PrimitiveDataType = validate(dtype, PrimitiveDataType)
         node._data_type = DataType(data_type)
@@ -375,7 +387,9 @@ class ASTBuilder(object):
     def add_shape(self, shapes: List[str]):
         node: Type = self.get_current_node()
         if not isinstance(node, Type):
-            raise ContextError(f"Adding Shape. Current Node is not of type `Type`. Received: {node}")
+            raise ContextError(
+                f"Adding Shape. Current Node is not of type `Type`. Received: {node}"
+            )
         if not hasattr(node, "_shape") or not isinstance(node._shape, list):
             node._shape = []
 
@@ -409,7 +423,7 @@ class ASTBuilder(object):
             _variable_type=MockQualifiedType,
         )
         self._node_stack.push(node)
- 
+
     def close_declaration_statement(self):
         express: ASTNode = self._node_stack.pop()
 
@@ -419,11 +433,15 @@ class ASTBuilder(object):
             return
 
         if not isinstance(express, Expression):
-            raise ContextError.message("declaration_statement", Expression.keyname(), express)
+            raise ContextError.message(
+                "declaration_statement", Expression.keyname(), express
+            )
 
         current: ASTNode = self._node_stack.pop()
         if not isinstance(current, DeclarationStatement):
-            raise ContextError.message("declaration_statement", DeclarationStatement.keyname(), current)
+            raise ContextError.message(
+                "declaration_statement", DeclarationStatement.keyname(), current
+            )
 
         new_node = replace(current, _expression=express)
         self._node_stack.push(new_node)
@@ -449,17 +467,21 @@ class ASTBuilder(object):
             return
 
         if not isinstance(express, Expression):
-            raise ContextError.message("return_statement", Expression.keyname(), express)
+            raise ContextError.message(
+                "return_statement", Expression.keyname(), express
+            )
 
         current: ASTNode = self._node_stack.pop()
         if not isinstance(current, ReturnStatement):
-            raise ContextError.message("return_statement", ReturnStatement.keyname(), current)
+            raise ContextError.message(
+                "return_statement", ReturnStatement.keyname(), current
+            )
 
         new_node = replace(current, _expression=express)
         self._node_stack.push(new_node)
 
     def close_statement(self):
-        # NOTE: This is a General Close of Any Statement. 
+        # NOTE: This is a General Close of Any Statement.
         #       Each Statement Type Needs it's Own Prep to Close Correctly.
         _statement: ASTNode = self._node_stack.pop()
         if not isinstance(_statement, Statement):
@@ -492,24 +514,26 @@ class ASTBuilder(object):
         op = validate(operator, UnaryOperation)
         node = UnaryExpression(_operation=op, _expression=None)
         self._node_stack.push(node)
-    
+
     def close_unary_expression(self):
         expression_node: ASTNode = self._node_stack.pop()
         if not isinstance(expression_node, Expression):
-            raise ContextError.message("unary_expression", Expression.keyname(), expression_node)
-    
+            raise ContextError.message(
+                "unary_expression", Expression.keyname(), expression_node
+            )
+
         current: ASTNode = self.get_current_node()
         if not isinstance(current, UnaryExpression):
-            raise ContextError.message("unary_expression", UnaryExpression.keyname(), current)
+            raise ContextError.message(
+                "unary_expression", UnaryExpression.keyname(), current
+            )
 
         current._expression = expression_node
 
     def add_binary_expression(self, operator: str):
         op = validate(operator, BinaryOperation)
         node = BinaryExpression(
-            _operation=op, 
-            _left_expression=None, 
-            _right_expression=None
+            _operation=op, _left_expression=None, _right_expression=None
         )
 
         self._node_stack.push(node)
@@ -525,7 +549,9 @@ class ASTBuilder(object):
 
         binary: ASTNode = self.get_current_node()
         if not isinstance(binary, BinaryExpression):
-            raise ContextError.message("binary_expression", BinaryExpression.keyname(), binary)
+            raise ContextError.message(
+                "binary_expression", BinaryExpression.keyname(), binary
+            )
 
         binary._left_expression = left
         binary._right_expression = right
@@ -534,26 +560,34 @@ class ASTBuilder(object):
         node = TernaryExpression(
             _condition=Expression,
             _true_expression=Expression,
-            _false_expression=Expression
-            )
+            _false_expression=Expression,
+        )
         self._node_stack.push(node)
 
     def close_ternary_expression(self):
         _false = self._node_stack.pop()
         if not isinstance(_false, Expression):
-            raise ContextError.message("ternary_expression", f"false {Expression.keyname()}", _false)
+            raise ContextError.message(
+                "ternary_expression", f"false {Expression.keyname()}", _false
+            )
 
         _true = self._node_stack.pop()
         if not isinstance(_true, Expression):
-            raise ContextError.message("ternary_expression", f"true {Expression.keyname()}", _true)
+            raise ContextError.message(
+                "ternary_expression", f"true {Expression.keyname()}", _true
+            )
 
         _condition = self._node_stack.pop()
         if not isinstance(_condition, Expression):
-            raise ContextError.message("ternary_expression", f"condition {Expression.keyname()}", _condition)
+            raise ContextError.message(
+                "ternary_expression", f"condition {Expression.keyname()}", _condition
+            )
 
         current = self.get_current_node()
         if not isinstance(current, TernaryExpression):
-            raise ContextError.message("ternary_expression", TernaryExpression.keyname(), current)
+            raise ContextError.message(
+                "ternary_expression", TernaryExpression.keyname(), current
+            )
 
         current._condition = _condition
         current._true_expression = _true

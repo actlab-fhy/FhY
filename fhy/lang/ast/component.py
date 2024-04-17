@@ -43,6 +43,7 @@ class Operation(Function):
         ret_type (QualifiedType): Type information of the Returned Value
 
     """
+
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
     ret_type: QualifiedType
