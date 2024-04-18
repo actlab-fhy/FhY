@@ -52,11 +52,11 @@ class ForAllStatement(Statement):
     """For Loop Node"""
 
     _index: Expression
-    _body: List[Statement] = field(default_factory=list)
+    body: List[Statement] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_index", "_body"])
+        attrs.extend(["_index", "body"])
         return attrs
 
     # TODO Jason: Implement the functionality of this class

@@ -58,7 +58,7 @@ def validate(name: str, enumeration: StrEnum) -> StrEnum:
         (StrEnum) An instance of the provided enumeration key name.
 
     Raises:
-        ValueError: When the name is not found within the enumeration, or is a `_PLACEHOLDER`
+        ValueError: When the name is not found within the enumeration.
 
     """
     try:
@@ -241,8 +241,51 @@ class ASTBuilder(object):
                 obj = IdentifierExpression(Identifier(s))
             node._shape.append(obj)
 
-    def add_index_type(self) -> None:
-        self._node_stack.push(IndexType(None, None))
+    def open_index_type(self) -> None:
+        self._node_stack.push(IndexType(Expression, Expression, None))
+
+    def _close_index_type(
+            self,
+            index: IndexType,
+            low: Expression,
+            high: Expression,
+            stride: Optional[Expression]
+            ) -> None:
+        index._lower_bound = low
+        index._upper_bound = high
+        index._stride = stride
+
+        self._node_stack.push(index)
+
+    def close_index_type(self) -> None:
+        stride_or_upper: ASTNode = self._node_stack.pop()
+        if not isinstance(stride_or_upper, Expression):
+            raise ContextError.message(
+                "index_type", Expression.keyname(), stride_or_upper
+                )
+
+        upper_or_lower: ASTNode = self._node_stack.pop()
+        if not isinstance(upper_or_lower, Expression):
+            raise ContextError.message(
+                "index_type", Expression.keyname(), upper_or_lower
+                )
+
+        lower_or_index: ASTNode = self._node_stack.pop()
+        if isinstance(lower_or_index, IndexType):
+            self._close_index_type(lower_or_index, upper_or_lower, stride_or_upper, None)
+            return
+
+        elif not isinstance(lower_or_index, Expression):
+            raise ContextError.message(
+                "index_type", Expression.keyname(), lower_or_index
+                )
+
+        index: ASTNode = self._node_stack.pop()
+        if not isinstance(index, IndexType):
+            raise ContextError.message(
+                "index_type", IndexType.keyname(), index
+                )
+        self._close_index_type(index, lower_or_index, upper_or_lower, stride_or_upper)
 
     def close_type_building(self) -> None:
         type_node: Type = self._node_stack.pop()
@@ -284,13 +327,24 @@ class ASTBuilder(object):
         new_node = replace(current, _expression=express)
         self._node_stack.push(new_node)
 
-    def open_branch_statement(self):
-        node = BranchStatement(Expression, [], [])
-        self._node_stack.push(node)
+    # def open_branch_statement(self):
+    #     node = BranchStatement(_predicate=Expression)
+    #     self._node_stack.push(node)
+
+    # def close_branch_statement(self):
+    #     # There are Variable Number of Expressions
+    #     # On Two Different Blocks that we need to
+    #     # Keep Track of Here... How do we do that?
+    #     # And blocks technically have no requirement
+    #     # to contain children...
+    #     ...
 
     def open_iteration_statement(self):
-        node = ForAllStatement(Expression, [])
+        node = ForAllStatement(_index=Expression)
         self._node_stack.push(node)
+
+    def close_iteration_statement(self):
+        ...
 
     def open_return_statement(self):
         node = ReturnStatement(_expression=Expression)
@@ -326,8 +380,18 @@ class ASTBuilder(object):
             raise ContextError.message("statement", Statement.keyname(), _statement)
 
         current: ASTNode = self._node_stack.pop()
-        if not isinstance(current, Function):
-            raise ContextError.message("statement", Function.keyname(), current)
+        if not isinstance(current, (Function, Statement)):
+            raise ContextError.message(
+                "statement", f"{Function.keyname()} | {Statement.keyname()}", current
+                )
+
+        elif isinstance(current, Statement):
+            # TODO: THis is in Preparation of Support of ForAllStatements
+            if not isinstance(current, ForAllStatement):
+                raise NotImplementedError(
+                    "Have Not Implemented CLosing Statements on anything other than" 
+                    f" ForAllStatements. Received: {current}"
+                    )
 
         body: List[Statement] = []
         if hasattr(current, "body") and current.body is not None:

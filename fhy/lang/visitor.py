@@ -1,9 +1,11 @@
 """
-    FhY/lang/visitor.py
+FhY/lang/visitor.py
 
 """
-from .ast.base import ASTNode
+
 from typing import Any, Callable, Generator, Tuple
+
+from .ast.base import ASTNode
 
 
 def get_node_key(node: ASTNode) -> str:
@@ -47,9 +49,11 @@ class BaseVisitor:
     """Base Visitor Pattern Class Interface.
 
     Args:
-        accessor (Callable[[Node], str]): Function that accepts a Class Obejct Node, and returns a string identifier name
+        accessor (Callable[[Node], str]): Function that accepts a Node, and
+            returns a string identifier name
 
     """
+
     def __init__(self, accessor: Callable[[ASTNode], str] = get_node_name) -> None:
         self.accessor = accessor
 

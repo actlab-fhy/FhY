@@ -1,11 +1,23 @@
 from typing import List, Optional
 
-from antlr4 import ParseTreeWalker
+from antlr4 import ParseTreeWalker, ParserRuleContext
 
 from fhy.lang.ast import ASTNode
 from fhy.lang.parser import FhYListener, FhYParser
 
 from ..builder import ASTBuilder
+from ...span import Span, _Span
+
+
+def getSourceInfo(ctx: ParserRuleContext) -> Span:
+    """Retrieves Line and Column Information from a Context"""
+    start = ctx.start
+    stop = ctx.stop
+    span = Span(
+        line=_Span(start.line, stop.line),
+        column=_Span(start.column, stop.column)
+    )
+    return span
 
 
 class ParseTreeConverter(FhYListener):
@@ -51,8 +63,11 @@ class ParseTreeConverter(FhYListener):
     #     ...
 
     def enterFunction_arg(self, ctx: FhYParser.Function_argContext):
-        argument_name: str = ctx.IDENTIFIER().getText()
-        self._builder.add_argument(argument_name)
+        
+        if (arg_name := ctx.IDENTIFIER()) is None:
+            span: Span = getSourceInfo(ctx.parentCtx)
+            raise SyntaxError(f"Function Argument Not given an Identifier: {span}")
+        self._builder.add_argument(arg_name.getText())
 
     def exitFunction_arg(self, ctx: FhYParser.Function_argContext):
         self._builder.close_argument_building()
@@ -81,10 +96,13 @@ class ParseTreeConverter(FhYListener):
     #     pass
 
     # def enterSelection_statement(self, ctx:FhYParser.Selection_statementContext):
-    #     pass
+    #     # We have two Statement Children of a Selection Statement, which 
+    #     # may or may not contain children themselves.
+    #     self._builder.open_branch_statement()
 
     # def exitSelection_statement(self, ctx:FhYParser.Selection_statementContext):
-    #     pass
+    #     print("Exiting Selection (Branch) Statement")
+    #     self._builder.close_branch_statement()
 
     # def enterIteration_statement(self, ctx:FhYParser.Iteration_statementContext):
     #     pass
@@ -140,10 +158,10 @@ class ParseTreeConverter(FhYListener):
     #     pass
 
     def enterIndex_type(self, ctx: FhYParser.Index_typeContext):
-        self._builder.add_index_type()
+        self._builder.open_index_type()
 
-    # def exitIndex_type(self, ctx:FhYParser.Index_typeContext):
-    #     pass
+    def exitIndex_type(self, ctx:FhYParser.Index_typeContext):
+        self._builder.close_index_type()
 
     def exitType(self, ctx: FhYParser.TypeContext):
         self._builder.close_type_building()
@@ -151,7 +169,7 @@ class ParseTreeConverter(FhYListener):
     # EXPRESSION CONTEXTS
     def enterExpression(self, ctx: FhYParser.ExpressionContext):
         if ctx.primary_expression() is not None:
-            ...
+            print("Expression -> PrimaryExpression")
 
         elif ctx.nested_expression is not None:
             # We pass since a nested expression contains a child expression.
@@ -243,6 +261,7 @@ class ParseTreeConverter(FhYListener):
             raise NotImplementedError("Unknown Expression Not Implemented")
 
     def enterPrimary_expression(self, ctx: FhYParser.Primary_expressionContext):
+        print("Are we Entering Primary Expressions?")
         if ctx.tuple_access_expression is not None:
             ...
 
