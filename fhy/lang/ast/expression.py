@@ -42,8 +42,8 @@ class UnaryExpression(Expression):
     # TODO Jason: Implement the functionality of this class
 
 
-# TODO: Unfortunately StrEnum is Only Available for Python3.11 and Above
-#       Remake this Using Something Else, or Construct StrEnum if sys.version_info < (3, 11)
+# TODO: StrEnum is Only Available for Python3.11 and Above Remake
+#       Using Something Else, or Construct StrEnum if sys.version_info < (3, 11)
 class BinaryOperation(StrEnum):
     # TODO Jason: Add docstring
     MULTIPLICATION = "*"

@@ -4,6 +4,7 @@ from antlr4 import (
     CommonTokenStream,
     InputStream,
     RecognitionException,
+    ParserRuleContext
 )
 from antlr4.error.ErrorListener import ErrorListener
 
@@ -231,7 +232,7 @@ def test_empty_operation(parser):
 
 
 def test_empty_operation_return_type(parser):
-    """test that an Empty Operation with a Return Type is Converted Correctly"""
+    """Tests that an Empty Operation with a Return Type is Converted Correctly"""
     source_file_content = "op foo(input int32[n, m] x) -> output int32[n, m] {}"
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
@@ -261,7 +262,7 @@ def test_empty_operation_return_type(parser):
 
 
 def test_declaration_statement(parser):
-    """Tests a single statement."""
+    """Tests a single Delcaration Statement."""
     source_file_content = "proc foo(){temp int32 i;}"
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
@@ -287,6 +288,7 @@ def test_declaration_statement(parser):
 
 
 def test_return_statement(parser):
+    """Tests a Return Statement"""
     source_file_content = "op foo() -> temp int32 {temp int32 i = 5; return i;}"
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
@@ -313,6 +315,7 @@ def test_return_statement(parser):
 
 
 def test_unary_expressions(parser):
+    """Tests a Unary Expression (Negative)"""
     source_file_content = "op foo() -> temp int32 {temp int32 i = -5;}"
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
@@ -339,6 +342,7 @@ def test_unary_expressions(parser):
 
 
 def test_binary_expressions(parser):
+    """Tests a Binary Expression (Multiplication)"""
     source_file_content = "op foo() -> temp float32 {temp float32 i = 5.0 * 6.0;}"
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
@@ -370,6 +374,7 @@ def test_binary_expressions(parser):
 
 
 def test_ternary_expressions(parser):
+    """Tests a Ternary Conditional Expression"""
     source_file_content = "op foo() {temp float32 i = 5.0 < 6.0 ? 7.0 / 8.0 : 4.0 - 3.0;}"
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
@@ -398,3 +403,44 @@ def test_ternary_expressions(parser):
     assert tern._true_expression._operation == BinaryOperation.DIVISION, "Expected `/` Operator in True Expression"
     assert isinstance(tern._false_expression, BinaryExpression), "Expected BinaryExpression False Expression"
     assert tern._false_expression._operation == BinaryOperation.SUBTRACTION, "Expected `/` Operator in False Expression"
+
+
+# def test_branch_statement(parser):
+#     """Test Handling of a Branch Statement"""
+#     source_file_content = """
+#     op foo() -> temp int32 {
+#         temp int32 x = 5;
+#         if (x <= 6) {
+#             temp int32 y = x;
+#         } else {
+#             temp int32 y = 0;
+#         }
+#         return y;
+#     }
+#     """
+#     parse_tree = parser(source_file_content).module()
+#     assert parse_tree is not None
+
+#     ast: ASTNode = from_parse_tree(parse_tree)
+#     assert isinstance(ast, Module), "Expected Module AST node"
+#     assert len(ast.components) == 1, "Expected 1 component"
+
+#     func: Component = ast.components[0]
+#     assert isinstance(func, Operation), "Expected Operation AST node"
+#     assert len(func.body) == 3, "Expected Procedure to contain 1 statement"
+
+
+def test_index_type(parser):
+    """Test Construction of an Index Type"""
+    # TODO: Support Index Type --> Need to Support Primary Expressions -> Atoms First
+    source = "proc bar(input int32[m, n] A) {temp index[1:m] i;}"
+    parse_tree = parser(source).module()
+    assert parse_tree is not None
+
+    ast: ASTNode = from_parse_tree(parse_tree)
+    assert isinstance(ast, Module), "Expected Module AST node"
+    assert len(ast.components) == 1, "Expected 1 component"
+
+    func: Component = ast.components[0]
+    assert isinstance(func, Procedure), "Expected Procedure AST node"
+    assert len(func.body) == 1, "Expected Procedure to contain 1 statement"
