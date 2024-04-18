@@ -7,8 +7,10 @@ from fhy.ir import Expression as IRExpression
 from fhy.ir import Identifier
 
 from .base import ASTNode
+from .directory import register_ast_node
 
 
+@register_ast_node
 @dataclass(frozen=True)
 class Module(ASTNode):
     # TODO Jason: Add docstring
