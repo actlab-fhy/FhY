@@ -5,7 +5,7 @@ from typing import List
 
 from fhy.ir import Type
 
-from .base import Expression, Identifier
+from .core import Expression, Identifier
 
 
 class UnaryOperation(StrEnum):
