@@ -251,12 +251,12 @@ class ASTBuilder(object):
         self._node_stack.push(IndexType(Expression, Expression, None))
 
     def _close_index_type(
-            self,
-            index: IndexType,
-            low: Expression,
-            high: Expression,
-            stride: Optional[Expression]
-            ) -> None:
+        self,
+        index: IndexType,
+        low: Expression,
+        high: Expression,
+        stride: Optional[Expression],
+    ) -> None:
         index._lower_bound = low
         index._upper_bound = high
         index._stride = stride
@@ -268,29 +268,29 @@ class ASTBuilder(object):
         if not isinstance(stride_or_upper, Expression):
             raise ContextError.message(
                 "index_type", Expression.keyname(), stride_or_upper
-                )
+            )
 
         upper_or_lower: ASTNode = self._node_stack.pop()
         if not isinstance(upper_or_lower, Expression):
             raise ContextError.message(
                 "index_type", Expression.keyname(), upper_or_lower
-                )
+            )
 
         lower_or_index: ASTNode = self._node_stack.pop()
         if isinstance(lower_or_index, IndexType):
-            self._close_index_type(lower_or_index, upper_or_lower, stride_or_upper, None)
+            self._close_index_type(
+                lower_or_index, upper_or_lower, stride_or_upper, None
+            )
             return
 
         elif not isinstance(lower_or_index, Expression):
             raise ContextError.message(
                 "index_type", Expression.keyname(), lower_or_index
-                )
+            )
 
         index: ASTNode = self._node_stack.pop()
         if not isinstance(index, IndexType):
-            raise ContextError.message(
-                "index_type", IndexType.keyname(), index
-                )
+            raise ContextError.message("index_type", IndexType.keyname(), index)
         self._close_index_type(index, lower_or_index, upper_or_lower, stride_or_upper)
 
     def close_type_building(self) -> None:
@@ -349,8 +349,7 @@ class ASTBuilder(object):
         node = ForAllStatement(_index=Expression)
         self._node_stack.push(node)
 
-    def close_iteration_statement(self):
-        ...
+    def close_iteration_statement(self): ...
 
     def open_return_statement(self):
         node = ReturnStatement(_expression=Expression)
@@ -389,15 +388,15 @@ class ASTBuilder(object):
         if not isinstance(current, (Function, Statement)):
             raise ContextError.message(
                 "statement", f"{Function.keyname()} | {Statement.keyname()}", current
-                )
+            )
 
         elif isinstance(current, Statement):
-            # TODO: THis is in Preparation of Support of ForAllStatements
+            # TODO: This is in Preparation of Support of ForAllStatements
             if not isinstance(current, ForAllStatement):
                 raise NotImplementedError(
-                    "Have Not Implemented CLosing Statements on anything other than" 
+                    "Have Not Implemented CLosing Statements on anything other than"
                     f" ForAllStatements. Received: {current}"
-                    )
+                )
 
         body: List[Statement] = []
         if hasattr(current, "body") and current.body is not None:

@@ -31,11 +31,12 @@ class Span(object):
     line: _Span
     column: _Span
 
-    def __init__(self,
-                 line: _Span,
-                 column: _Span,
-                 source: Optional[Source] = None,
-                 ) -> None:
+    def __init__(
+        self,
+        line: _Span,
+        column: _Span,
+        source: Optional[Source] = None,
+    ) -> None:
         self.source = source
         self.line = line
         self.column = column

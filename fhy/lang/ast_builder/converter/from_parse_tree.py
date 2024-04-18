@@ -1,18 +1,16 @@
-"""
+""" """
 
-"""
 from logging import Logger
 from typing import List, Optional
 
-from antlr4 import ParseTreeWalker, ParserRuleContext
+from antlr4 import ParserRuleContext, ParseTreeWalker
 
 from fhy.lang.ast import ASTNode
 from fhy.lang.parser import FhYListener, FhYParser
 
-from ..builder import ASTBuilder
-from ...span import Span, _Span
 from ....utils.logger import get_logger
-
+from ...span import Span, _Span
+from ..builder import ASTBuilder
 
 _log: Logger = get_logger(__name__)
 
@@ -22,8 +20,7 @@ def getSourceInfo(ctx: ParserRuleContext) -> Span:
     start = ctx.start
     stop = ctx.stop
     span = Span(
-        line=_Span(start.line, stop.line),
-        column=_Span(start.column, stop.column)
+        line=_Span(start.line, stop.line), column=_Span(start.column, stop.column)
     )
     return span
 
@@ -94,7 +91,7 @@ class ParseTreeConverter(FhYListener):
         self._log.debug(" Exit")
 
     def enterAtom(self, ctx: FhYParser.AtomContext):
-        self._log.debug(f"Enter")
+        self._log.debug("Enter")
         if ctx.literal() is not None:
             return
         self._builder.add_identifier(ctx.getText())
@@ -116,7 +113,7 @@ class ParseTreeConverter(FhYListener):
     #     pass
 
     # def enterSelection_statement(self, ctx:FhYParser.Selection_statementContext):
-    #     # We have two Statement Children of a Selection Statement, which 
+    #     # We have two Statement Children of a Selection Statement, which
     #     # may or may not contain children themselves.
     #     self._builder.open_branch_statement()
 
@@ -178,7 +175,7 @@ class ParseTreeConverter(FhYListener):
         self._log.debug("Enter")
         self._builder.open_shape()
 
-    def exitShape(self, ctx:FhYParser.ShapeContext):
+    def exitShape(self, ctx: FhYParser.ShapeContext):
         self._log.debug(" Exit")
         self._builder.close_shape()
 
@@ -186,7 +183,7 @@ class ParseTreeConverter(FhYListener):
         self._log.debug("Enter")
         self._builder.open_index_type()
 
-    def exitIndex_type(self, ctx:FhYParser.Index_typeContext):
+    def exitIndex_type(self, ctx: FhYParser.Index_typeContext):
         self._log.debug(" Exit")
         self._builder.close_index_type()
 
