@@ -1,3 +1,5 @@
+""" """
+from dataclasses import dataclass
 from typing import List, Optional
 
 from fhy.ir import Type, TypeQualifier
@@ -5,6 +7,7 @@ from fhy.ir import Type, TypeQualifier
 from .core import ASTNode
 
 
+@dataclass(frozen=True, kw_only=True)
 class QualifiedType(ASTNode):
     """Qualified Type Container
 
@@ -14,25 +17,8 @@ class QualifiedType(ASTNode):
 
     """
 
-    _base_type: Optional[Type]
-    _type_qualifier: Optional[TypeQualifier]
-
-    def __init__(
-        self,
-        base_type: Optional[Type] = None,
-        type_qualifier: Optional[TypeQualifier] = None,
-    ) -> None:
-        super().__init__()
-        self._base_type = base_type
-        self._type_qualifier = type_qualifier
-
-    @property
-    def base_type(self) -> Optional[Type]:
-        return self._base_type
-
-    @property
-    def type_qualifier(self) -> Optional[TypeQualifier]:
-        return self._type_qualifier
+    base_type: Optional[Type]
+    type_qualifier: Optional[TypeQualifier]
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()

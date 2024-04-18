@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import List
 from ..span import Span
 
 
+@dataclass(frozen=True, kw_only=True)
 class ASTNode(ABC):
     """Core abstract AST node."""
 
