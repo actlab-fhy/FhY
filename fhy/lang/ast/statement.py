@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from .base import Statement
+from .core import Statement
 from .expression import Expression, Identifier
 from .qualified_type import QualifiedType
 

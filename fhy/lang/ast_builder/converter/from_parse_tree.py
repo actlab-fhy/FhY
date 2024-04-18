@@ -116,7 +116,7 @@ class ParseTreeConverter(FhYListener):
     #     pass
 
     # def enterSelection_statement(self, ctx:FhYParser.Selection_statementContext):
-    #     # We have two Statement Children of a Selection Statement, which 
+    #     # We have two Statement Children of a Selection Statement, which
     #     # may or may not contain children themselves.
     #     self._builder.open_branch_statement()
 

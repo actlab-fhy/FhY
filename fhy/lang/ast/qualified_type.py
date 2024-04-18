@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fhy.ir import Type, TypeQualifier
 
-from .base import ASTNode
+from .core import ASTNode
 
 
 class QualifiedType(ASTNode):

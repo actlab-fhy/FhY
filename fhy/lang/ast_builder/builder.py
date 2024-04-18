@@ -395,7 +395,7 @@ class ASTBuilder(object):
             # TODO: THis is in Preparation of Support of ForAllStatements
             if not isinstance(current, ForAllStatement):
                 raise NotImplementedError(
-                    "Have Not Implemented CLosing Statements on anything other than" 
+                    "Have Not Implemented CLosing Statements on anything other than"
                     f" ForAllStatements. Received: {current}"
                     )
 

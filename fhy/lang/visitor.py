@@ -5,7 +5,7 @@ FhY/lang/visitor.py
 
 from typing import Any, Callable, Generator, Tuple
 
-from .ast.base import ASTNode
+from .ast.core import ASTNode
 
 
 def get_node_key(node: ASTNode) -> str:
