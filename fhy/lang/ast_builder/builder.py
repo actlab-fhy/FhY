@@ -222,24 +222,30 @@ class ASTBuilder(object):
     def add_numerical_type(self) -> None:
         self._node_stack.push(NumericalType(_MockType, []))
 
-    def add_shape(self, shapes: List[str]):
+    def open_shape(self):
         node: Type = self.get_current_node()
         if not isinstance(node, Type):
             raise ContextError(
-                f"Adding Shape. Current Node is not of type `Type`. Received: {node}"
+                f"Opening Shape. Current Node is not of type `Type`. Received: {node}"
             )
         if not hasattr(node, "_shape") or not isinstance(node._shape, list):
             node._shape = []
 
-        # NOTE: We Support Mixed Identification of Shape. Consider the
-        #       Following Variations: [n, m] vs [2, 4] vs [2, n]
-        # TODO: Consider and Implement this Variant: [n + m, n - 1]
-        for s in shapes:
-            if s.isnumeric():
-                obj = IntLiteral(int(s))
-            else:
-                obj = IdentifierExpression(Identifier(s))
-            node._shape.append(obj)
+    def close_shape(self):
+        shape: List[ASTNode] = []
+        # NOTE: We don't know the number of elements defining shape
+        while len(self._node_stack):
+            node: ASTNode = self._node_stack.pop()
+            if isinstance(node, Type):
+                break
+            elif not isinstance(node, Expression):
+                raise ContextError.message("shape", Expression.keyname(), node)
+            shape.append(node)
+
+        if not isinstance(node, Type):
+            raise ContextError.message("shape", "`Type`", node)
+        node._shape = shape[::-1]
+        self._node_stack.push(node)
 
     def open_index_type(self) -> None:
         self._node_stack.push(IndexType(Expression, Expression, None))
@@ -400,6 +406,10 @@ class ASTBuilder(object):
 
         new_node: Function = replace(current, body=body)
         self._node_stack.push(new_node)
+
+    def add_identifier(self, name: str):
+        node = IdentifierExpression((Identifier(name)))
+        self._node_stack.push(node)
 
     def add_literal(self, value: Union[int, float, complex]):
         if isinstance(value, complex):

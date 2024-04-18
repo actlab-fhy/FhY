@@ -1,3 +1,7 @@
+"""
+
+"""
+from logging import Logger
 from typing import List, Optional
 
 from antlr4 import ParseTreeWalker, ParserRuleContext
@@ -7,6 +11,10 @@ from fhy.lang.parser import FhYListener, FhYParser
 
 from ..builder import ASTBuilder
 from ...span import Span, _Span
+from ....utils.logger import get_logger
+
+
+_log: Logger = get_logger(__name__)
 
 
 def getSourceInfo(ctx: ParserRuleContext) -> Span:
@@ -25,19 +33,23 @@ class ParseTreeConverter(FhYListener):
     _builder: ASTBuilder
     _ast: Optional[ASTNode]
 
-    def __init__(self) -> None:
+    def __init__(self, log: Logger = _log) -> None:
         super().__init__()
         self._builder = ASTBuilder()
         self._ast = None
+        self._log = log
 
     def enterModule(self, ctx: FhYParser.ModuleContext) -> None:
+        self._log.debug("Enter")
         self._builder.add_module()
 
     def exitModule(self, ctx: FhYParser.ModuleContext) -> None:
+        self._log.debug(" Exit")
         self._builder.close_module_building()
         self._ast: ASTNode = self._builder.ast
 
     def enterComponent(self, ctx: FhYParser.ComponentContext) -> None:
+        self._log.debug("Enter")
         if ctx.function_declaration() is not None:
             raise NotImplementedError("Function Declarations are not yet Supported.")
         elif ctx.function_definition() is not None:
@@ -46,10 +58,12 @@ class ParseTreeConverter(FhYListener):
             raise NotImplementedError()
 
     def exitComponent(self, ctx: FhYParser.ComponentContext) -> None:
+        self._log.debug(" Exit")
         if any([ctx.function_declaration(), ctx.function_definition()]):
             self._builder.close_component_building()
 
     def enterFunction_header(self, ctx: FhYParser.Function_headerContext):
+        self._log.debug("Enter")
         function_keyword: str = ctx.FUNCTION_KEYWORD().getText()
         function_name: str = ctx.IDENTIFIER().getText()
         if function_keyword == "proc":
@@ -63,30 +77,36 @@ class ParseTreeConverter(FhYListener):
     #     ...
 
     def enterFunction_arg(self, ctx: FhYParser.Function_argContext):
-        
+        self._log.debug("Enter")
         if (arg_name := ctx.IDENTIFIER()) is None:
             span: Span = getSourceInfo(ctx.parentCtx)
             raise SyntaxError(f"Function Argument Not given an Identifier: {span}")
         self._builder.add_argument(arg_name.getText())
 
     def exitFunction_arg(self, ctx: FhYParser.Function_argContext):
+        self._log.debug(" Exit")
         self._builder.close_argument_building()
 
-    # def enterFunction_body(self, ctx: FhYParser.Function_bodyContext):
-    #     ...
+    def enterFunction_body(self, ctx: FhYParser.Function_bodyContext):
+        self._log.debug("Enter")
 
-    # def exitFunction_body(self, ctx: FhYParser.Function_bodyContext):
-    #     ...
+    def exitFunction_body(self, ctx: FhYParser.Function_bodyContext):
+        self._log.debug(" Exit")
 
-    # def enterAtom(self, ctx: FhYParser.AtomContext):
-    #     ...
+    def enterAtom(self, ctx: FhYParser.AtomContext):
+        self._log.debug(f"Enter")
+        if ctx.literal() is not None:
+            return
+        self._builder.add_identifier(ctx.getText())
 
     # STATEMENT CONTEXTS
     def enterDeclaration_statement(self, ctx: FhYParser.Declaration_statementContext):
+        self._log.debug("Enter")
         name = ctx.IDENTIFIER().getText()
         self._builder.open_declaration_statement(name)
 
     def exitDeclaration_statement(self, ctx: FhYParser.Declaration_statementContext):
+        self._log.debug(" Exit")
         self._builder.close_declaration_statement()
 
     # def enterExpression_statement(self, ctx:FhYParser.Expression_statementContext):
@@ -101,7 +121,6 @@ class ParseTreeConverter(FhYListener):
     #     self._builder.open_branch_statement()
 
     # def exitSelection_statement(self, ctx:FhYParser.Selection_statementContext):
-    #     print("Exiting Selection (Branch) Statement")
     #     self._builder.close_branch_statement()
 
     # def enterIteration_statement(self, ctx:FhYParser.Iteration_statementContext):
@@ -111,17 +130,21 @@ class ParseTreeConverter(FhYListener):
     #     pass
 
     def enterReturn_statement(self, ctx: FhYParser.Return_statementContext):
+        self._log.debug("Enter")
         self._builder.open_return_statement()
 
     def exitReturn_statement(self, ctx: FhYParser.Return_statementContext):
+        self._log.debug(" Exit")
         self._builder.close_return_statement()
 
     # TYPE CONTEXTS
     def enterQualified_type(self, ctx: FhYParser.Qualified_typeContext):
+        self._log.debug("Enter")
         type_qualifier_name: str = ctx.IDENTIFIER().getText()
         self._builder.add_qualified_type(type_qualifier_name)
 
     def exitQualified_type(self, ctx: FhYParser.Qualified_typeContext):
+        self._log.debug(" Exit")
         self._builder.close_qualified_type_building()
 
     # def enterType(self, ctx:FhYParser.TypeContext):
@@ -137,12 +160,14 @@ class ParseTreeConverter(FhYListener):
     #     pass
 
     def enterNumerical_type(self, ctx: FhYParser.Numerical_typeContext):
+        self._log.debug("Enter")
         self._builder.add_numerical_type()
 
     # def exitNumerical_type(self, ctx:FhYParser.Numerical_typeContext):
     #     pass
 
     def enterDtype(self, ctx: FhYParser.DtypeContext):
+        self._log.debug("Enter")
         numerical_type_name: str = ctx.IDENTIFIER().getText()
         self._builder.add_dtype(numerical_type_name)
 
@@ -150,26 +175,30 @@ class ParseTreeConverter(FhYListener):
     #     pass
 
     def enterShape(self, ctx: FhYParser.ShapeContext):
-        # TODO: This is a little Wonky, and Won't support Expressions.
-        shapes: List[str] = ctx.getText().split(",")
-        self._builder.add_shape(shapes)
+        self._log.debug("Enter")
+        self._builder.open_shape()
 
-    # def exitShape(self, ctx:FhYParser.ShapeContext):
-    #     pass
+    def exitShape(self, ctx:FhYParser.ShapeContext):
+        self._log.debug(" Exit")
+        self._builder.close_shape()
 
     def enterIndex_type(self, ctx: FhYParser.Index_typeContext):
+        self._log.debug("Enter")
         self._builder.open_index_type()
 
     def exitIndex_type(self, ctx:FhYParser.Index_typeContext):
+        self._log.debug(" Exit")
         self._builder.close_index_type()
 
     def exitType(self, ctx: FhYParser.TypeContext):
+        self._log.debug(" Exit")
         self._builder.close_type_building()
 
     # EXPRESSION CONTEXTS
     def enterExpression(self, ctx: FhYParser.ExpressionContext):
+        self._log.debug("Enter")
         if ctx.primary_expression() is not None:
-            print("Expression -> PrimaryExpression")
+            ...
 
         elif ctx.nested_expression is not None:
             # We pass since a nested expression contains a child expression.
@@ -227,6 +256,7 @@ class ParseTreeConverter(FhYListener):
             raise NotImplementedError("Unknown Expression Not Implemented")
 
     def exitExpression(self, ctx: FhYParser.ExpressionContext):
+        self._log.debug(" Exit")
         if ctx.primary_expression() is not None:
             ...
 
@@ -261,7 +291,7 @@ class ParseTreeConverter(FhYListener):
             raise NotImplementedError("Unknown Expression Not Implemented")
 
     def enterPrimary_expression(self, ctx: FhYParser.Primary_expressionContext):
-        print("Are we Entering Primary Expressions?")
+        self._log.debug("Enter")
         if ctx.tuple_access_expression is not None:
             ...
 
@@ -278,10 +308,12 @@ class ParseTreeConverter(FhYListener):
             raise NotImplementedError("Unknown Primary Expression")
 
     def exitStatement(self, ctx: FhYParser.StatementContext):
+        self._log.debug(" Exit")
         self._builder.close_statement()
 
     # LITERALS
     def enterLiteral(self, ctx: FhYParser.LiteralContext):
+        self._log.debug("Enter")
         # TODO: Capturing Floats is Not Working Here...
         if (floats := ctx.float_literal()) is not None:
             value = float(floats.getText())

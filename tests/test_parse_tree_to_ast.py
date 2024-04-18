@@ -8,7 +8,15 @@ from antlr4 import (
 )
 from antlr4.error.ErrorListener import ErrorListener
 
-from fhy.ir import DataType, Identifier, NumericalType, PrimitiveDataType, TypeQualifier, Type
+from fhy.ir import (
+    DataType,
+    Identifier,
+    IndexType,
+    NumericalType,
+    PrimitiveDataType,
+    TypeQualifier,
+    Type
+)
 from fhy.lang.ast import (
     Argument,
     ASTNode,
@@ -443,4 +451,24 @@ def test_index_type(parser):
 
     func: Component = ast.components[0]
     assert isinstance(func, Procedure), "Expected Procedure AST node"
+    assert len(func.args) == 1, "Expected 1 Argument"
+    _test_arg(func.args[0], "A", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32)
+
     assert len(func.body) == 1, "Expected Procedure to contain 1 statement"
+    statement = func.body[0]
+    assert isinstance(statement, DeclarationStatement), "Expected Declaration Statement"
+    assert isinstance(statement._variable_name, Identifier), "Expected Identifier"
+    assert statement._variable_name.name_hint == "i", "Expected Name Hint `i`"
+
+    var_type = statement._variable_type
+    assert isinstance(var_type, QualifiedType), "Expected QualifiedType"
+    assert var_type.type_qualifier == TypeQualifier.TEMP, "Expected `Temp` TypeQualifier"
+    index = var_type.base_type
+    assert isinstance(index, IndexType), "Expected IndexType Base Type"
+
+    assert isinstance(index._lower_bound , IntLiteral), "Expected IntLiteral Lower Bound"
+    assert index._lower_bound.value == 1, "Expected LowerBound value of 1"
+
+    assert isinstance(index._upper_bound, IdentifierExpression), "Expected IdentifierExpression Upper Bound"
+    assert isinstance(index._upper_bound._identifier, Identifier), "Expected Identifier"
+    assert index._upper_bound._identifier.name_hint == "m", "Expected Identifier name `m`"
