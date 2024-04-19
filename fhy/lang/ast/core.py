@@ -39,6 +39,7 @@ class Statement(ASTNode, ABC):
     ...
 
 
+@dataclass(frozen=True, kw_only=True)
 class Expression(ASTNode, IRExpression, ABC):
     # TODO Jason: Add docstring
     ...

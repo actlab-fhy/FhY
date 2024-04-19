@@ -36,6 +36,7 @@ from fhy.lang.ast.expression import (
     UnaryExpression,
     UnaryOperation,
 )
+from fhy.lang.span import Span
 from fhy.lang.ast.statement import (
     BranchStatement,
     DeclarationStatement,
@@ -88,7 +89,7 @@ class ContextError(Exception):
 #       Optional, since that is only true during build, not after creation.
 _MockType = PrimitiveDataType._PLACEHOLDER
 _MockQual = TypeQualifier._PLACEHOLDER
-MockQualifiedType = QualifiedType(base_type=_MockType, type_qualifier=_MockQual)
+MockQualifiedType = QualifiedType(_span=None, base_type=_MockType, type_qualifier=_MockQual)
 
 
 class ASTBuilder(object):
@@ -116,23 +117,26 @@ class ASTBuilder(object):
         return self._node_stack.peek()
 
     def add_module(self) -> None:
-        self._node_stack.push(Module())
+        self._node_stack.push(Module(_span=None))
 
     def close_module_building(self) -> None:
         module_node: ASTNode = self._node_stack.pop()
         if not isinstance(module_node, Module):
-            # TODO Jason: Improve exception
             raise ContextError.message("module", Module.keyname(), module_node)
 
         self._ast = module_node
 
-    def add_procedure(self, name: str) -> None:
-        self._node_stack.push(Procedure(name=Identifier(name)))
+    def add_procedure(self, location: Span, name: str) -> None:
+        node = Procedure(_span=location, name=Identifier(name))
+        self._node_stack.push(node)
 
-    def add_operation(self, name: str) -> None:
-        self._node_stack.push(
-            Operation(name=Identifier(name), ret_type=copy(MockQualifiedType))
+    def add_operation(self, location: Span, name: str) -> None:
+        node = Operation(
+            _span=location,
+            name=Identifier(name),
+            ret_type=copy(MockQualifiedType)
         )
+        self._node_stack.push(node)
 
     def close_component_building(self) -> None:
         component_node: ASTNode = self._node_stack.pop()
@@ -148,8 +152,9 @@ class ASTBuilder(object):
         new_module_node: Module = replace(module_node, components=components)
         self._node_stack.push(new_module_node)
 
-    def add_argument(self, arg_name: str) -> None:
-        self._node_stack.push(Argument(name=Identifier(arg_name)))
+    def add_argument(self, location: Span, arg_name: str) -> None:
+        node = Argument(_span=location, name=Identifier(arg_name))
+        self._node_stack.push(node)
 
     def close_argument_building(self) -> None:
         argument_node: ASTNode = self._node_stack.pop()
@@ -165,14 +170,17 @@ class ASTBuilder(object):
         new_function_node: Component = replace(function_node, args=args)  # type: ignore[call-arg]
         self._node_stack.push(new_function_node)
 
-    def add_qualified_type(self, name: str) -> None:
+    def add_qualified_type(self, location: Span, name: str) -> None:
         qualified_type: TypeQualifier = validate(name, TypeQualifier)  # type: ignore
+        node = QualifiedType(
+            _span=location,
+            base_type=_MockType,
+            type_qualifier=qualified_type
+        )
 
         # TODO: We are pushing a Type onto the stack, instead of an AST Node
         #       Can we / Should we Instead modify the previous node?
-        self._node_stack.push(
-            QualifiedType(base_type=_MockType, type_qualifier=qualified_type)
-        )
+        self._node_stack.push(node)
 
     def close_qualified_type_building(self) -> None:
         qualified_type_node: ASTNode = self._node_stack.pop()
@@ -219,7 +227,7 @@ class ASTBuilder(object):
         data_type: PrimitiveDataType = validate(dtype, PrimitiveDataType)
         node._data_type = DataType(data_type)
 
-    def add_numerical_type(self) -> None:
+    def open_numerical_type(self) -> None:
         self._node_stack.push(NumericalType(_MockType, []))
 
     def open_shape(self):
@@ -298,16 +306,18 @@ class ASTBuilder(object):
         if not isinstance(type_node, Type):
             raise ContextError.message("type", "Type", type_node)
 
-        qualified_type_node: QualifiedType = self.get_current_node()
+        qualified_type_node: QualifiedType = self._node_stack.pop()
         if not isinstance(qualified_type_node, QualifiedType):
             raise ContextError.message("type", "QualifiedType", qualified_type_node)
 
-        qualified_type_node._base_type = type_node
+        new_node = replace(qualified_type_node, base_type=type_node)
+        self._node_stack.push(new_node)
 
-    def open_declaration_statement(self, name: str):
+    def open_declaration_statement(self, location: Span, name: str):
         node = DeclarationStatement(
+            _span=location,
             _variable_name=Identifier(name),
-            _variable_type=MockQualifiedType,
+            _variable_type=copy(MockQualifiedType),
         )
         self._node_stack.push(node)
 
@@ -345,14 +355,14 @@ class ASTBuilder(object):
     #     # to contain children...
     #     ...
 
-    def open_iteration_statement(self):
-        node = ForAllStatement(_index=Expression)
+    def open_iteration_statement(self, location: Span):
+        node = ForAllStatement(_span=location, _index=Expression)
         self._node_stack.push(node)
 
     def close_iteration_statement(self): ...
 
-    def open_return_statement(self):
-        node = ReturnStatement(_expression=Expression)
+    def open_return_statement(self, location: Span):
+        node = ReturnStatement(_span=location, _expression=Expression)
         self._node_stack.push(node)
 
     def close_return_statement(self):
@@ -406,8 +416,11 @@ class ASTBuilder(object):
         new_node: Function = replace(current, body=body)
         self._node_stack.push(new_node)
 
-    def add_identifier(self, name: str):
-        node = IdentifierExpression((Identifier(name)))
+    def add_identifier(self, location: Span, name: str):
+        node = IdentifierExpression(
+            _span=location,
+            _identifier=Identifier(name)
+        )
         self._node_stack.push(node)
 
     def add_literal(self, value: Union[int, float, complex]):
@@ -421,9 +434,9 @@ class ASTBuilder(object):
             raise NotImplementedError("Unknown Literal")
         self._node_stack.push(node)
 
-    def add_unary_expression(self, operator: str):
+    def add_unary_expression(self, location: Span, operator: str):
         op = validate(operator, UnaryOperation)
-        node = UnaryExpression(_operation=op, _expression=None)
+        node = UnaryExpression(_span=location, _operation=op, _expression=None)
         self._node_stack.push(node)
 
     def close_unary_expression(self):
@@ -433,18 +446,22 @@ class ASTBuilder(object):
                 "unary_expression", Expression.keyname(), expression_node
             )
 
-        current: ASTNode = self.get_current_node()
+        current: ASTNode = self._node_stack.pop()
         if not isinstance(current, UnaryExpression):
             raise ContextError.message(
                 "unary_expression", UnaryExpression.keyname(), current
             )
 
-        current._expression = expression_node
+        new_node = replace(current, _expression=expression_node)
+        self._node_stack.push(new_node)
 
-    def add_binary_expression(self, operator: str):
+    def add_binary_expression(self, location: Span, operator: str):
         op = validate(operator, BinaryOperation)
         node = BinaryExpression(
-            _operation=op, _left_expression=None, _right_expression=None
+            _span=location,
+            _operation=op,
+            _left_expression=None,
+            _right_expression=None
         )
 
         self._node_stack.push(node)
@@ -458,17 +475,17 @@ class ASTBuilder(object):
         if not isinstance(left, Expression):
             raise ContextError.message("binary_expression", Expression.keyname(), left)
 
-        binary: ASTNode = self.get_current_node()
+        binary: ASTNode = self._node_stack.pop()
         if not isinstance(binary, BinaryExpression):
             raise ContextError.message(
                 "binary_expression", BinaryExpression.keyname(), binary
             )
+        new_node = replace(binary, _left_expression=left, _right_expression=right)
+        self._node_stack.push(new_node)
 
-        binary._left_expression = left
-        binary._right_expression = right
-
-    def open_ternary_expression(self):
+    def open_ternary_expression(self, location: Span):
         node = TernaryExpression(
+            _span=location,
             _condition=Expression,
             _true_expression=Expression,
             _false_expression=Expression,
@@ -494,12 +511,16 @@ class ASTBuilder(object):
                 "ternary_expression", f"condition {Expression.keyname()}", _condition
             )
 
-        current = self.get_current_node()
+        current = self._node_stack.pop()
         if not isinstance(current, TernaryExpression):
             raise ContextError.message(
                 "ternary_expression", TernaryExpression.keyname(), current
             )
 
-        current._condition = _condition
-        current._true_expression = _true
-        current._false_expression = _false
+        new_node = replace(
+            current,
+            _condition=_condition,
+            _true_expression=_true,
+            _false_expression=_false
+            )
+        self._node_stack.push(new_node)

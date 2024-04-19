@@ -1,16 +1,42 @@
+""" """
 import logging
+from typing import Optional
 
 
-def get_logger(name: str, level: int = logging.DEBUG) -> logging.Logger:
-    """Constructs a Logger given a name and level."""
+_default_format = logging.Formatter(
+    "%(asctime)s | %(levelname)s | %(funcName)s():%(lineno)d | %(message)s"
+)
+
+
+def get_logger(
+        name: str,
+        level: int = logging.DEBUG,
+        stream: Optional[logging.Handler] = None,
+        formatter: logging.Formatter = _default_format
+        ) -> logging.Logger:
+    """Constructs a Logger given a name and level.
+
+    Args:
+        name (str):
+        level (int): Valid Logging Level
+        stream (logging.Handler): Output Stream of logging. Defaults to StreamHandler.
+        formatter (logging.Formatter): Format of Logging Message
+
+    Raises:
+        TypeError: When an invalid Stream Type is provided.
+
+    """
     log: logging.Logger = logging.getLogger(name)
     log.setLevel(level)
-    stream = logging.StreamHandler()
-    form = logging.Formatter(
-        "%(asctime)s | %(levelname)s | %(message)s | %(funcName)s():%(lineno)d"
-    )
+
+    if stream is None:
+        stream = logging.StreamHandler()
+    
+    elif not isinstance(stream, logging.Handler):
+        raise TypeError(f"Invalid Stream Provided: {stream}")
+
     stream.setLevel(level)
-    stream.setFormatter(form)
+    stream.setFormatter(formatter)
     log.addHandler(stream)
 
     return log

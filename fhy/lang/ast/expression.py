@@ -1,5 +1,6 @@
 # TODO Jason: Add docstring
 from abc import ABC
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import List
 
@@ -16,6 +17,7 @@ class UnaryOperation(StrEnum):
     LOGICAL_NOT = "!"
 
 
+@dataclass(frozen=True, kw_only=True)
 class UnaryExpression(Expression):
     """Expressions of Unary Operators
 
@@ -25,14 +27,8 @@ class UnaryExpression(Expression):
 
     """
 
-    def __init__(
-        self,
-        _operation: UnaryOperation,
-        _expression: Expression,
-    ) -> None:
-        super().__init__()
-        self._operation = _operation
-        self._expression = _expression
+    _operation: UnaryOperation
+    _expression: Expression
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -69,6 +65,7 @@ class BinaryOperation(StrEnum):
     # POWER = "**"
 
 
+@dataclass(frozen=True, kw_only=True)
 class BinaryExpression(Expression):
     """Algebraic or Logical Expression Requiring Two Arguments
 
@@ -78,17 +75,9 @@ class BinaryExpression(Expression):
         _right_expression (Expression): Right Input Expression
 
     """
-
-    def __init__(
-        self,
-        _operation: BinaryOperation,
-        _left_expression: Expression,
-        _right_expression: Expression,
-    ) -> None:
-        super().__init__()
-        self._operation = _operation
-        self._left_expression = _left_expression
-        self._right_expression = _right_expression
+    _operation: BinaryOperation
+    _left_expression: Expression
+    _right_expression: Expression
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -97,6 +86,7 @@ class BinaryExpression(Expression):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class TernaryExpression(Expression):
     """A Conditional (?) Expression Node
 
@@ -110,16 +100,9 @@ class TernaryExpression(Expression):
 
     """
 
-    def __init__(
-        self,
-        _condition: Expression,
-        _true_expression: Expression,
-        _false_expression: Expression,
-    ) -> None:
-        super().__init__()
-        self._condition = _condition
-        self._true_expression = _true_expression
-        self._false_expression = _false_expression
+    _condition: Expression
+    _true_expression: Expression
+    _false_expression: Expression
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -207,15 +190,13 @@ class TupleExpression(Expression):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class IdentifierExpression(Expression):
     """Unclear... Is this meant to be a declaration without value assignment?
     e.g. int i;
 
     """
-
-    def __init__(self, _identifier: Identifier) -> None:
-        super().__init__()
-        self._identifier = _identifier
+    _identifier: Identifier
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
