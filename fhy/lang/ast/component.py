@@ -2,12 +2,14 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from .base import ASTNode, Function
+from .core import ASTNode, Function
+from .directory import register_ast_node
 from .expression import Identifier
 from .qualified_type import QualifiedType
 from .statement import Statement
 
 
+@register_ast_node
 @dataclass(frozen=True, kw_only=True)
 class Argument(ASTNode):
     # TODO Jason: Add docstring
@@ -18,6 +20,7 @@ class Argument(ASTNode):
         return ["name", "qualified_type"]
 
 
+@register_ast_node
 @dataclass(frozen=True, kw_only=True)
 class Procedure(Function):
     """FhY procedure node"""
@@ -32,6 +35,7 @@ class Procedure(Function):
         return attrs
 
 
+@register_ast_node
 @dataclass(frozen=True, kw_only=True)
 class Operation(Function):
     """FhY Operation Node
@@ -43,6 +47,7 @@ class Operation(Function):
         ret_type (QualifiedType): Type information of the Returned Value
 
     """
+
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
     ret_type: QualifiedType

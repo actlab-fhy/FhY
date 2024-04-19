@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from .base import Statement
+from .core import Statement
 from .expression import Expression, Identifier
 from .qualified_type import QualifiedType
 
@@ -17,15 +17,14 @@ class DeclarationStatement(Statement):
         _expression (Optional[Expression]):
 
     """
+
     _variable_name: Identifier
     _variable_type: QualifiedType
     _expression: Optional[Expression] = field(default=None)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(
-            ["_variable_name", "_variable_type", "_expression"]
-        )
+        attrs.extend(["_variable_name", "_variable_type", "_expression"])
         return attrs
 
     # TODO Jason: Implement the functionality of this class
@@ -51,12 +50,13 @@ class ExpressionStatement(Statement):
 @dataclass(frozen=True, kw_only=True)
 class ForAllStatement(Statement):
     """For Loop Node"""
+
     _index: Expression
-    _body: List[Statement] = field(default_factory=list)
+    body: List[Statement] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_index", "_body"])
+        attrs.extend(["_index", "body"])
         return attrs
 
     # TODO Jason: Implement the functionality of this class
@@ -72,6 +72,7 @@ class BranchStatement(Statement):
         _false_body (List[Statement]): Body of Statements Evaluated if False
 
     """
+
     _predicate: Expression
     _true_body: List[Statement] = field(default_factory=list)
     _false_body: List[Statement] = field(default_factory=list)
@@ -87,7 +88,7 @@ class BranchStatement(Statement):
 @dataclass(frozen=True, kw_only=True)
 class ReturnStatement(Statement):
     _expression: Expression
-    
+
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
         attrs.extend(["_expression"])

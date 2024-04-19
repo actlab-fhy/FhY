@@ -5,7 +5,7 @@ from typing import List
 
 from fhy.ir import Type
 
-from .base import Expression, Identifier
+from .core import Expression, Identifier
 
 
 class UnaryOperation(StrEnum):
@@ -42,8 +42,8 @@ class UnaryExpression(Expression):
     # TODO Jason: Implement the functionality of this class
 
 
-# TODO: Unfortunately StrEnum is Only Available for Python3.11 and Above
-#       Remake this Using Something Else, or Construct StrEnum if sys.version_info < (3, 11)
+# TODO: StrEnum is Only Available for Python3.11 and Above Remake
+#       Using Something Else, or Construct StrEnum if sys.version_info < (3, 11)
 class BinaryOperation(StrEnum):
     # TODO Jason: Add docstring
     MULTIPLICATION = "*"
@@ -239,7 +239,7 @@ class IntLiteral(Literal):
     def value(self) -> int:
         """Value of Integer"""
         return self._value
-    
+
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
         attrs.extend(["_value"])
@@ -256,7 +256,7 @@ class FloatLiteral(Literal):
     def value(self) -> float:
         """Value of Floating Point number"""
         return self._value
-    
+
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
         attrs.extend(["_value"])
@@ -275,7 +275,7 @@ class ComplexLiteral(Literal):
     def value(self) -> complex:
         """Value of complex number"""
         return self._value
-    
+
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
         attrs.extend(["_value"])

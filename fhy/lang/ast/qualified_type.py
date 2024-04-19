@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fhy.ir import Type, TypeQualifier
 
-from .base import ASTNode
+from .core import ASTNode
 
 
 class QualifiedType(ASTNode):
@@ -10,7 +10,7 @@ class QualifiedType(ASTNode):
 
     Args:
         _base_type (Type): Primitive or Generic Type (e.g. float, int, T)
-        _type_qualifier (Optional[TypeQualifier]): Qualifying Type, (i.e. input, output, param, state)
+        _type_qualifier (Optional[TypeQualifier]): Qualifying Type Identifier
 
     """
 
