@@ -3,8 +3,8 @@ from antlr4 import (
     BailErrorStrategy,
     CommonTokenStream,
     InputStream,
+    ParserRuleContext,
     RecognitionException,
-    ParserRuleContext
 )
 from antlr4.error.ErrorListener import ErrorListener
 
@@ -14,8 +14,8 @@ from fhy.ir import (
     IndexType,
     NumericalType,
     PrimitiveDataType,
+    Type,
     TypeQualifier,
-    Type
 )
 from fhy.lang.ast import (
     Argument,
@@ -35,12 +35,9 @@ from fhy.lang.ast.expression import (
     IntLiteral,
     TernaryExpression,
     UnaryExpression,
-    UnaryOperation
+    UnaryOperation,
 )
-from fhy.lang.ast.statement import (
-    DeclarationStatement,
-    ReturnStatement
-)
+from fhy.lang.ast.statement import DeclarationStatement, ReturnStatement
 from fhy.lang.ast_builder import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
 
@@ -77,11 +74,11 @@ def parser(lexer):
 
 
 def _test_qual_type(
-        qarg: QualifiedType,
-        qtype: TypeQualifier,
-        btype: Type,
-        primitive: PrimitiveDataType,
-        ) -> Type:
+    qarg: QualifiedType,
+    qtype: TypeQualifier,
+    btype: Type,
+    primitive: PrimitiveDataType,
+) -> Type:
     assert (
         qarg.type_qualifier == qtype
     ), f"Expected argument type qualifier to be {qtype}"
@@ -100,12 +97,12 @@ def _test_qual_type(
 
 
 def _test_arg(
-        arg: Argument,
-        name: str,
-        qtype: TypeQualifier,
-        btype: Type,
-        primitive: PrimitiveDataType,
-        ) -> Type:
+    arg: Argument,
+    name: str,
+    qtype: TypeQualifier,
+    btype: Type,
+    primitive: PrimitiveDataType,
+) -> Type:
     """Tests a Single Argument for Standard Checks"""
     assert isinstance(
         arg.name, Identifier
@@ -113,7 +110,9 @@ def _test_arg(
 
     assert arg.name.name_hint == name, f"Expected argument name to be '{name}'"
     arg_type: QualifiedType = arg.qualified_type
-    assert isinstance(arg_type, QualifiedType), f"Expected Argument.qualified_type to be a QualifiedType: {arg_type}"
+    assert isinstance(
+        arg_type, QualifiedType
+    ), f"Expected Argument.qualified_type to be a QualifiedType: {arg_type}"
 
     return _test_qual_type(arg_type, qtype, btype, primitive)
 
@@ -127,13 +126,17 @@ def _test_shape(shape: list, expected: list):
             sh, Expression
         ), "Expected Expression Type for Shape Components"
 
-        assert isinstance(sh, (IdentifierExpression, IntLiteral)), "Expected IdentifierExpression or IntLiteral"
+        assert isinstance(
+            sh, (IdentifierExpression, IntLiteral)
+        ), "Expected IdentifierExpression or IntLiteral"
         assert type(sh) == type(ex), "Output Shape Type Does Not Match Expected Type"
 
         if isinstance(ex, IntLiteral):
             assert ex.value == sh.value, "Shape Value Does Not Match"
         elif isinstance(ex, IdentifierExpression):
-            assert ex._identifier.name_hint == sh._identifier.name_hint, "Shape Name Hints Do Not Match"
+            assert (
+                ex._identifier.name_hint == sh._identifier.name_hint
+            ), "Shape Name Hints Do Not Match"
 
 
 def test_empty_file(parser):
@@ -166,7 +169,10 @@ def test_empty_procedure(parser):
 
 
 def test_empty_procedure_with_a_qualified_argument(parser):
-    """Test that an empty procedure with a single qualified argument is converted correctly."""
+    """Test that an empty procedure with a single qualified
+    argument is converted correctly.
+
+    """
     source_file_content = "proc foo(input int32 x){}"
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None, "Expected Parse Tree in Module Context"
@@ -184,7 +190,9 @@ def test_empty_procedure_with_a_qualified_argument(parser):
     assert len(procedure.args) == 1, "Expected 1 argument"
 
     arg: Argument = procedure.args[0]
-    arg_base_type = _test_arg(arg, "x", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32)
+    arg_base_type = _test_arg(
+        arg, "x", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32
+    )
     assert (
         len(arg_base_type.shape) == 0
     ), "Expected argument data type to have an empty shape (i.e., scalar)"
@@ -207,16 +215,18 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(parser):
     ), "Expected Procedure Name to be an Identifier"
     assert procedure.name.name_hint == "foo", "Expected procedure name to be 'foo'"
     assert len(procedure.args) == 1, "Expected 1 argument"
-    
+
     arg: Argument = procedure.args[0]
-    arg_base_type = _test_arg(arg, "x", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32)
+    arg_base_type = _test_arg(
+        arg, "x", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32
+    )
     assert (
         len(arg_base_type.shape) == 2
     ), "Expected argument data type Shape to have Two Elements"
 
     expected_arg_shape = [
         IdentifierExpression(Identifier("m")),
-        IdentifierExpression(Identifier("n"))
+        IdentifierExpression(Identifier("n")),
     ]
 
     _test_shape(arg_base_type.shape, expected_arg_shape)
@@ -255,17 +265,21 @@ def test_empty_operation_return_type(parser):
     assert len(op.args) == 1, "Expected 1 argument"
 
     arg: Argument = op.args[0]
-    arg_base_type = _test_arg(arg, "x", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32)
+    arg_base_type = _test_arg(
+        arg, "x", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32
+    )
 
     expected_arg_shape = [
         IdentifierExpression(Identifier("n")),
-        IdentifierExpression(Identifier("m"))
+        IdentifierExpression(Identifier("m")),
     ]
     _test_shape(arg_base_type.shape, expected_arg_shape)
 
     assert len(op.body) == 0, "Expected 0 statements in the body"
     assert isinstance(op.ret_type, QualifiedType)
-    base_ret = _test_qual_type(op.ret_type, TypeQualifier.OUTPUT, NumericalType, PrimitiveDataType.INT32)
+    base_ret = _test_qual_type(
+        op.ret_type, TypeQualifier.OUTPUT, NumericalType, PrimitiveDataType.INT32
+    )
     _test_shape(base_ret.shape, expected_arg_shape)
 
 
@@ -284,12 +298,25 @@ def test_declaration_statement(parser):
     assert len(procedure.body) == 1, "Expected Procedure to contain 1 statement"
 
     statement = procedure.body[0]
-    assert isinstance(statement, DeclarationStatement), "Expected Statement to be a Declaration"
-    assert isinstance(statement._variable_name, Identifier), "Expected Variable Name to be an Identifier"
-    assert statement._variable_name.name_hint == "i", "Expected Variable Name Hint to be `i`"
+    assert isinstance(
+        statement, DeclarationStatement
+    ), "Expected Statement to be a Declaration"
+    assert isinstance(
+        statement._variable_name, Identifier
+    ), "Expected Variable Name to be an Identifier"
+    assert (
+        statement._variable_name.name_hint == "i"
+    ), "Expected Variable Name Hint to be `i`"
 
-    assert isinstance(statement._variable_type, QualifiedType), "Expected Statement._variable_type to be a QualifiedType"
-    base = _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.INT32)
+    assert isinstance(
+        statement._variable_type, QualifiedType
+    ), "Expected Statement._variable_type to be a QualifiedType"
+    base = _test_qual_type(
+        statement._variable_type,
+        TypeQualifier.TEMP,
+        NumericalType,
+        PrimitiveDataType.INT32,
+    )
     assert (
         len(base.shape) == 0
     ), "Expected argument data type to have an empty shape (i.e., scalar)"
@@ -311,7 +338,9 @@ def test_return_statement(parser):
 
     first, statement = procedure.body
     assert isinstance(first, DeclarationStatement), "Expected Declaration Statement"
-    assert first._variable_name.name_hint == "i", "Expected DecalrationStatement.name_hint == `i`"
+    assert (
+        first._variable_name.name_hint == "i"
+    ), "Expected DecalrationStatement.name_hint == `i`"
     print("First: ", first._variable_type.base_type)
 
     assert isinstance(statement, ReturnStatement), "Expected Return Statement"
@@ -338,13 +367,22 @@ def test_unary_expressions(parser):
 
     statement = func.body[0]
     assert isinstance(statement, DeclarationStatement), "Expected Declaration Statement"
-    assert isinstance(statement._variable_name, Identifier), "Statement Variable Must be an Identifier"
+    assert isinstance(
+        statement._variable_name, Identifier
+    ), "Statement Variable Must be an Identifier"
     assert statement._variable_name.name_hint == "i"
-    _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.INT32)
+    _test_qual_type(
+        statement._variable_type,
+        TypeQualifier.TEMP,
+        NumericalType,
+        PrimitiveDataType.INT32,
+    )
 
     unary = statement._expression
     assert isinstance(unary, UnaryExpression), "Expected an UnaryExpression"
-    assert unary._operation == UnaryOperation.NEGATIVE, "Expected Negative UnaryOperator Operation"
+    assert (
+        unary._operation == UnaryOperation.NEGATIVE
+    ), "Expected Negative UnaryOperator Operation"
     assert isinstance(unary._expression, IntLiteral), "Expected IntLiteral Expression"
     assert unary._expression.value == 5, "Expected IntLiteral Value of int(5)"
 
@@ -365,25 +403,44 @@ def test_binary_expressions(parser):
 
     statement = func.body[0]
     assert isinstance(statement, DeclarationStatement), "Expected Declaration Statement"
-    assert isinstance(statement._variable_name, Identifier), "Statement Variable Must be an Identifier"
+    assert isinstance(
+        statement._variable_name, Identifier
+    ), "Statement Variable Must be an Identifier"
     assert statement._variable_name.name_hint == "i"
-    _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.FLOAT32)
+    _test_qual_type(
+        statement._variable_type,
+        TypeQualifier.TEMP,
+        NumericalType,
+        PrimitiveDataType.FLOAT32,
+    )
 
     binary = statement._expression
     assert isinstance(binary, BinaryExpression), "Expected an BinaryExpression"
-    assert binary._operation == BinaryOperation.MULTIPLICATION, "Expected `*` BinaryOperator Operation"
+    assert (
+        binary._operation == BinaryOperation.MULTIPLICATION
+    ), "Expected `*` BinaryOperator Operation"
 
     # TODO: This part is Failing, since we are not Accurately Assigning Float Literals.
-    assert isinstance(binary._left_expression, FloatLiteral), "Expected FloatLiteral Expression"
-    assert binary._left_expression.value == 5.0, "Expected FloatLiteral Value of float(5.0)"
+    assert isinstance(
+        binary._left_expression, FloatLiteral
+    ), "Expected FloatLiteral Expression"
+    assert (
+        binary._left_expression.value == 5.0
+    ), "Expected FloatLiteral Value of float(5.0)"
 
-    assert isinstance(binary._right_expression, FloatLiteral), "Expected FloatLiteral Expression"
-    assert binary._right_expression.value == 6.0, "Expected FloatLiteral Value of float(5.0)"
+    assert isinstance(
+        binary._right_expression, FloatLiteral
+    ), "Expected FloatLiteral Expression"
+    assert (
+        binary._right_expression.value == 6.0
+    ), "Expected FloatLiteral Value of float(5.0)"
 
 
 def test_ternary_expressions(parser):
     """Tests a Ternary Conditional Expression"""
-    source_file_content = "op foo() {temp float32 i = 5.0 < 6.0 ? 7.0 / 8.0 : 4.0 - 3.0;}"
+    source_file_content = (
+        "op foo() {temp float32 i = 5.0 < 6.0 ? 7.0 / 8.0 : 4.0 - 3.0;}"
+    )
     parse_tree = parser(source_file_content).module()
     assert parse_tree is not None
 
@@ -397,20 +454,39 @@ def test_ternary_expressions(parser):
 
     statement = func.body[0]
     assert isinstance(statement, DeclarationStatement), "Expected Declaration Statement"
-    assert isinstance(statement._variable_name, Identifier), "Statement Variable Must be an Identifier"
+    assert isinstance(
+        statement._variable_name, Identifier
+    ), "Statement Variable Must be an Identifier"
     assert statement._variable_name.name_hint == "i"
-    _test_qual_type(statement._variable_type, TypeQualifier.TEMP, NumericalType, PrimitiveDataType.FLOAT32)
+    _test_qual_type(
+        statement._variable_type,
+        TypeQualifier.TEMP,
+        NumericalType,
+        PrimitiveDataType.FLOAT32,
+    )
 
     tern = statement._expression
     assert isinstance(tern, TernaryExpression), "Expected Ternary Expression"
-    assert isinstance(tern._condition, BinaryExpression), "Expected BinaryExpression Condition  "
-    assert tern._condition._operation == BinaryOperation.LESS_THAN, "Expected `<` Operator in Condition"
+    assert isinstance(
+        tern._condition, BinaryExpression
+    ), "Expected BinaryExpression Condition  "
+    assert (
+        tern._condition._operation == BinaryOperation.LESS_THAN
+    ), "Expected `<` Operator in Condition"
     assert tern._condition._left_expression
 
-    assert isinstance(tern._true_expression, BinaryExpression), "Expected BinaryExpression True Expression"
-    assert tern._true_expression._operation == BinaryOperation.DIVISION, "Expected `/` Operator in True Expression"
-    assert isinstance(tern._false_expression, BinaryExpression), "Expected BinaryExpression False Expression"
-    assert tern._false_expression._operation == BinaryOperation.SUBTRACTION, "Expected `/` Operator in False Expression"
+    assert isinstance(
+        tern._true_expression, BinaryExpression
+    ), "Expected BinaryExpression True Expression"
+    assert (
+        tern._true_expression._operation == BinaryOperation.DIVISION
+    ), "Expected `/` Operator in True Expression"
+    assert isinstance(
+        tern._false_expression, BinaryExpression
+    ), "Expected BinaryExpression False Expression"
+    assert (
+        tern._false_expression._operation == BinaryOperation.SUBTRACTION
+    ), "Expected `/` Operator in False Expression"
 
 
 # def test_branch_statement(parser):
@@ -452,7 +528,9 @@ def test_index_type(parser):
     func: Component = ast.components[0]
     assert isinstance(func, Procedure), "Expected Procedure AST node"
     assert len(func.args) == 1, "Expected 1 Argument"
-    _test_arg(func.args[0], "A", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32)
+    _test_arg(
+        func.args[0], "A", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32
+    )
 
     assert len(func.body) == 1, "Expected Procedure to contain 1 statement"
     statement = func.body[0]
@@ -462,13 +540,19 @@ def test_index_type(parser):
 
     var_type = statement._variable_type
     assert isinstance(var_type, QualifiedType), "Expected QualifiedType"
-    assert var_type.type_qualifier == TypeQualifier.TEMP, "Expected `Temp` TypeQualifier"
+    assert (
+        var_type.type_qualifier == TypeQualifier.TEMP
+    ), "Expected `Temp` TypeQualifier"
     index = var_type.base_type
     assert isinstance(index, IndexType), "Expected IndexType Base Type"
 
-    assert isinstance(index._lower_bound , IntLiteral), "Expected IntLiteral Lower Bound"
+    assert isinstance(index._lower_bound, IntLiteral), "Expected IntLiteral Lower Bound"
     assert index._lower_bound.value == 1, "Expected LowerBound value of 1"
 
-    assert isinstance(index._upper_bound, IdentifierExpression), "Expected IdentifierExpression Upper Bound"
+    assert isinstance(
+        index._upper_bound, IdentifierExpression
+    ), "Expected IdentifierExpression Upper Bound"
     assert isinstance(index._upper_bound._identifier, Identifier), "Expected Identifier"
-    assert index._upper_bound._identifier.name_hint == "m", "Expected Identifier name `m`"
+    assert (
+        index._upper_bound._identifier.name_hint == "m"
+    ), "Expected Identifier name `m`"

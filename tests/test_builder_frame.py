@@ -1,4 +1,5 @@
 """ """
+
 import pytest
 
 from fhy.lang.ast.core import Module
@@ -10,8 +11,8 @@ def test_builder_frame_properties():
     builder = ASTBuilderFrame(Module)
 
     # Attributes should be Populated
-    assert (
-        builder._attributes == set(("_span", "components"))
+    assert builder._attributes == set(
+        ("_span", "components")
     ), "Expected Certain Attributes"
 
     # Those Attributes should be Assigned
@@ -21,11 +22,22 @@ def test_builder_frame_properties():
     # We should not be able to Assign Attributes not specified by the ASTNode
     with pytest.raises(FieldAttributeError):
         builder._bad_attribute = "Ooops"
-    
-    assert not hasattr(builder, "_bad_attribute"), "Builder should not have `_bad_attribute`"
+
+    assert not hasattr(
+        builder, "_bad_attribute"
+    ), "Builder should not have `_bad_attribute`"
+
+    # Confirm users cannot Directly Modify Protected Attributes
+    with pytest.raises(FieldAttributeError):
+        builder._type_info = "Modified!?"
+    assert (
+        builder._type_info != "Modified!?"
+    ), "User should not be able to Modify Protected Attribute"
 
     # Update Values
-    assert builder.components is None, "Expected components Attribute to be None at first."
+    assert (
+        builder.components is None
+    ), "Expected components Attribute to be None at first."
     builder.update(components=[])
     assert isinstance(builder.components, list), "Expected Components to be List"
 

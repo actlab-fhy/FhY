@@ -1,4 +1,5 @@
 """ """
+
 import pytest
 
 from fhy.ir.type import PrimitiveDataType, TypeQualifier
