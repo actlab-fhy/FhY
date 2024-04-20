@@ -29,14 +29,17 @@ from fhy.lang.ast.expression import (
     BinaryExpression,
     BinaryOperation,
     ComplexLiteral,
+    ExpressionList,
     FloatLiteral,
+    FunctionExpression,
     IdentifierExpression,
     IntLiteral,
     TernaryExpression,
+    TensorAccessExpression,
+    TupleAccessExpression,
     UnaryExpression,
     UnaryOperation,
 )
-from fhy.lang.span import Span
 from fhy.lang.ast.statement import (
     BranchStatement,
     DeclarationStatement,
@@ -44,6 +47,7 @@ from fhy.lang.ast.statement import (
     ForAllStatement,
     ReturnStatement,
 )
+from fhy.lang.span import Span
 from fhy.utils import Stack
 
 
@@ -89,7 +93,9 @@ class ContextError(Exception):
 #       Optional, since that is only true during build, not after creation.
 _MockType = PrimitiveDataType._PLACEHOLDER
 _MockQual = TypeQualifier._PLACEHOLDER
-MockQualifiedType = QualifiedType(_span=None, base_type=_MockType, type_qualifier=_MockQual)
+MockQualifiedType = QualifiedType(
+    _span=None, base_type=_MockType, type_qualifier=_MockQual
+)
 
 
 class ASTBuilder(object):
@@ -132,9 +138,7 @@ class ASTBuilder(object):
 
     def add_operation(self, location: Span, name: str) -> None:
         node = Operation(
-            _span=location,
-            name=Identifier(name),
-            ret_type=copy(MockQualifiedType)
+            _span=location, name=Identifier(name), ret_type=copy(MockQualifiedType)
         )
         self._node_stack.push(node)
 
@@ -173,9 +177,7 @@ class ASTBuilder(object):
     def add_qualified_type(self, location: Span, name: str) -> None:
         qualified_type: TypeQualifier = validate(name, TypeQualifier)  # type: ignore
         node = QualifiedType(
-            _span=location,
-            base_type=_MockType,
-            type_qualifier=qualified_type
+            _span=location, base_type=_MockType, type_qualifier=qualified_type
         )
 
         # TODO: We are pushing a Type onto the stack, instead of an AST Node
@@ -343,6 +345,44 @@ class ASTBuilder(object):
         new_node = replace(current, _expression=express)
         self._node_stack.push(new_node)
 
+    def open_expression_statement(self, location: Span, name: Optional[str]):
+        if name is None:
+            node = ExpressionStatement(_span=location, _left=None, _right=None)
+        else:
+            node = ExpressionStatement(
+                _span=location, _left=Identifier(name), _right=None
+            )
+        self._node_stack.push(node)
+
+    def close_expression_statement(self):
+        # TODO: This is not Collecting Correctly...
+        index = self._node_stack.pop()
+        if not isinstance(index, ExpressionList):
+            raise ContextError.message(
+                "expression_statement", "ExpressionList", index
+            )
+
+        right = self._node_stack.pop()
+        if not isinstance(right, Expression):
+            raise ContextError.message(
+                "expression_statement", Expression.keyname(), right
+            )
+
+        left = self._node_stack.pop()
+        if not isinstance(left, Expression):
+            raise ContextError.message(
+                "expression_statement", Expression.keyname(), left
+            )
+
+        statement = self._node_stack.pop()
+        if not isinstance(statement, ExpressionStatement):
+            raise ContextError.message(
+                "expression_statement", ExpressionStatement.keyname(), statement
+            )
+
+        new_node = replace(statement, _left=left, _right=right, _index=index.body)
+        self._node_stack.push(new_node)
+
     # def open_branch_statement(self):
     #     node = BranchStatement(_predicate=Expression)
     #     self._node_stack.push(node)
@@ -355,11 +395,25 @@ class ASTBuilder(object):
     #     # to contain children...
     #     ...
 
-    def open_iteration_statement(self, location: Span):
-        node = ForAllStatement(_span=location, _index=Expression)
-        self._node_stack.push(node)
+    # def open_iteration_statement(self, location: Span):
+    #     node = ForAllStatement(_span=location, _index=Expression)
+    #     self._node_stack.push(node)
 
-    def close_iteration_statement(self): ...
+    # def close_iteration_statement(self):
+    #     _index = self._node_stack.pop()
+    #     if not isinstance(_index, Expression):
+    #         raise ContextError.message(
+    #             "iteration_statement", Expression.keyname(), _index
+    #         )
+
+    #     _statement = self._node_stack.pop()
+    #     if not isinstance(_statement, ForAllStatement):
+    #         raise ContextError.message(
+    #             "iteration_statement", ForAllStatement.keyname(), _statement
+    #         )
+
+    #     new_node = replace(_statement, _index=_index)
+    #     self._node_stack.push(new_node)
 
     def open_return_statement(self, location: Span):
         node = ReturnStatement(_span=location, _expression=Expression)
@@ -400,36 +454,87 @@ class ASTBuilder(object):
                 "statement", f"{Function.keyname()} | {Statement.keyname()}", current
             )
 
-        elif isinstance(current, Statement):
-            # TODO: This is in Preparation of Support of ForAllStatements
-            if not isinstance(current, ForAllStatement):
-                raise NotImplementedError(
-                    "Have Not Implemented CLosing Statements on anything other than"
-                    f" ForAllStatements. Received: {current}"
-                )
+        elif (
+            isinstance(current, Statement) and
+            not isinstance(current, ForAllStatement)
+            ):
+            raise NotImplementedError(
+                "Have Not Implemented CLosing Statements on anything other than"
+                f" ForAllStatements. Received: {current}"
+            )   
 
         body: List[Statement] = []
         if hasattr(current, "body") and current.body is not None:
             body.extend(current.body)
         body.append(_statement)
 
-        new_node: Function = replace(current, body=body)
+        new_node: Union[Function, Statement] = replace(current, body=body)
+        self._node_stack.push(new_node)
+
+    def open_expression_list(self):
+        self._node_stack.push(ExpressionList())
+
+    def close_expression_list(self):
+        body: List[Expression] = []
+        while len(self._node_stack):
+            node = self._node_stack.pop()
+            if isinstance(node, ExpressionList):
+                break
+            elif not isinstance(node, Expression):
+                raise ContextError.message(
+                    "expression_list", Expression.keyname(), node
+                )
+            body.append(node)
+
+        if not isinstance(node, ExpressionList):
+            raise ContextError.message(
+                    "expression_list", "ExpressionList", node
+                )
+
+        node.body = body[::-1]
+        self._node_stack.push(node)
+
+    def open_tensor_access_expression(self, location: Span):
+        node = TensorAccessExpression(_span=location)
+        self._node_stack.push(node)
+
+    def close_tensor_access_expression(self):
+        express_body = self._node_stack.pop()
+        if not isinstance(express_body, ExpressionList):
+            raise ContextError.message(
+                "tensor_access_expression", "ExpressionList", express_body
+            )
+
+        index_body = self._node_stack.pop()
+        if not isinstance(index_body, ExpressionList):
+            raise ContextError.message(
+                "tensor_access_expression", "ExpressionList", index_body
+            )
+
+        tensor = self._node_stack.pop()
+        if not isinstance(tensor, TensorAccessExpression):
+            raise ContextError.message(
+                "tensor_access_expression", "ExpressionList", tensor
+            )
+
+        new_node = replace(
+            tensor,
+            _index=index_body.body,
+            _expressions=express_body.body,
+        )
         self._node_stack.push(new_node)
 
     def add_identifier(self, location: Span, name: str):
-        node = IdentifierExpression(
-            _span=location,
-            _identifier=Identifier(name)
-        )
+        node = IdentifierExpression(_span=location, _identifier=Identifier(name))
         self._node_stack.push(node)
 
-    def add_literal(self, value: Union[int, float, complex]):
+    def add_literal(self, location: Span, value: Union[int, float, complex]):
         if isinstance(value, complex):
-            node = ComplexLiteral(value)
+            node = ComplexLiteral(_span=location, value=value)
         elif isinstance(value, float):
-            node = FloatLiteral(value)
+            node = FloatLiteral(_span=location, value=value)
         elif isinstance(value, int):
-            node = IntLiteral(value)
+            node = IntLiteral(_span=location, value=value)
         else:
             raise NotImplementedError("Unknown Literal")
         self._node_stack.push(node)
@@ -458,10 +563,7 @@ class ASTBuilder(object):
     def add_binary_expression(self, location: Span, operator: str):
         op = validate(operator, BinaryOperation)
         node = BinaryExpression(
-            _span=location,
-            _operation=op,
-            _left_expression=None,
-            _right_expression=None
+            _span=location, _operation=op, _left_expression=None, _right_expression=None
         )
 
         self._node_stack.push(node)
@@ -521,6 +623,6 @@ class ASTBuilder(object):
             current,
             _condition=_condition,
             _true_expression=_true,
-            _false_expression=_false
-            )
+            _false_expression=_false,
+        )
         self._node_stack.push(new_node)

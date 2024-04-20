@@ -37,7 +37,12 @@ from fhy.lang.ast.expression import (
     UnaryExpression,
     UnaryOperation,
 )
-from fhy.lang.ast.statement import DeclarationStatement, ReturnStatement
+from fhy.lang.ast.statement import (
+    DeclarationStatement,
+    ExpressionStatement,
+    ReturnStatement,
+    ForAllStatement
+)
 from fhy.lang.ast_builder import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
 
@@ -225,8 +230,8 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(parser):
     ), "Expected argument data type Shape to have Two Elements"
 
     expected_arg_shape = [
-        IdentifierExpression(Identifier("m")),
-        IdentifierExpression(Identifier("n")),
+        IdentifierExpression(_span=None, _identifier=Identifier("m")),
+        IdentifierExpression(_span=None, _identifier=Identifier("n")),
     ]
 
     _test_shape(arg_base_type.shape, expected_arg_shape)
@@ -270,8 +275,8 @@ def test_empty_operation_return_type(parser):
     )
 
     expected_arg_shape = [
-        IdentifierExpression(Identifier("n")),
-        IdentifierExpression(Identifier("m")),
+        IdentifierExpression(_span=None, _identifier=Identifier("n")),
+        IdentifierExpression(_span=None, _identifier=Identifier("m")),
     ]
     _test_shape(arg_base_type.shape, expected_arg_shape)
 
@@ -516,7 +521,6 @@ def test_ternary_expressions(parser):
 
 def test_index_type(parser):
     """Test Construction of an Index Type"""
-    # TODO: Support Index Type --> Need to Support Primary Expressions -> Atoms First
     source = "proc bar(input int32[m, n] A) {temp index[1:m] i;}"
     parse_tree = parser(source).module()
     assert parse_tree is not None
@@ -556,3 +560,104 @@ def test_index_type(parser):
     assert (
         index._upper_bound._identifier.name_hint == "m"
     ), "Expected Identifier name `m`"
+
+
+def test_tensor_access_expressions(parser):
+    """Tests construction of TensorAccess Expressions."""
+    source = """
+proc bar(input int32[m, n] A, output int32[m, n] B) {
+    temp index[1:m] i;
+    temp index[1:n] j;
+    A[i, j];
+}
+"""
+    parse_tree = parser(source).module()
+    assert parse_tree is not None
+
+    ast: ASTNode = from_parse_tree(parse_tree)
+    assert isinstance(ast, Module), "Expected Module AST node"
+    assert len(ast.components) == 1, "Expected 1 component"
+    print(ast)
+
+    func: Component = ast.components[0]
+    assert isinstance(func, Procedure), "Expected Procedure AST node"
+    assert len(func.args) == 2, "Expected 2 Argument"
+    _test_arg(
+        func.args[0], "A", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32
+    )
+    assert len(func.body) == 3, "Expected 3 Statement in Procedure Body"
+
+    statement = func.body[2]
+    assert isinstance(statement, ExpressionStatement), "Expected ExpressionStatement"
+
+    # index = [Id(i), Id(j)]
+    assert isinstance(statement._index, list), "Expected Index to be a List"
+    assert len(statement._index) == 2, "Expected 2 Elements in Index"
+    assert isinstance(
+        statement._index[0], IdentifierExpression
+    ), "Expected IdentifierExpression"
+    assert statement._index[0]._identifier.name_hint == "i", "Expected Index Name `i`"
+    assert isinstance(
+        statement._index[0], IdentifierExpression
+    ), "Expected IdentifierExpression"
+    assert statement._index[1]._identifier.name_hint == "j", "Expected Index Name `j`"
+
+    # TODO: Validate Construction of this ExpressionStatement
+    #       I think that _left and _right are a little Off...
+    #       statement._right  # IdentifierExpression A
+    #       statement._left  # TensorAccessExpression ??
+
+    assert isinstance(statement._right, IdentifierExpression)
+    assert statement._right._identifier.name_hint == "A", "Expected Tensor Name `A`"
+
+
+
+# TODO: Work on Handling Iteration Statements
+# def test_empty_iteration_statement(parser):
+#     source = "proc bar(input int32[m, n] A) {temp index[1:m] i; forall (i) {}}"
+#     parse_tree = parser(source).module()
+#     assert parse_tree is not None
+
+#     ast: ASTNode = from_parse_tree(parse_tree)
+#     assert isinstance(ast, Module), "Expected Module AST node"
+#     assert len(ast.components) == 1, "Expected 1 component"
+
+#     func: Component = ast.components[0]
+#     assert isinstance(func, Procedure), "Expected Procedure AST node"
+#     assert len(func.args) == 1, "Expected 1 Argument"
+#     _test_arg(
+#         func.args[0], "A", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32
+#     )
+
+#     assert len(func.body) == 2, "Expected Procedure to contain 2 statements"
+#     declartion, iteration = func.body
+#     assert isinstance(declartion, DeclarationStatement), "Expected Declaration Statement"
+#     assert isinstance(iteration, ForAllStatement), "Expected For All Statement"
+
+#     assert isinstance(iteration._index, IdentifierExpression), "Expected Identifier Expression"
+#     assert len(iteration.body) == 0, "Expected Empty Iteration Statement Body"
+
+
+# def test_iteration_statement(parser):
+#     source = "proc bar(input int32[m, n] A) {temp index[1:m] i; forall (i) {temp index[1:n] j;}}"
+#     parse_tree = parser(source).module()
+#     assert parse_tree is not None
+
+#     ast: ASTNode = from_parse_tree(parse_tree)
+#     assert isinstance(ast, Module), "Expected Module AST node"
+#     assert len(ast.components) == 1, "Expected 1 component"
+
+#     func: Component = ast.components[0]
+#     assert isinstance(func, Procedure), "Expected Procedure AST node"
+#     assert len(func.args) == 1, "Expected 1 Argument"
+#     _test_arg(
+#         func.args[0], "A", TypeQualifier.INPUT, NumericalType, PrimitiveDataType.INT32
+#     )
+
+#     assert len(func.body) == 2, "Expected Procedure to contain 2 statements"
+#     declartion, iteration = func.body
+#     assert isinstance(declartion, DeclarationStatement), "Expected Declaration Statement"
+#     assert isinstance(iteration, ForAllStatement), "Expected For All Statement"
+
+#     assert isinstance(iteration._index, IdentifierExpression), "Expected Identifier Expression"
+#     assert len(iteration.body) == 1, "Expected Iteration Statement Body to have 1 Element"

@@ -75,6 +75,7 @@ class BinaryExpression(Expression):
         _right_expression (Expression): Right Input Expression
 
     """
+
     _operation: BinaryOperation
     _left_expression: Expression
     _right_expression: Expression
@@ -196,6 +197,7 @@ class IdentifierExpression(Expression):
     e.g. int i;
 
     """
+
     _identifier: Identifier
 
     def visit_attrs(self) -> List[str]:

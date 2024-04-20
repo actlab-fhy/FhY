@@ -124,11 +124,17 @@ class ParseTreeConverter(FhYListener):
         self._log.debug("Exit")
         self._builder.close_declaration_statement()
 
-    # def enterExpression_statement(self, ctx:FhYParser.Expression_statementContext):
-    #     pass
+    def enterExpression_statement(self, ctx:FhYParser.Expression_statementContext):
+        self._log.debug("Enter")
+        location = getSourceInfo(ctx)
+        name = ctx.IDENTIFIER()
+        if name is not None:
+            name = name.getText()
+        self._builder.open_expression_statement(location, name)
 
-    # def exitExpression_statement(self, ctx:FhYParser.Expression_statementContext):
-    #     pass
+    def exitExpression_statement(self, ctx:FhYParser.Expression_statementContext):
+        self._log.debug("Exit")
+        self._builder.close_expression_statement()
 
     # def enterSelection_statement(self, ctx:FhYParser.Selection_statementContext):
     #     # We have two Statement Children of a Selection Statement, which
@@ -138,12 +144,12 @@ class ParseTreeConverter(FhYListener):
     # def exitSelection_statement(self, ctx:FhYParser.Selection_statementContext):
     #     self._builder.close_branch_statement()
 
-    def enterIteration_statement(self, ctx:FhYParser.Iteration_statementContext):
+    def enterIteration_statement(self, ctx: FhYParser.Iteration_statementContext):
         self._log.debug("Enter")
         location: Span = getSourceInfo(ctx)
         self._builder.open_iteration_statement(location)
 
-    def exitIteration_statement(self, ctx:FhYParser.Iteration_statementContext):
+    def exitIteration_statement(self, ctx: FhYParser.Iteration_statementContext):
         self._log.debug("Exit")
         self._builder.close_iteration_statement()
 
@@ -280,6 +286,14 @@ class ParseTreeConverter(FhYListener):
         else:
             raise NotImplementedError("Unknown Expression Not Implemented")
 
+    def enterExpression_list(self, ctx:FhYParser.Expression_listContext):
+        self._log.debug("Enter")
+        self._builder.open_expression_list()
+
+    def exitExpression_list(self, ctx:FhYParser.Expression_listContext):
+        self._log.debug("Exit")
+        self._builder.close_expression_list()
+
     def exitExpression(self, ctx: FhYParser.ExpressionContext):
         self._log.debug("Exit")
         if ctx.primary_expression() is not None:
@@ -316,21 +330,27 @@ class ParseTreeConverter(FhYListener):
             raise NotImplementedError("Unknown Expression Not Implemented")
 
     def enterPrimary_expression(self, ctx: FhYParser.Primary_expressionContext):
-        self._log.debug("Enter")
+
+        location = getSourceInfo(ctx)
         if ctx.tuple_access_expression is not None:
-            ...
+            self._log.debug("Enter Tuple Access Expression")
 
         elif ctx.function_expression is not None:
-            ...
+            self._log.debug("Enter Function Expression")
 
         elif ctx.tensor_access_expression is not None:
-            ...
+            self._log.debug("Enter Tensor Access Expression")
+            self._builder.open_tensor_access_expression(location)
 
         elif ctx.atom() is not None:
+            self._log.debug("Enter Atom Expression")
             ...
 
         else:
             raise NotImplementedError("Unknown Primary Expression")
+
+    def exitPrimary_expression(self, ctx:FhYParser.Primary_expressionContext):
+        self._log.debug("Exit")
 
     def exitStatement(self, ctx: FhYParser.StatementContext):
         self._log.debug("Exit")
@@ -339,6 +359,7 @@ class ParseTreeConverter(FhYListener):
     # LITERALS
     def enterLiteral(self, ctx: FhYParser.LiteralContext):
         self._log.debug("Enter")
+        location = getSourceInfo(ctx)
         # TODO: Capturing Floats is Not Working Here...
         if (floats := ctx.float_literal()) is not None:
             value = float(floats.getText())
@@ -349,7 +370,7 @@ class ParseTreeConverter(FhYListener):
         # TODO: Handle Complex Values
         else:
             raise NotImplementedError("Unknown Type Literal")
-        self._builder.add_literal(value)
+        self._builder.add_literal(location, value)
 
     @property
     def ast(self) -> Optional[ASTNode]:

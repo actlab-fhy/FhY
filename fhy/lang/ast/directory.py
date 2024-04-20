@@ -1,6 +1,7 @@
 # TODO Jason: Add docstring
 from dataclasses import dataclass
 from typing import Dict
+
 from .base import ASTNode
 
 
@@ -9,6 +10,7 @@ class UnregisteredASTNode(Exception):
     is not available (i.e. the ASTNode has not been registered)
 
     """
+
     ...
 
 
@@ -22,7 +24,7 @@ _ast_node_types: Dict[type[ASTNode], ASTNodeTypeInfo] = {}
 
 def get_ast_node_type_info(ast_node_class: type[ASTNode]) -> ASTNodeTypeInfo:
     """Collects Typing Information from an ASTNode that has been previously registered.
-    
+
     Raises:
         UnregisteredASTNode: When a class has not been previously registered.
 
