@@ -1,6 +1,6 @@
 # TODO Jason: Add docstring
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import List
 
@@ -111,6 +111,14 @@ class TernaryExpression(Expression):
         return attrs
 
 
+@dataclass
+class ExpressionList(object):
+    """Helper Container to Split Up Build Process"""
+
+    body: List[Expression] = field(default_factory=list)
+
+
+@dataclass(frozen=True, kw_only=True)
 class TupleAccessExpression(Expression):
     """Expression to Access Tuple Elements
 
@@ -131,21 +139,14 @@ class TupleAccessExpression(Expression):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class FunctionExpression(Expression):
-    """Option"""
+    """Function Call"""
 
-    def __init__(
-        self,
-        _template_types: List[Type],
-        _indices: List[Expression],
-        _args: List[Expression],
-        _return_type: Type,
-    ) -> None:
-        super().__init__()
-        self._template_types = _template_types
-        self._indices = _indices
-        self._args = _args
-        self._return_type = _return_type
+    _template_types: List[Type]
+    _indices: List[Expression]
+    _args: List[Expression]
+    _return_type: Type
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -153,6 +154,7 @@ class FunctionExpression(Expression):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class TensorAccessExpression(Expression):
     """Tensor Indexing Node
 
@@ -164,12 +166,8 @@ class TensorAccessExpression(Expression):
 
     """
 
-    def __init__(
-        self, _expressions: List[Expression], _indices: List[Expression]
-    ) -> None:
-        super().__init__()
-        self._expressions = _expressions
-        self._indices = _indices
+    _expressions: List[Expression] = field(default_factory=list)
+    _indices: List[Expression] = field(default_factory=list)
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -178,12 +176,12 @@ class TensorAccessExpression(Expression):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class TupleExpression(Expression):
     """Expression of a Tuple"""
 
-    def __init__(self, _expressions: List[Expression]) -> None:
-        super().__init__()
-        self._expressions = _expressions
+    _expressions: List[Expression] = field(default_factory=list)
+
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -208,20 +206,16 @@ class IdentifierExpression(Expression):
     # TODO Jason: Implement the functionality of this class
 
 
+@dataclass(frozen=True, kw_only=True)
 class Literal(Expression, ABC):
     """Expression Literal Values"""
 
 
+@dataclass(frozen=True, kw_only=True)
 class IntLiteral(Literal):
     """Integer value Node"""
 
-    def __init__(self, value: int) -> None:
-        self._value = value
-
-    @property
-    def value(self) -> int:
-        """Value of Integer"""
-        return self._value
+    value: int
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -229,16 +223,11 @@ class IntLiteral(Literal):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class FloatLiteral(Literal):
     """Floating Point value Node"""
 
-    def __init__(self, value: float) -> None:
-        self._value = value
-
-    @property
-    def value(self) -> float:
-        """Value of Floating Point number"""
-        return self._value
+    value: float
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -246,18 +235,11 @@ class FloatLiteral(Literal):
         return attrs
 
 
+@dataclass(frozen=True, kw_only=True)
 class ComplexLiteral(Literal):
     """Complex Number value Node"""
 
-    _value: complex
-
-    def __init__(self, value: complex) -> None:
-        self._value = value
-
-    @property
-    def value(self) -> complex:
-        """Value of complex number"""
-        return self._value
+    value: complex
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
