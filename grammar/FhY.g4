@@ -42,7 +42,7 @@ function_arg
     ;
 
 function_body
-    : statement*
+    : statement_series
     ;
 
 /*
@@ -57,6 +57,10 @@ statement
     | return_statement
     ;
 
+statement_series
+    : statement*
+    ;
+
 declaration_statement
     : qualified_type name=IDENTIFIER (EQUALS_SIGN expression)? SEMICOLON
     ;
@@ -66,11 +70,11 @@ expression_statement
     ;
 
 selection_statement
-    : IF OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement* CLOSE_BRACE (ELSE OPEN_BRACE statement* CLOSE_BRACE)?
+    : IF OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement_series CLOSE_BRACE (ELSE OPEN_BRACE statement_series CLOSE_BRACE)?
     ;
 
 iteration_statement
-    : FORALL OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement* CLOSE_BRACE
+    : FORALL OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement_series CLOSE_BRACE
     ;
 
 return_statement

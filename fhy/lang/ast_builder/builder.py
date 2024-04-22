@@ -33,7 +33,7 @@ from fhy.lang.ast.expression import (
     UnaryOperation,
 )
 from fhy.lang.ast.statement import (
-    BranchStatement,
+    SelectionStatement,
     DeclarationStatement,
     ExpressionStatement,
     ForAllStatement,

@@ -62,7 +62,7 @@ class ForAllStatement(Statement):
 
 
 @dataclass(frozen=True, kw_only=True)
-class BranchStatement(Statement):
+class SelectionStatement(Statement):
     """A Branch (Conditional) Statement Block Node.
 
     Args:

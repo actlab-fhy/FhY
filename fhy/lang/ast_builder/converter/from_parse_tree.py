@@ -30,6 +30,10 @@ def _initialize_builtin_identifiers() -> Dict[str, ir.Identifier]:
     }
 
 
+# TODO: Change function signatures to enable type checking
+# TODO: after the todo abovce remove all the unnecessary asserts for types
+
+
 class ParseTreeConverter(FhYVisitor):
     _scopes: ChainMap[str, ir.Identifier]
 
@@ -155,6 +159,12 @@ class ParseTreeConverter(FhYVisitor):
         self,
         ctx: FhYParser.Function_bodyContext
     ) -> Any:
+        return self.visitStatement_series(ctx.statement_series())
+
+    # =====================
+    # STATEMENT VISITORS
+    # =====================
+    def visitStatement_series(self, ctx: FhYParser.Statement_seriesContext):
         statements: List[ast.Statement] = []
         if ctx.statement() is not None:
             for statement_ctx in ctx.statement():
@@ -163,9 +173,6 @@ class ParseTreeConverter(FhYVisitor):
                 statements.append(statement)
         return statements
 
-    # =====================
-    # STATEMENT VISITORS
-    # =====================
     def visitDeclaration_statement(self, ctx: FhYParser.Declaration_statementContext) -> Any:
         qualified_type = self.visitQualified_type(ctx.qualified_type())
         name_hint: str = ctx.IDENTIFIER().getText()
@@ -189,6 +196,34 @@ class ParseTreeConverter(FhYVisitor):
         span = _get_source_info(ctx)
 
         return ast.ExpressionStatement(left=left_expression, right=right_expression, span=span)
+
+    def visitSelection_statement(self, ctx: FhYParser.Selection_statementContext):
+        condition_ctx = ctx.expression()
+        condition = self.visitExpression(condition_ctx)
+        assert isinstance(condition, ast.Expression), f"Expected \"Expression\", got {type(condition)}"
+        self._open_scope()
+        true_body_ctx = ctx.statement_series(0)
+        true_body = self.visitStatement_series(true_body_ctx)
+        self._close_scope()
+        false_body = []
+        if (false_body_ctx := ctx.statement_series(1)) is not None:
+            self._open_scope()
+            false_body = self.visitStatement_series(false_body_ctx)
+            self._close_scope()
+        span = _get_source_info(ctx)
+        return ast.SelectionStatement(condition=condition, true_body=true_body, false_body=false_body, span=span)
+
+    def visitIteration_statement(self, ctx: FhYParser.Iteration_statementContext):
+        index_ctx = ctx.expression()
+        index = self.visitExpression(index_ctx)
+        assert isinstance(index, ast.Expression), f"Expected \"Expression\", got {type(index)}"
+        self._open_scope()
+        body_ctx = ctx.statement_series()
+        body = self.visitStatement_series(body_ctx)
+        assert all(isinstance(statement, ast.Statement) for statement in body), "Expected all elements to be \"Statement\""
+        self._close_scope()
+        span = _get_source_info(ctx)
+        return ast.ForAllStatement(index=index, body=body, span=span)
 
     def visitReturn_statement(self, ctx: FhYParser.Return_statementContext) -> Any:
         expression_ctx = ctx.expression()

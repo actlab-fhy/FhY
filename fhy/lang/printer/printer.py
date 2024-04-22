@@ -61,6 +61,18 @@ class ASTPrettyPrinter(BasePass):
             left = ""
         return left + self.visit(expression_statement.right) + ";"
 
+    def visit_SelectionStatement(self, selection_statement: ast.SelectionStatement) -> str:
+        self._increment_indent()
+        pprinted_body = self._format_statements([self.visit(statement) for statement in selection_statement.body])
+        self._decrement_indent()
+        return f"if ({self.visit(selection_statement.condition)}) " + "{\n" + pprinted_body + "\n}"
+
+    def visit_ForAllStatement(self, for_all_statement: ast.ForAllStatement) -> str:
+        self._increment_indent()
+        pprinted_body = self._format_statements([self.visit(statement) for statement in for_all_statement.body])
+        self._decrement_indent()
+        return f"forall ({self.visit(for_all_statement.index)}) " + "{\n" + pprinted_body + "\n}"
+
     def visit_ReturnStatement(self, return_statement: ast.ReturnStatement) -> str:
         return f"return {self.visit(return_statement.expression)};"
 
@@ -117,7 +129,6 @@ class ASTPrettyPrinter(BasePass):
 
     def default(self, node: ast.ASTNode) -> str:
         return f"{type(node).__name__} NOT IMPLEMENTED"
-
 
 
 def pprint_ast(ast: ast.ASTNode, indent_char: str = "  ", is_identifier_id_printed: bool = False) -> str:

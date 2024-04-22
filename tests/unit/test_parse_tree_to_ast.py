@@ -354,6 +354,63 @@ def test_declaration_statement(parser):
     _assert_is_expected_shape(statement_qualified_type_shape, [])
 
 
+def test_selection_statement(parser):
+    source_file_content = "proc foo() {if (1) {i = 1;} else {j = 1;}}"
+    parse_tree = _parse_file_contents(parser, source_file_content)
+
+    _ast = from_parse_tree(parse_tree)
+
+    _assert_is_expected_module(_ast, 1)
+
+    procedure = _ast.components[0]
+    _assert_is_expected_procedure(procedure, "foo", 0, 1)
+
+    statement = procedure.body[0]
+    assert isinstance(statement, ast.SelectionStatement), f"Expected \"SelectionStatement\" AST node, got \"{type(statement)}\""
+    assert isinstance(statement.condition, ast.IntLiteral), f"Expected condition to be \"IntLiteral\" AST node, got \"{type(statement.condition)}\""
+    assert statement.condition.value == 1, f"Expected condition value to be 1, got {statement.condition.value}"
+
+    assert len(statement.true_body) == 1, f"Expected true branch to have 1 statement, got {len(statement.true_body)}"
+    true_branch = statement.true_body[0]
+    assert isinstance(true_branch, ast.ExpressionStatement), f"Expected true branch to be \"ExpressionStatement\" AST node, got \"{type(true_branch)}\""
+    assert isinstance(true_branch.left, ast.IdentifierExpression), f"Expected left expression to be \"IdentifierExpression\" AST node, got \"{type(true_branch.left)}\""
+    assert true_branch.left.identifier.name_hint == "i", f"Expected left expression name hint to be \"i\", got \"{true_branch.left.identifier.name_hint}\""
+    assert isinstance(true_branch.right, ast.IntLiteral), f"Expected right expression to be \"IntLiteral\" AST node, got \"{type(true_branch.right)}\""
+    assert true_branch.right.value == 1, f"Expected right expression value to be 1, got {true_branch.right.value}"
+
+    assert len(statement.false_body) == 1, f"Expected false branch to have 1 statement, got {len(statement.false_body)}"
+    false_branch = statement.false_body[0]
+    assert isinstance(false_branch, ast.ExpressionStatement), f"Expected false branch to be \"ExpressionStatement\" AST node, got \"{type(false_branch)}\""
+    assert isinstance(false_branch.left, ast.IdentifierExpression), f"Expected left expression to be \"IdentifierExpression\" AST node, got \"{type(false_branch.left)}\""
+    assert false_branch.left.identifier.name_hint == "j", f"Expected left expression name hint to be \"j\", got \"{false_branch.left.identifier.name_hint}\""
+    assert isinstance(false_branch.right, ast.IntLiteral), f"Expected right expression to be \"IntLiteral\" AST node, got \"{type(false_branch.right)}\""
+    assert false_branch.right.value == 1, f"Expected right expression value to be 1, got {false_branch.right.value}"
+
+
+def test_for_all_statement(parser):
+    source_file_content = "proc foo() {forall (i) {j = 1;}}"
+    parse_tree = _parse_file_contents(parser, source_file_content)
+
+    _ast = from_parse_tree(parse_tree)
+
+    _assert_is_expected_module(_ast, 1)
+
+    procedure = _ast.components[0]
+    _assert_is_expected_procedure(procedure, "foo", 0, 1)
+
+    statement = procedure.body[0]
+    assert isinstance(statement, ast.ForAllStatement), f"Expected \"ForAllStatement\" AST node, got \"{type(statement)}\""
+    assert isinstance(statement.index, ast.IdentifierExpression), f"Expected index to be \"IdentifierExpression\" AST node, got \"{type(statement.index)}\""
+    assert statement.index.identifier.name_hint == "i", f"Expected index name hint to be \"i\", got \"{statement.index.identifier.name_hint}\""
+
+    assert len(statement.body) == 1, f"Expected body to have 1 statement, got {len(statement.body)}"
+    body_statement = statement.body[0]
+    assert isinstance(body_statement, ast.ExpressionStatement), f"Expected body statement to be \"ExpressionStatement\" AST node, got \"{type(body_statement)}\""
+    assert isinstance(body_statement.left, ast.IdentifierExpression), f"Expected left expression to be \"IdentifierExpression\" AST node, got \"{type(body_statement.left)}\""
+    assert body_statement.left.identifier.name_hint == "j", f"Expected left expression name hint to be \"j\", got \"{body_statement.left.identifier.name_hint}\""
+    assert isinstance(body_statement.right, ast.IntLiteral), f"Expected right expression to be \"IntLiteral\" AST node, got \"{type(body_statement.right)}\""
+    assert body_statement.right.value == 1, f"Expected right expression value to be 1, got {body_statement.right.value}"
+
 def test_return_statement(parser):
     """Tests a Return Statement"""
     source_file_content = "op foo() -> temp int32 {temp int32 i = 5; return i;}"
