@@ -9,6 +9,9 @@ from ..ast import ASTNode, Expression
 from ..ast.directory import get_ast_node_type_info, ASTNodeTypeInfo
 
 
+# TODO: File kept around temporarily in case contents needed; please delete
+
+
 class FieldAttributeError(Exception):
     """Raised when Attempt to Assign an Unsupported Attribute."""
 

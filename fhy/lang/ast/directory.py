@@ -5,6 +5,9 @@ from typing import Dict
 from .base import ASTNode
 
 
+# TODO: Is this needed now?
+
+
 class UnregisteredASTNode(Exception):
     """Raised when the information about a specific ASTNode type
     is not available (i.e. the ASTNode has not been registered)

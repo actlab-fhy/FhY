@@ -14,12 +14,11 @@ def test_empty_program():
 
 
 def test_empty_operation():
-    Identifier._next_id = 0
     operation_name = Identifier("foo")
     ast = Module(
         components=[
             Operation(
-                name=Identifier("foo"),
+                name=operation_name,
                 args=[],
                 return_type=QualifiedType(type_qualifier=TypeQualifier.OUTPUT, base_type=NumericalType(DataType(PrimitiveDataType.INT32), [])),
                 body=[]
@@ -29,4 +28,4 @@ def test_empty_operation():
 
     output: str = pprint_ast(ast)
 
-    assert output == "op foo::0() -> output int32 {}"
+    assert output == f"op (foo::{operation_name._id})() -> output int32 " + "{\n\n}"

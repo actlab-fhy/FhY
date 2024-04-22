@@ -1,7 +1,8 @@
 """ """
 
 from logging import Logger
-from typing import Any, List, Tuple, Optional, Union
+from collections import ChainMap
+from typing import Any, List, Tuple, Dict, Optional, Union
 
 from antlr4 import ParserRuleContext, ParseTreeWalker
 
@@ -14,11 +15,6 @@ from ....utils.logger import get_logger
 from ...span import Span
 from ..builder import ASTBuilder
 
-_log: Logger = get_logger(__name__)
-
-
-# TODO: Consider making the builders immutable so they need to be popped, updated, and pushed again rather than modified in-place
-
 
 def _get_source_info(ctx: ParserRuleContext) -> Span:
     """Retrieves line and column information from a context"""
@@ -28,11 +24,32 @@ def _get_source_info(ctx: ParserRuleContext) -> Span:
     return Span(0, 0, 0, 0)
 
 
+def _initialize_builtin_identifiers() -> Dict[str, ir.Identifier]:
+    return {
+        "sum": ir.Identifier("sum"),
+    }
+
+
 class ParseTreeConverter(FhYVisitor):
-    _builder: ASTBuilder
+    _scopes: ChainMap[str, ir.Identifier]
 
     def __init__(self) -> None:
-        self._builder = ASTBuilder()
+        self._scopes = ChainMap(_initialize_builtin_identifiers())
+
+    def _open_scope(self) -> None:
+        self._scopes = self._scopes.new_child()
+
+    def _close_scope(self) -> None:
+        self._scopes = self._scopes.parents
+
+    def _get_identifier(self, name_hint: str) -> ir.Identifier:
+        if name_hint in self._scopes:
+            return self._scopes[name_hint]
+        else:
+            identifier = ir.Identifier(name_hint)
+            self._scopes[name_hint] = identifier
+            return identifier
+
 
     def convert(self, ctx: FhYParser.ModuleContext) -> ast.Module:
         node = self.visitModule(ctx)
@@ -43,12 +60,14 @@ class ParseTreeConverter(FhYVisitor):
     # MODULE VISITORS
     # =====================
     def visitModule(self, ctx: FhYParser.ModuleContext) -> Any:
+        self._open_scope()
         components: List[ast.Component] = []
         for component_ctx in ctx.component():
             component = self.visitComponent(component_ctx)
             assert isinstance(component, ast.Component), f"Expected \"Component\", got {type(component)}"
             components.append(component)
         span = _get_source_info(ctx)
+        self._close_scope()
         return ast.Module(components=components, span=span)
 
     # =====================
@@ -65,6 +84,7 @@ class ParseTreeConverter(FhYVisitor):
         self,
         ctx: FhYParser.Function_definitionContext
     ) -> Any:
+        self._open_scope()
         # TODO: add template types and indices (3rd and 4th returned values here)
         keyword, name, _, _, args, return_type = self.visitFunction_header(
             ctx.function_header()
@@ -74,6 +94,8 @@ class ParseTreeConverter(FhYVisitor):
         body = self.visitFunction_body(body_ctx)
 
         span = _get_source_info(ctx)
+
+        self._close_scope()
 
         if keyword == "proc":
             if return_type is not None:
@@ -96,7 +118,8 @@ class ParseTreeConverter(FhYVisitor):
     ) -> Any:
         keyword: str = ctx.FUNCTION_KEYWORD().getText()
 
-        name: ir.Identifier = ir.Identifier(ctx.IDENTIFIER().getText())
+        name_hint: str = ctx.IDENTIFIER().getText()
+        name = self._get_identifier(name_hint)
 
         args_ctx: FhYParser.Function_argsContext = ctx.function_args(0)
         args: List[ast.Argument] = self.visitFunction_args(args_ctx)
@@ -122,7 +145,9 @@ class ParseTreeConverter(FhYVisitor):
         ctx: FhYParser.Function_argContext
     ) -> Any:
         qualified_type = self.visitQualified_type(ctx.qualified_type())
-        name = ir.Identifier(ctx.IDENTIFIER().getText())
+        name_hint: str = ctx.IDENTIFIER().getText()
+        name = self._get_identifier(name_hint)
+
         span = _get_source_info(ctx)
         return ast.Argument(qualified_type=qualified_type, name=name, span=span)
 
@@ -143,7 +168,8 @@ class ParseTreeConverter(FhYVisitor):
     # =====================
     def visitDeclaration_statement(self, ctx: FhYParser.Declaration_statementContext) -> Any:
         qualified_type = self.visitQualified_type(ctx.qualified_type())
-        name = ir.Identifier(ctx.IDENTIFIER().getText())
+        name_hint: str = ctx.IDENTIFIER().getText()
+        name = self._get_identifier(name_hint)
         expression = None
         if (expression_ctx := ctx.expression()) is not None:
             expression = self.visitExpression(expression_ctx)
@@ -277,7 +303,7 @@ class ParseTreeConverter(FhYVisitor):
         # TODO: add tuples
         span = _get_source_info(ctx)
         if (identifier_ctx := ctx.IDENTIFIER()) is not None:
-            identifer = ir.Identifier(identifier_ctx.getText())
+            identifer = self._get_identifier(identifier_ctx.getText())
             return ast.IdentifierExpression(identifier=identifer, span=span)
 
         elif (literal_ctx := ctx.literal()) is not None:
@@ -369,388 +395,11 @@ class ParseTreeConverter(FhYVisitor):
         return low, high, stride
 
 
-# class __ParseTreeConverter(FhYListener):
-#     # TODO Jason: Add docstring
-#     _builder: ASTBuilder
-#     _ast: Optional[ast.ASTNode]
-
-#     def __init__(self, log: Logger = _log) -> None:
-#         super().__init__()
-#         self._builder = ASTBuilder()
-#         self._ast = None
-#         self._log = log
-
-#     def _set_current_frame_span_for_current_context(
-#         self, ctx: ParserRuleContext
-#     ) -> None:
-#         span = _get_source_info(ctx)
-#         self._builder.set_current_frame_span(span)
-
-#     def enterModule(self, ctx: FhYParser.ModuleContext) -> None:
-#         self._builder.open_context(Module)
-
-#     def exitModule(self, ctx: FhYParser.ModuleContext) -> None:
-#         self._set_current_frame_span_for_current_context(ctx)
-#         module_builder_frame = self._builder.close_context()
-#         if not issubclass(module_builder_frame.cls, Module):
-#             raise Exception()
-#             # raise ContextError.message("module", Module.keyname(), module_builder_frame)
-#         self._ast = module_builder_frame.build()
-
-#     def enterComponent(self, ctx: FhYParser.ComponentContext) -> None:
-#         if ctx.function_declaration() is not None:
-#             raise NotImplementedError("Function declarations are not yet supported.")
-#         elif ctx.function_definition() is not None:
-#             pass
-#         else:
-#             raise NotImplementedError()
-
-#     def exitComponent(self, ctx: FhYParser.ComponentContext) -> None:
-#         def is_any_component_parsed() -> bool:
-#             return any(
-#                 [
-#                     ctx.function_declaration(),
-#                     ctx.function_definition(),
-#                 ]
-#             )
-
-#         if is_any_component_parsed():
-#             self._set_current_frame_span_for_current_context(ctx)
-#             component_builder_frame: ASTBuilderFrame = self._builder.close_context()
-#             if not issubclass(component_builder_frame.cls, Component):
-#                 raise Exception()
-#                 # raise ContextError.message("component", Component.keyname(), component_builder_frame)
-
-#             module_builder_frame: ASTBuilderFrame = self._builder.get_current_frame()
-#             if not issubclass(module_builder_frame.cls, Module):
-#                 raise Exception()
-#                 # raise ContextError.message("component", Module.keyname(), module_builder_frame)
-
-#             module_builder_frame.components.append(component_builder_frame.build())
-
-#     def enterFunction_header(self, ctx: FhYParser.Function_headerContext):
-#         function_keyword: str = ctx.FUNCTION_KEYWORD().getText()
-
-#         if function_keyword == "proc":
-#             self._builder.open_context(Procedure)
-#         elif function_keyword == "op":
-#             self._builder.open_context(Operation)
-#         else:
-#             raise NotImplementedError()
-
-#         function_name: str = ctx.IDENTIFIER().getText()
-#         self._builder.get_current_frame().name = ir.Identifier(function_name)
-
-#     def enterFunction_arg(self, ctx: FhYParser.Function_argContext):
-#         if (arg_name := ctx.IDENTIFIER()) is None:
-#             raise SyntaxError()
-
-#         self._builder.open_context(Argument)
-#         self._builder.get_current_frame().name = arg_name.getText()
-
-#     def exitFunction_arg(self, ctx: FhYParser.Function_argContext):
-#         self._set_current_frame_span_for_current_context(ctx)
-#         argument_builder_frame: ASTBuilderFrame = self._builder.close_context()
-#         if not issubclass(argument_builder_frame.cls, Argument):
-#             raise Exception()
-#             # raise ContextError.message("argument", Argument.keyname(), argument_builder_frame)
-
-#         function_builder_frame: ASTBuilderFrame = self._builder.get_current_frame()
-#         if not issubclass(function_builder_frame.cls, Function):
-#             raise Exception()
-#             # raise ContextError.message("argument", Function.keyname(), function_builder_frame)
-
-#         function_builder_frame.args.append(argument_builder_frame.build())
-
-#     # def enterFunction_body(self, ctx: FhYParser.Function_bodyContext):
-#     #     self._log.debug("Enter")
-
-#     # def exitFunction_body(self, ctx: FhYParser.Function_bodyContext):
-#     #     self._log.debug("Exit")
-
-#     def enterAtom(self, ctx: FhYParser.AtomContext):
-#         self._log.debug("Enter")
-#         if ctx.literal() is not None:
-#             return
-#         location: Span = _get_source_info(ctx)
-#         self._builder.add_identifier(location, ctx.getText())
-
-#     # STATEMENT CONTEXTS
-#     def enterDeclaration_statement(self, ctx: FhYParser.Declaration_statementContext):
-#         self._log.debug("Enter")
-#         if (identifier := ctx.IDENTIFIER()) is None:
-#             where = _get_source_info(ctx.parentCtx)
-#             raise SyntaxError(
-#                 f"No Identifier was provided for Declaration Statement: {where}"
-#             )
-
-#         name = identifier.getText()
-#         location: Span = _get_source_info(ctx)
-#         self._builder.open_declaration_statement(location, name)
-
-#     def exitDeclaration_statement(self, ctx: FhYParser.Declaration_statementContext):
-#         self._log.debug("Exit")
-#         self._builder.close_declaration_statement()
-
-#     def enterExpression_statement(self, ctx:FhYParser.Expression_statementContext):
-#         self._log.debug("Enter")
-#         location = _get_source_info(ctx)
-#         name = ctx.IDENTIFIER()
-#         if name is not None:
-#             name = name.getText()
-#         self._builder.open_expression_statement(location, name)
-
-#     def exitExpression_statement(self, ctx:FhYParser.Expression_statementContext):
-#         self._log.debug("Exit")
-#         self._builder.close_expression_statement()
-
-#     # def enterSelection_statement(self, ctx:FhYParser.Selection_statementContext):
-#     #     # We have two Statement Children of a Selection Statement, which
-#     #     # may or may not contain children themselves.
-#     #     self._builder.open_branch_statement()
-
-#     # def exitSelection_statement(self, ctx:FhYParser.Selection_statementContext):
-#     #     self._builder.close_branch_statement()
-
-#     def enterIteration_statement(self, ctx: FhYParser.Iteration_statementContext):
-#         self._log.debug("Enter")
-#         location: Span = _get_source_info(ctx)
-#         self._builder.open_iteration_statement(location)
-
-#     def exitIteration_statement(self, ctx: FhYParser.Iteration_statementContext):
-#         self._log.debug("Exit")
-#         self._builder.close_iteration_statement()
-
-#     def enterReturn_statement(self, ctx: FhYParser.Return_statementContext):
-#         self._log.debug("Enter")
-#         location = _get_source_info(ctx)
-#         self._builder.open_return_statement(location)
-
-#     def exitReturn_statement(self, ctx: FhYParser.Return_statementContext):
-#         self._log.debug("Exit")
-#         self._builder.close_return_statement()
-
-#     # TYPE CONTEXTS
-#     def enterQualified_type(self, ctx: FhYParser.Qualified_typeContext):
-#         self._builder.open_context(QualifiedType)
-
-#         if (type_qualifier := ctx.IDENTIFIER()) is None:
-#             raise SyntaxError()
-
-#         self._builder.get_current_frame().type_qualifier = ir.TypeQualifier(
-#             type_qualifier.getText()
-#         )
-
-#     def exitQualified_type(self, ctx: FhYParser.Qualified_typeContext):
-#         self._set_current_frame_span_for_current_context(ctx)
-#         self._builder.close_qualified_type_building()
-
-#     # def enterType(self, ctx:FhYParser.TypeContext):
-#     #     pass
-
-#     # def exitType(self, ctx:FhYParser.TypeContext):
-#     #     pass
-
-#     # def enterTuple_type(self, ctx:FhYParser.Tuple_typeContext):
-#     #     pass
-
-#     # def exitTuple_type(self, ctx:FhYParser.Tuple_typeContext):
-#     #     pass
-
-#     def enterNumerical_type(self, ctx: FhYParser.Numerical_typeContext):
-#         self._builder.open_context(ir.NumericalType)
-
-#     # def exitNumerical_type(self, ctx:FhYParser.Numerical_typeContext):
-#     #     ...
-
-#     def enterDtype(self, ctx: FhYParser.DtypeContext):
-#         self._log.debug("Enter")
-#         numerical_type_name: str = ctx.IDENTIFIER().getText()
-#         self._builder.add_dtype(numerical_type_name)
-
-#     # def exitDtype(self, ctx:FhYParser.DtypeContext):
-#     #     pass
-
-#     # def enterShape(self, ctx: FhYParser.ShapeContext):
-#     #     self._log.debug("Enter")
-#     #     self._builder.open_shape()
-
-#     # def exitShape(self, ctx: FhYParser.ShapeContext):
-#     #     self._log.debug("Exit")
-#     #     self._builder.close_shape()
-
-#     def enterIndex_type(self, ctx: FhYParser.Index_typeContext):
-#         self._builder.open_context(ir.IndexType)
-
-#     # def exitIndex_type(self, ctx: FhYParser.Index_typeContext):
-#     #     self._log.debug("Exit")
-#     #     self._builder.close_index_type()
-
-#     def exitType(self, ctx: FhYParser.TypeContext):
-#         self._builder.close_type_building()
-
-#     # EXPRESSION CONTEXTS
-#     def enterExpression(self, ctx: FhYParser.ExpressionContext):
-#         self._log.debug("Enter")
-#         location = _get_source_info(ctx)
-#         if ctx.primary_expression() is not None:
-#             ...
-
-#         elif ctx.nested_expression is not None:
-#             # We pass since a nested expression contains a child expression.
-#             # which will return back here anyways and be solved then.
-#             ...
-
-#         elif (unary := ctx.unary_expression) is not None:
-#             self._builder.add_unary_expression(location, unary.text)
-
-#         elif ctx.multiplicative_expression is not None:
-#             op = ctx.DIVISION() or ctx.MULTIPLICATION()
-#             self._builder.add_binary_expression(location, op.getText())
-
-#         elif ctx.additive_expression is not None:
-#             op = ctx.ADDITION() or ctx.SUBTRACTION()
-#             self._builder.add_binary_expression(location, op.getText())
-
-#         elif ctx.shift_expression is not None:
-#             op = ctx.LEFT_SHIFT() or ctx.RIGHT_SHIFT()
-#             self._builder.add_binary_expression(location, op.getText())
-
-#         elif ctx.relational_expression is not None:
-#             op = (
-#                 ctx.LESS_THAN()
-#                 or ctx.LESS_THAN_OR_EQUAL()
-#                 or ctx.GREATER_THAN()
-#                 or ctx.GREATER_THAN_OR_EQUAL()
-#             )
-#             self._builder.add_binary_expression(location, op.getText())
-
-#         elif ctx.equality_expression is not None:
-#             op = ctx.EQUAL_TO() or ctx.NOT_EQUAL_TO()
-#             self._builder.add_binary_expression(location, op.getText())
-
-#         elif ctx.and_expression is not None:
-#             self._builder.add_binary_expression(location, ctx.AND().getText())
-
-#         elif ctx.exclusive_or_expression is not None:
-#             self._builder.add_binary_expression(location, ctx.EXCLUSIVE_OR().getText())
-
-#         elif ctx.or_expression is not None:
-#             self._builder.add_binary_expression(location, ctx.OR().getText())
-
-#         elif ctx.logical_and_expression is not None:
-#             self._builder.add_binary_expression(location, ctx.LOGICAL_AND().getText())
-
-#         elif ctx.logical_or_expression is not None:
-#             self._builder.add_binary_expression(location, ctx.LOGICAL_OR().getText())
-
-#         elif ctx.ternary_expression is not None:
-#             assert ctx.QUESTION_MARK().getText() == "?"
-#             self._builder.open_ternary_expression(location)
-
-#         else:
-#             raise NotImplementedError("Unknown Expression Not Implemented")
-
-#     def enterExpression_list(self, ctx:FhYParser.Expression_listContext):
-#         self._log.debug("Enter")
-#         self._builder.open_expression_list()
-
-#     def exitExpression_list(self, ctx:FhYParser.Expression_listContext):
-#         self._log.debug("Exit")
-#         self._builder.close_expression_list()
-
-#     def exitExpression(self, ctx: FhYParser.ExpressionContext):
-#         self._log.debug("Exit")
-#         if ctx.primary_expression() is not None:
-#             ...
-
-#         elif ctx.nested_expression is not None:
-#             # We pass since a nested expression contains a child expression.
-#             # which will return back here anyways and be solved then.
-#             ...
-
-#         elif ctx.unary_expression is not None:
-#             self._builder.close_unary_expression()
-
-#         elif any(
-#             i is not None
-#             for i in (
-#                 ctx.multiplicative_expression,
-#                 ctx.additive_expression,
-#                 ctx.shift_expression,
-#                 ctx.relational_expression,
-#                 ctx.equality_expression,
-#                 ctx.and_expression,
-#                 ctx.or_expression,
-#                 ctx.logical_and_expression,
-#                 ctx.logical_or_expression,
-#             )
-#         ):
-#             self._builder.close_binary_expression()
-
-#         elif ctx.ternary_expression is not None:
-#             self._builder.close_ternary_expression()
-
-#         else:
-#             raise NotImplementedError("Unknown Expression Not Implemented")
-
-#     def enterPrimary_expression(self, ctx: FhYParser.Primary_expressionContext):
-
-#         location = _get_source_info(ctx)
-#         if ctx.tuple_access_expression is not None:
-#             self._log.debug("Enter Tuple Access Expression")
-
-#         elif ctx.function_expression is not None:
-#             self._log.debug("Enter Function Expression")
-
-#         elif ctx.tensor_access_expression is not None:
-#             self._log.debug("Enter Tensor Access Expression")
-#             self._builder.open_tensor_access_expression(location)
-
-#         elif ctx.atom() is not None:
-#             self._log.debug("Enter Atom Expression")
-#             ...
-
-#         else:
-#             raise NotImplementedError("Unknown Primary Expression")
-
-#     def exitPrimary_expression(self, ctx:FhYParser.Primary_expressionContext):
-#         self._log.debug("Exit")
-
-#     def exitStatement(self, ctx: FhYParser.StatementContext):
-#         self._log.debug("Exit")
-#         self._builder.close_statement()
-
-#     # LITERALS
-#     def enterLiteral(self, ctx: FhYParser.LiteralContext):
-#         self._log.debug("Enter")
-#         location = _get_source_info(ctx)
-#         # TODO: Capturing Floats is Not Working Here...
-#         if (floats := ctx.float_literal()) is not None:
-#             value = float(floats.getText())
-
-#         elif (integer := ctx.INT_LITERAL()) is not None:
-#             value = int(integer.getText())
-
-#         # TODO: Handle Complex Values
-#         else:
-#             raise NotImplementedError("Unknown Type Literal")
-#         self._builder.add_literal(location, value)
-
-#     @property
-#     def ast(self) -> Optional[ASTNode]:
-#         return self._ast
-
-
 def from_parse_tree(parse_tree: FhYParser.ModuleContext) -> ast.ASTNode:
     # TODO Jason: Add docstring
     converter = ParseTreeConverter()
-    # walker = ParseTreeWalker()
-    # walker.walk(converter, parse_tree)
     _ast = converter.visitModule(parse_tree)
-    # assert len(converter._builder._frame_stack) == 0, "Incomplete AST Build."
     if _ast is None:
-        # TODO Jason: Implement a better error for this ast conversion failure
         raise Exception()
 
     return _ast

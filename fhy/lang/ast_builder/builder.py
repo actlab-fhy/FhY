@@ -44,6 +44,7 @@ from fhy.lang.span import Span
 from fhy.utils import Stack
 
 
+# TODO: File kept around temporarily in case contents needed; please delete
 
 
 class ContextError(Exception):
