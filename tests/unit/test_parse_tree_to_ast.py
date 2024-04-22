@@ -855,3 +855,34 @@ def test_tensor_access_expressions(parser):
         ),
         ast.IntLiteral(span=None, value=1),
     )
+
+
+def test_tuple_type(parser):
+    source_file_content = (
+        "op bar() -> output int32[m,n] {output (int32[m, n], int32) i;}"
+    )
+    parse_tree = _parse_file_contents(parser, source_file_content)
+    _ast = from_parse_tree(parse_tree)
+    _assert_is_expected_module(_ast, 1)
+
+    operation = _ast.components[0]
+    _assert_is_expected_operation(operation, "bar", 0, 1)
+
+    statement = operation.body[0]
+    assert isinstance(
+        statement, ast.DeclarationStatement
+    ), "Expected DeclarationStatement"
+    assert statement.variable_name.name_hint == "i", "Expected Variable Name `i`"
+
+    assert isinstance(
+        statement.variable_type, ast.QualifiedType
+    ), "Expected QualifiedType"
+    _tuple = statement.variable_type.base_type
+    assert isinstance(
+        _tuple, ir.type.TupleType
+    ), f"Expected TupleType. Received: {_tuple}"
+
+    assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
+    t1, t2 = _tuple._types
+    assert isinstance(t1, ir.NumericalType), "Expected Numerical Type"
+    assert isinstance(t2, ir.NumericalType), "Expected Numerical Type"

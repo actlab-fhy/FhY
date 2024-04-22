@@ -80,6 +80,10 @@ class IndexType(Type):
 
     """
 
+    _lower_bound: Expression
+    _upper_bound: Expression
+    _stride: Optional[Expression]
+
     def __init__(
         self,
         lower_bound: Expression,
@@ -103,6 +107,14 @@ class IndexType(Type):
         return self._stride
 
     # TODO Jason: Implement the functionality of this class
+
+
+class TupleType(Type):
+    _types: List[Type]
+
+    def __init__(self, types: List[Type]) -> None:
+        super().__init__()
+        self._types = types
 
 
 # TODO: Again, Replace Usage of StrEnum, or something.
