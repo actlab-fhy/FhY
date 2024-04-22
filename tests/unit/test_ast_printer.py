@@ -26,6 +26,6 @@ def test_empty_operation():
         ]
     )
 
-    output: str = pprint_ast(ast)
+    output: str = pprint_ast(ast, is_identifier_id_printed=True)
 
     assert output == f"op (foo::{operation_name._id})() -> output int32 " + "{\n\n}"

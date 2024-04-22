@@ -5,11 +5,13 @@ from fhy import ir
 
 
 class ASTPrettyPrinter(BasePass):
+    _is_identifier_id_printed: bool
     _indent_char: str
     _current_indent: int
 
-    def __init__(self, indent_char: str) -> None:
+    def __init__(self, indent_char: str, is_identifier_id_printed: bool) -> None:
         super().__init__()
+        self._is_identifier_id_printed = is_identifier_id_printed
         self._indent_char = indent_char
         self._current_indent = 0
 
@@ -87,7 +89,10 @@ class ASTPrettyPrinter(BasePass):
         return f"({self.pprint(ternary_expression.condition)} ? {self.pprint(ternary_expression.true)} : {self.pprint(ternary_expression.false)})"
 
     def pprint_FunctionExpression(self, function_expression: ast.FunctionExpression) -> str:
-        return f"{self.pprint(function_expression.function)}({', '.join(self.pprint(arg) for arg in function_expression.args)})"
+        template_types = ", ".join(self.pprint_Type(template_type) for template_type in function_expression.template_types)
+        indices = ", ".join(self.pprint(index) for index in function_expression.indices)
+        args = ", ".join(self.pprint(arg) for arg in function_expression.args)
+        return f"{self.pprint(function_expression.function)}<{template_types}>[{indices}]({args})"
 
     def pprint_ArrayAccessExpression(self, array_access_expression: ast.ArrayAccessExpression) -> str:
         return f"{self.pprint(array_access_expression.array_expression)}[{', '.join(self.pprint(index) for index in array_access_expression.indices)}]"
@@ -131,9 +136,12 @@ class ASTPrettyPrinter(BasePass):
         return f"index[{index_range}]"
 
     def pprint_Identifier(self, identifier: ir.Identifier) -> str:
-        return f"({identifier.name_hint}::{identifier._id})"
+        if self._is_identifier_id_printed:
+            return f"({identifier.name_hint}::{identifier._id})"
+        else:
+            return identifier.name_hint
 
 
-def pprint_ast(ast: ast.ASTNode, indent_char: str = "  ") -> str:
-    pprinter = ASTPrettyPrinter(indent_char)
+def pprint_ast(ast: ast.ASTNode, indent_char: str = "  ", is_identifier_id_printed: bool = False) -> str:
+    pprinter = ASTPrettyPrinter(indent_char, is_identifier_id_printed)
     return pprinter(ast)
