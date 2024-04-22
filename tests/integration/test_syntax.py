@@ -80,3 +80,67 @@ proc matmul(input int32[m, n] A, input int32[n, p] B, output int32[m, p] C) {
     assert (
         pprinted_ast == expected_pprinted_ast
     ), f"Expected:\n{expected_pprinted_ast}\nGot:\n{pprinted_ast}"
+
+
+def test_fully_connected_nn(parser):
+    source_file_content = """
+op sigmoid(input float32[m] x) -> output float32[m] {
+   temp index[1:m] i;
+   return 1 / (1 + exp(-x[i]));
+}
+
+op forward(input float32[n] x, param float32[m, n] W, param float32[m] b) -> output float32[m] {
+   temp index[1:m] i;
+   temp index[1:n] j;
+   temp float32[m] FC_out;
+
+   FC_out[i] = sum[j](W[i, j] * x[j]) + b[i];
+   return sigmoid(FC_out);
+}
+
+proc main(input float32[examples, n] X, param float32[m, n] W, param float32[m] b, output float32[examples, m] Y) {
+    temp index[1:examples] e;
+    temp index[1:n] i;
+    temp index[1:m] j;
+
+    temp float32[n] x;
+    temp float32[m] y;
+
+    forall (e) {
+        x[i] = X[e, i];
+        y = forward(x, W, b);
+        Y[e, j] = y[j];
+    }
+}
+"""
+    parse_tree = _parse_file_contents(parser, source_file_content)
+
+    _ast = from_parse_tree(parse_tree)
+    pprinted_ast = pprint_ast(_ast, indent_char="   ")
+
+    expected_pprinted_ast = """op sigmoid(input float32[m] x) -> output float32[m] {
+   temp index[1:m:1] i;
+   return (1 / (1 + exp<>[](-(x[i]))));
+}
+op forward(input float32[n] x, param float32[m, n] W, param float32[m] b) -> output float32[m] {
+   temp index[1:m:1] i;
+   temp index[1:n:1] j;
+   temp float32[m] FC_out;
+   FC_out[i] = (sum<>[j]((W[i, j] * x[j])) + b[i]);
+   return sigmoid<>[](FC_out);
+}
+proc main(input float32[examples, n] X, param float32[m, n] W, param float32[m] b, output float32[examples, m] Y) {
+   temp index[1:examples:1] e;
+   temp index[1:n:1] i;
+   temp index[1:m:1] j;
+   temp float32[n] x;
+   temp float32[m] y;
+   forall (e) {
+      x[i] = X[e, i];
+      y = forward<>[](x, W, b);
+      Y[e, j] = y[j];
+   }
+}"""
+    assert (
+        pprinted_ast == expected_pprinted_ast
+    ), f"Expected:\n{expected_pprinted_ast}\nGot:\n{pprinted_ast}"
