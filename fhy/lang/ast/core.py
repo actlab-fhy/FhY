@@ -11,7 +11,7 @@ from .directory import register_ast_node
 
 
 @register_ast_node
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Module(ASTNode):
     # TODO Jason: Add docstring
     components: List["Component"] = field(default_factory=list)
@@ -33,13 +33,11 @@ class Function(Component, ABC):
         return ["name"]
 
 
-@dataclass(frozen=True, kw_only=True)
 class Statement(ASTNode, ABC):
     # TODO Jason: Add docstring
     ...
 
 
-@dataclass(frozen=True, kw_only=True)
 class Expression(ASTNode, IRExpression, ABC):
     # TODO Jason: Add docstring
     ...

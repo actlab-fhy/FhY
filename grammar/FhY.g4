@@ -26,7 +26,7 @@ function_definition
     ;
 
 function_header
-    : function_type=FUNCTION_KEYWORD name=IDENTIFIER (LESS_THAN identifier_list GREATER_THAN)? (OPEN_BRACKET function_args CLOSE_BRACKET)? OPEN_PARENTHESES function_args CLOSE_PARENTHESES (ARROW qualified_type)?
+    : function_type=FUNCTION_KEYWORD name=IDENTIFIER (LESS_THAN function_template_types=identifier_list GREATER_THAN)? (OPEN_BRACKET function_indices=function_args CLOSE_BRACKET)? OPEN_PARENTHESES function_args CLOSE_PARENTHESES (ARROW return_type=qualified_type)?
     ;
 
 identifier_list
@@ -62,7 +62,7 @@ declaration_statement
     ;
 
 expression_statement
-    : (name=IDENTIFIER (OPEN_BRACKET expression_list CLOSE_BRACKET)? EQUALS_SIGN)? expression SEMICOLON
+    : (primitive_expression)? (EQUALS_SIGN)? expression SEMICOLON
     ;
 
 selection_statement
@@ -96,15 +96,11 @@ tuple_type
     ;
 
 numerical_type
-    : dtype (OPEN_BRACKET shape CLOSE_BRACKET)?
+    : dtype (OPEN_BRACKET expression_list CLOSE_BRACKET)?
     ;
 
 dtype
     : base_dtype=IDENTIFIER (LESS_THAN expression_list GREATER_THAN)?
-    ;
-
-shape
-    : (expression (COMMA expression)*)?
     ;
 
 index_type
@@ -133,19 +129,20 @@ expression
     | logical_and_expression=expression LOGICAL_AND expression
     | logical_or_expression=expression LOGICAL_OR expression
     | ternary_expression=expression QUESTION_MARK expression COLON expression
-    | primary_expression
+    | primitive_expression
     ;
 
 expression_list
     : (expression (COMMA expression)*)?
     ;
 
-primary_expression
-    : tuple_access_expression=primary_expression DOT INT_LITERAL
-    | function_expression=primary_expression (LESS_THAN expression_list GREATER_THAN)? (OPEN_BRACKET expression_list CLOSE_BRACKET)? OPEN_PARENTHESES expression_list CLOSE_PARENTHESES
-    | tensor_access_expression=primary_expression OPEN_BRACKET expression_list CLOSE_BRACKET
+primitive_expression
+    // : tuple_access_expression=IDENTIFIER DOT INT_LITERAL
+    : function_expression=primitive_expression (LESS_THAN expression_list GREATER_THAN)? (OPEN_BRACKET expression_list CLOSE_BRACKET)? OPEN_PARENTHESES expression_list CLOSE_PARENTHESES
+    | array_access_expression=primitive_expression OPEN_BRACKET expression_list CLOSE_BRACKET
     | atom
     ;
+
 
 atom
     : tuple=OPEN_PARENTHESES ((expression COMMA) | (expression (COMMA expression)+))? CLOSE_PARENTHESES

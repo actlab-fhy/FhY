@@ -27,8 +27,8 @@ class UnaryExpression(Expression):
 
     """
 
-    _operation: UnaryOperation
-    _expression: Expression
+    operation: UnaryOperation
+    expression: Expression
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -76,9 +76,9 @@ class BinaryExpression(Expression):
 
     """
 
-    _operation: BinaryOperation
-    _left_expression: Expression
-    _right_expression: Expression
+    operation: BinaryOperation
+    left: Expression
+    right: Expression
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -101,9 +101,9 @@ class TernaryExpression(Expression):
 
     """
 
-    _condition: Expression
-    _true_expression: Expression
-    _false_expression: Expression
+    condition: Expression
+    true: Expression
+    false: Expression
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -128,10 +128,8 @@ class TupleAccessExpression(Expression):
 
     """
 
-    def __init__(self, _expression: Expression, _element_index: int) -> None:
-        super().__init__()
-        self._expression = _expression
-        self._element_index = _element_index
+    tuple_expression: Expression
+    element_index: int
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -143,10 +141,10 @@ class TupleAccessExpression(Expression):
 class FunctionExpression(Expression):
     """Function Call"""
 
-    _template_types: List[Type]
-    _indices: List[Expression]
-    _args: List[Expression]
-    _return_type: Type
+    template_types: List[Type]
+    indices: List[Expression]
+    args: List[Expression]
+    return_type: Type
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -155,7 +153,7 @@ class FunctionExpression(Expression):
 
 
 @dataclass(frozen=True, kw_only=True)
-class TensorAccessExpression(Expression):
+class ArrayAccessExpression(Expression):
     """Tensor Indexing Node
 
     Args:
@@ -166,8 +164,8 @@ class TensorAccessExpression(Expression):
 
     """
 
-    _expressions: List[Expression] = field(default_factory=list)
-    _indices: List[Expression] = field(default_factory=list)
+    array_expression: Expression
+    indices: List[Expression]
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
@@ -180,8 +178,7 @@ class TensorAccessExpression(Expression):
 class TupleExpression(Expression):
     """Expression of a Tuple"""
 
-    _expressions: List[Expression] = field(default_factory=list)
-
+    expressions: List[Expression] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -196,11 +193,11 @@ class IdentifierExpression(Expression):
 
     """
 
-    _identifier: Identifier
+    identifier: Identifier
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_identifier"])
+        attrs.extend(["identifier"])
         return attrs
 
     # TODO Jason: Implement the functionality of this class

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from ..span import Span
 
@@ -9,9 +9,8 @@ from ..span import Span
 class ASTNode(ABC):
     """Core abstract AST node."""
 
-    _span: Span
+    span: Optional[Span]
 
-    # TODO: is this method necessary?
     @classmethod
     def keyname(cls) -> str:
         """Class Node Name"""

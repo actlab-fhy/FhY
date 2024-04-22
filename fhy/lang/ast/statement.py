@@ -18,9 +18,9 @@ class DeclarationStatement(Statement):
 
     """
 
-    _variable_name: Identifier
-    _variable_type: QualifiedType
-    _expression: Optional[Expression] = field(default=None)
+    variable_name: Identifier
+    variable_type: QualifiedType
+    expression: Optional[Expression] = field(default=None)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -35,9 +35,8 @@ class ExpressionStatement(Statement):
     """Expression Statement"""
 
     # TODO Jason: Add docstring
-    _left: Optional[Identifier] = field(default=None)
-    _index: List[Expression] = field(default_factory=list)
-    _right: Expression
+    left: Optional[Expression] = field(default=None)
+    right: Expression
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -51,12 +50,12 @@ class ExpressionStatement(Statement):
 class ForAllStatement(Statement):
     """For Loop Node"""
 
-    _index: Expression
+    index: Expression
     body: List[Statement] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_index", "body"])
+        attrs.extend(["index", "body"])
         return attrs
 
     # TODO Jason: Implement the functionality of this class
@@ -73,13 +72,13 @@ class BranchStatement(Statement):
 
     """
 
-    _predicate: Expression
-    _true_body: List[Statement] = field(default_factory=list)
-    _false_body: List[Statement] = field(default_factory=list)
+    condition: Expression
+    true_body: List[Statement] = field(default_factory=list)
+    false_body: List[Statement] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_predicate", "_true_body", "_false_body"])
+        attrs.extend(["predicate", "true_body", "false_body"])
         return attrs
 
     # TODO Jason: Implement the functionality of this class
@@ -87,9 +86,9 @@ class BranchStatement(Statement):
 
 @dataclass(frozen=True, kw_only=True)
 class ReturnStatement(Statement):
-    _expression: Expression
+    expression: Expression
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_expression"])
+        attrs.extend(["expression"])
         return attrs

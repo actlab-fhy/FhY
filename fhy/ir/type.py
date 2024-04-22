@@ -1,5 +1,5 @@
 # TODO Jason: Add docstring
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import StrEnum
 from typing import List, Optional
 
@@ -9,8 +9,6 @@ from .expression import Expression
 class Type(ABC):
     """Abstract Node Defining Data Types."""
 
-    ...
-
 
 # TODO: Remove StrEnum, Find another Way
 class PrimitiveDataType(StrEnum):
@@ -18,7 +16,6 @@ class PrimitiveDataType(StrEnum):
 
     INT32 = "int32"
     FLOAT32 = "float32"
-    _PLACEHOLDER = "_placeholder"
 
 
 class DataType(object):
@@ -33,9 +30,9 @@ class DataType(object):
 
     def __init__(
         self,
-        _primitive_data_type: PrimitiveDataType,
+        primitive_data_type: PrimitiveDataType,
     ) -> None:
-        self._primitive_data_type = _primitive_data_type
+        self._primitive_data_type = primitive_data_type
 
     @property
     def primitive_data_type(self) -> PrimitiveDataType:
@@ -56,10 +53,10 @@ class NumericalType(Type):
     _data_type: DataType
     _shape: List[Expression]
 
-    def __init__(self, _data_type: DataType, _shape: List[Expression]) -> None:
+    def __init__(self, data_type: DataType, shape: List[Expression]) -> None:
         super().__init__()
-        self._data_type = _data_type
-        self._shape = _shape
+        self._data_type = data_type
+        self._shape = shape
 
     @property
     def data_type(self) -> DataType:
@@ -85,13 +82,25 @@ class IndexType(Type):
 
     def __init__(
         self,
-        _lower_bound: Expression,
-        _upper_bound: Expression,
-        _stride: Optional[Expression],
+        lower_bound: Expression,
+        upper_bound: Expression,
+        stride: Optional[Expression],
     ) -> None:
-        self._lower_bound = _lower_bound
-        self._upper_bound = _upper_bound
-        self._stride = _stride
+        self._lower_bound = lower_bound
+        self._upper_bound = upper_bound
+        self._stride = stride
+
+    @property
+    def lower_bound(self) -> Expression:
+        return self._lower_bound
+
+    @property
+    def upper_bound(self) -> Expression:
+        return self._upper_bound
+
+    @property
+    def stride(self) -> Optional[Expression]:
+        return self._stride
 
     # TODO Jason: Implement the functionality of this class
 
@@ -106,4 +115,3 @@ class TypeQualifier(StrEnum):
     STATE = "state"
     PARAM = "param"
     TEMP = "temp"
-    _PLACEHOLDER = "_placeholder"

@@ -43,7 +43,7 @@ addopts = "-n auto -rA --cov=fhy --cov-report term-missing --cov-fail-under=90"
 
 [tool.coverage.report]
 omit = [
-   "fhy/lang/parser/*.py"
+   "fhy/lang/parser/FhY*.py"
 ]
 
 [tool.mypy]

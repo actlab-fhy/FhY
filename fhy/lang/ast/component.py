@@ -1,4 +1,5 @@
 # TODO Jason: Add docstring
+from abc import ABC
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -14,7 +15,7 @@ from .statement import Statement
 class Argument(ASTNode):
     # TODO Jason: Add docstring
     name: Optional[Identifier] = field(default=None)
-    qualified_type: Optional[QualifiedType] = field(default=None)
+    qualified_type: QualifiedType
 
     def visit_attrs(self) -> List[str]:
         return ["name", "qualified_type"]
@@ -50,12 +51,12 @@ class Operation(Function):
 
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
-    ret_type: QualifiedType
+    return_type: QualifiedType
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["args", "body", "ret_type"])
+        attrs.extend(["args", "body", "return_type"])
         return attrs
 
 

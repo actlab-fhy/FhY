@@ -33,13 +33,15 @@ class Span(object):
 
     def __init__(
         self,
-        line: _Span,
-        column: _Span,
+        start_line: int,
+        end_line: int,
+        start_column: int,
+        end_column: int,
         source: Optional[Source] = None,
     ) -> None:
         self.source = source
-        self.line = line
-        self.column = column
+        self.line = _Span(start_line, end_line)
+        self.column = _Span(start_column, end_column)
 
     def __repr__(self) -> str:
         text = ""

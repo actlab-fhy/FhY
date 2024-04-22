@@ -11,8 +11,6 @@ class UnregisteredASTNode(Exception):
 
     """
 
-    ...
-
 
 @dataclass
 class ASTNodeTypeInfo:
@@ -38,8 +36,8 @@ def get_ast_node_type_info(ast_node_class: type[ASTNode]) -> ASTNodeTypeInfo:
 
 def _get_ast_node_fields(ast_node_class: type[ASTNode]) -> Dict[str, type]:
     fields: Dict[str, type] = {}
-    # NOTE: In the event a Subclass Overwrites an attribute, traverse the
-    #       MRO Backwards, to prioritize the final Atribute Definition
+    # NOTE: In the event a subclass overwrites an attribute, traverse the
+    #       MRO backwards to prioritize the final attribute definition.
     for cls in reversed(ast_node_class.mro()):
         if ASTNode in cls.mro():
             fields.update(cls.__annotations__)
