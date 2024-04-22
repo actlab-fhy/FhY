@@ -100,6 +100,9 @@ class ASTPrettyPrinter(BasePass):
     def visit_IntLiteral(self, int_literal: ast.IntLiteral) -> str:
         return str(int_literal.value)
 
+    def visit_FloatLiteral(self, float_literal: ast.FloatLiteral) -> str:
+        return str(float_literal.value)
+
     def visit_QualifiedType(self, qualified_type: ast.QualifiedType) -> str:
         return f"{qualified_type.type_qualifier} {self.visit(qualified_type.base_type)}"
 
