@@ -25,6 +25,11 @@ class Identifier(object):
         # TODO Jason: Add docstring
         return self._name_hint
 
+    @property
+    def id(self) -> int:
+        # TODO Jason: Add docstring
+        return self._id
+
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, Identifier) and self._id == other._id
 
