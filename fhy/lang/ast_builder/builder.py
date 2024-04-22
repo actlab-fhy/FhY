@@ -22,7 +22,6 @@ from fhy.lang.ast.expression import (
     BinaryExpression,
     BinaryOperation,
     ComplexLiteral,
-    ExpressionList,
     FloatLiteral,
     FunctionExpression,
     IdentifierExpression,

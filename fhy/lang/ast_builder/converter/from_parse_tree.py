@@ -231,7 +231,28 @@ class ParseTreeConverter(FhYVisitor):
         #     return ast.TupleAccessExpression(span=span, tuple_expression=primitive_expression, element_index=int(ctx.INT_LITERAL().getText()))
 
         if ctx.function_expression is not None:
-            raise NotImplementedError()
+            function_expression_ctx = ctx.primitive_expression()
+            function_expression = self.visitPrimitive_expression(function_expression_ctx)
+            assert isinstance(function_expression, ast.Expression), f"Expected \"Expression\", got {type(function_expression)}"
+
+            expression_list_counter: int = 0
+
+            template_types: List[ast.Expression] = []
+            if ctx.LESS_THAN() is not None and ctx.GREATER_THAN() is not None:
+                template_types = self.visitExpression_list(ctx.expression_list(expression_list_counter))
+                assert all(isinstance(expr, ast.Expression) for expr in template_types), "Expected all elements to be \"Expression\""
+                expression_list_counter += 1
+
+            indices: List[ast.Expression] = []
+            if ctx.OPEN_BRACKET() is not None and ctx.CLOSE_BRACKET() is not None:
+                indices = self.visitExpression_list(ctx.expression_list(expression_list_counter))
+                assert all(isinstance(expr, ast.Expression) for expr in indices), "Expected all elements to be \"Expression\""
+                expression_list_counter += 1
+
+            args = self.visitExpression_list(ctx.expression_list(expression_list_counter))
+            assert all(isinstance(expr, ast.Expression) for expr in args), "Expected all elements to be \"Expression\""
+
+            return ast.FunctionExpression(function=function_expression, template_types=template_types, indices=indices, args=args, span=span)
 
         elif ctx.array_access_expression is not None:
             array_expression_ctx = ctx.primitive_expression()

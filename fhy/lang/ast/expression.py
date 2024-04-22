@@ -111,13 +111,6 @@ class TernaryExpression(Expression):
         return attrs
 
 
-@dataclass
-class ExpressionList(object):
-    """Helper Container to Split Up Build Process"""
-
-    body: List[Expression] = field(default_factory=list)
-
-
 @dataclass(frozen=True, kw_only=True)
 class TupleAccessExpression(Expression):
     """Expression to Access Tuple Elements
@@ -141,10 +134,10 @@ class TupleAccessExpression(Expression):
 class FunctionExpression(Expression):
     """Function Call"""
 
+    function: Expression
     template_types: List[Type]
     indices: List[Expression]
     args: List[Expression]
-    return_type: Type
 
     # TODO Jason: Implement the functionality of this class
     def visit_attrs(self) -> List[str]:
