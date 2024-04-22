@@ -1,7 +1,14 @@
 import pytest
 
+from fhy.ir import (
+    DataType,
+    Identifier,
+    NumericalType,
+    PrimitiveDataType,
+    Type,
+    TypeQualifier,
+)
 from fhy.lang.ast import Argument, Module, Native, Operation, Procedure, QualifiedType
-from fhy.ir import DataType, Identifier, Type, TypeQualifier, NumericalType, PrimitiveDataType
 from fhy.lang.printer import pprint_ast
 
 
@@ -20,8 +27,11 @@ def test_empty_operation():
             Operation(
                 name=operation_name,
                 args=[],
-                return_type=QualifiedType(type_qualifier=TypeQualifier.OUTPUT, base_type=NumericalType(DataType(PrimitiveDataType.INT32), [])),
-                body=[]
+                return_type=QualifiedType(
+                    type_qualifier=TypeQualifier.OUTPUT,
+                    base_type=NumericalType(DataType(PrimitiveDataType.INT32), []),
+                ),
+                body=[],
             )
         ]
     )

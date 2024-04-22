@@ -1,6 +1,7 @@
 """ """
 
 from dataclasses import dataclass
+from typing import Optional
 
 import pytest
 
@@ -67,7 +68,7 @@ def test_register_ast_node(setup_ast_node):
     ), "Expected __GenericTestNode to be Registered"
 
     ret = directory.get_ast_node_type_info(node)
-    expected = {"_span": Span, "x": int, "y": float}
+    expected = {"span": Optional[Span], "x": int, "y": float}
     assert ret.fields == expected, "Expected Correct Annotations of __GenericTestNode"
 
 
@@ -83,5 +84,5 @@ def test_register_ast_node_with_bad_subclassing(setup_ast_node):
     ), "Expected __SubclassedTestNode to be Registered"
 
     ret = directory.get_ast_node_type_info(node)
-    expected = {"_span": Span, "x": float, "y": float, "z": float}
+    expected = {"span": Optional[Span], "x": float, "y": float, "z": float}
     assert ret.fields == expected, "Expected Correct Annotation"

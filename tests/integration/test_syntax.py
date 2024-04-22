@@ -1,7 +1,8 @@
 """Tests the conversion from ANTLR parse tree to FhY AST and the AST printer"""
-import pytest
 
 from typing import Any, Callable, List, Optional, Type
+
+import pytest
 from antlr4 import (
     BailErrorStrategy,
     CommonTokenStream,
@@ -76,4 +77,6 @@ proc matmul(input int32[m, n] A, input int32[n, p] B, output int32[m, p] C) {
   temp index[1:n:1] k;
   C[i, j] = sum<>[k]((A[i, k] * B[k, j]));
 }"""
-    assert pprinted_ast == expected_pprinted_ast, f"Expected:\n{expected_pprinted_ast}\nGot:\n{pprinted_ast}"
+    assert (
+        pprinted_ast == expected_pprinted_ast
+    ), f"Expected:\n{expected_pprinted_ast}\nGot:\n{pprinted_ast}"
