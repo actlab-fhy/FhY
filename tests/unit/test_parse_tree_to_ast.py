@@ -886,3 +886,47 @@ def test_tuple_type(parser):
     t1, t2 = _tuple._types
     assert isinstance(t1, ir.NumericalType), "Expected Numerical Type"
     assert isinstance(t2, ir.NumericalType), "Expected Numerical Type"
+
+
+def test_int_literal(parser):
+    source_file_content = "op bar() -> output int32 {1; 0b0101; 0B01; 0x1; 0XFF; 0o1; 0O7;}"
+    parse_tree = _parse_file_contents(parser, source_file_content)
+
+    _ast = from_parse_tree(parse_tree)
+
+    _assert_is_expected_module(_ast, 1)
+
+    operation = _ast.components[0]
+    _assert_is_expected_operation(operation, "bar", 0, 7)
+
+    for i, value in enumerate([1, 5, 1, 1, 255, 1, 7]):
+        statement = operation.body[i]
+        assert isinstance(
+            statement, ast.ExpressionStatement
+        ), "Expected ExpressionStatement"
+        assert isinstance(
+            statement.right, ast.IntLiteral
+        ), "Expected IntLiteral in ExpressionStatement"
+        assert statement.right.value == value, f"Expected IntLiteral Value to be {value}"
+
+
+def test_float_literal(parser):
+    source_file_content = "op bar() -> output float32 {1.0; .2; 1.; 1e2; 1.2e3;}"
+    parse_tree = _parse_file_contents(parser, source_file_content)
+
+    _ast = from_parse_tree(parse_tree)
+
+    _assert_is_expected_module(_ast, 1)
+
+    operation = _ast.components[0]
+    _assert_is_expected_operation(operation, "bar", 0, 5)
+
+    for i, value in enumerate([1.0, 0.2, 1.0, 100.0, 1200.0]):
+        statement = operation.body[i]
+        assert isinstance(
+            statement, ast.ExpressionStatement
+        ), "Expected ExpressionStatement"
+        assert isinstance(
+            statement.right, ast.FloatLiteral
+        ), "Expected FloatLiteral in ExpressionStatement"
+        assert statement.right.value == value, f"Expected FloatLiteral Value to be {value}"

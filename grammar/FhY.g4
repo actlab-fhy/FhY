@@ -160,21 +160,7 @@ atom
 
 literal
     : INT_LITERAL
-    | float_literal
-    ;
-
-float_literal
-    : decimal_float_literal
-    ;
-
-decimal_float_literal
-    : fraction_part EXPONENT_PART?
-    | DIGIT_SEQUENCE EXPONENT_PART
-    ;
-
-fraction_part
-    : DIGIT_SEQUENCE? DOT DIGIT_SEQUENCE
-    | DIGIT_SEQUENCE DOT
+    | FLOAT_LITERAL
     ;
 
 /*
@@ -365,6 +351,20 @@ fragment IDENTIFIER_NON_DIGIT
 
 fragment NONDIGIT
     : [a-zA-Z_]
+    ;
+
+FLOAT_LITERAL
+    : DECIMAL_FLOAT_LITERAL
+    ;
+
+fragment DECIMAL_FLOAT_LITERAL
+    : FRACTION_PART EXPONENT_PART?
+    | DIGIT_SEQUENCE EXPONENT_PART
+    ;
+
+fragment FRACTION_PART
+    : DIGIT_SEQUENCE? DOT DIGIT_SEQUENCE
+    | DIGIT_SEQUENCE DOT
     ;
 
 INT_LITERAL

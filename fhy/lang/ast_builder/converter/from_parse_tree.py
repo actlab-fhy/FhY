@@ -448,40 +448,27 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitLiteral(self, ctx: FhYParser.LiteralContext):
         if (int_literal_ctx := ctx.INT_LITERAL()) is not None:
-            return ast.IntLiteral(span=None, value=int(int_literal_ctx.getText()))
+            int_literal_str: str = int_literal_ctx.getText()
 
-        elif (float_literal_ctx := ctx.float_literal()) is not None:
-            float_literal = self.visitFloat_literal(float_literal_ctx)
-            assert isinstance(
-                float_literal, ast.FloatLiteral
-            ), f'Expected "FloatLiteral", got {type(float_literal)}'
+            if int_literal_str.startswith(("0x", "0X")):
+                base = 16
+            elif int_literal_str.startswith(("0b", "0B")):
+                base = 2
+            elif int_literal_str.startswith(("0o", "0O")):
+                base = 8
+            else:
+                base = 10
+
+            return ast.IntLiteral(span=None, value=int(int_literal_str, base=base))
+
+        elif (float_literal_ctx := ctx.FLOAT_LITERAL()) is not None:
+            float_literal = ast.FloatLiteral(
+                span=None, value=float(float_literal_ctx.getText())
+            )
             return float_literal
 
         else:
             raise Exception()
-
-    def visitDecimal_float_literal(
-        self, ctx: FhYParser.Decimal_float_literalContext
-    ) -> Any:
-        span = _get_source_info(ctx)
-        if (fraction_part_ctx := ctx.fraction_part()) is not None:
-            literal_piece = self.visitFraction_part(fraction_part_ctx)
-            assert isinstance(
-                literal_piece, float
-            ), f'Expected "float", got {type(literal_piece)}'
-            if (exponent_part_ctx := ctx.EXPONENT_PART()) is not None:
-                return ast.FloatLiteral(
-                    span=span,
-                    value=literal_piece * 10 ** int(exponent_part_ctx.getText()),
-                )
-            else:
-                return ast.FloatLiteral(span=span, value=literal_piece)
-
-        else:
-            return ast.FloatLiteral(span=span, value=float(ctx.getText()))
-
-    def visitFraction_part(self, ctx: FhYParser.Fraction_partContext) -> Any:
-        return float(ctx.getText())
 
     # =====================
     # TYPE VISITORS
