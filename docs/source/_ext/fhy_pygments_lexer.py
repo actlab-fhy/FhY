@@ -74,6 +74,4 @@ class FhYLexer(RegexLexer):
 
 
 def setup(app):
-    from pygments.lexers.rust import RustLexer
     app.add_lexer("FhY", FhYLexer)
-    app.add_lexer("Rust", RustLexer)
