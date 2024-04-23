@@ -10,4 +10,7 @@ Check out our posts below to see what we've been up to.
    :caption: Posts:
    :glob:
 
-   post_*
+   post_2024-04-04
+   post_2024-04-05
+   post_2024-04-10
+   .. post_*
