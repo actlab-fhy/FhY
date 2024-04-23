@@ -29,6 +29,9 @@ dependencies = {file = ["requirements.txt"]}
 [tool.setuptools.packages.find]
 exclude = ["grammar", "docs", "tests"]
 
+[project.scripts]
+fhy = "fhy.cli:main"
+
 [project.optional-dependencies]
 dev = ["pytest", "pytest-cov", "pytest-xdist", "tox", "ruff", "mypy", "sphinx>=5.0.2", "wheel", "setuptools>=67.6.1"]
 test = ["pytest", "pytest-cov", "pytest-xdist"]
