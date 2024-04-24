@@ -90,6 +90,7 @@ class Stack(Generic[T]):
 
     def __next__(self) -> T:
         if self._iter_index >= len(self._stack):
+            self._iter_index = 0
             raise StopIteration
         else:
             item = self._stack[self._iter_index]
