@@ -58,10 +58,9 @@ def test_single_file_examples(parser, file):
     print(result)
     assert result == expected, f"Did not Create Expected Output: {file}"
 
-line_terminators = ('\r\n', '\n', '\r')
 
 def access_cli(filepath: str, *args) -> str:
-    """Access FhY Entry Point"""
+    """Access FhY Entry Point using subprocess and return the decoded stdout"""
     result = subprocess.run(["fhy", filepath, *args], stdout=subprocess.PIPE)
     output = result.stdout.decode()
     return output
