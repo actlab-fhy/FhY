@@ -1,20 +1,39 @@
-"""
-FhY/lang/visitor.py
+"""A Simple Visitor Pattern base class to visit ASTNode objects.
+
+Classes:
+    BasePass: abstract visitor pattern class
+    Visitor:
 
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Callable, Generator, Tuple, Union, Sequence
-
-from .base import ASTNode
-from .component import Native, Operation, Procedure, Argument
-from .core import Module
-from .expression import BinaryExpression, IdentifierExpression, UnaryExpression, TernaryExpression, TupleAccessExpression, TupleExpression, FunctionExpression, ArrayAccessExpression, IntLiteral, FloatLiteral
-from .qualified_type import QualifiedType
-from .statement import DeclarationStatement, ExpressionStatement, ReturnStatement, SelectionStatement, ForAllStatement
+from abc import ABC
+from typing import Any, Callable, Sequence, Union
 
 from fhy import ir
 
+from .base import ASTNode
+from .component import Argument, Operation, Procedure
+from .core import Module
+from .expression import (
+    ArrayAccessExpression,
+    BinaryExpression,
+    FloatLiteral,
+    FunctionExpression,
+    IdentifierExpression,
+    IntLiteral,
+    TernaryExpression,
+    TupleAccessExpression,
+    TupleExpression,
+    UnaryExpression,
+)
+from .qualified_type import QualifiedType
+from .statement import (
+    DeclarationStatement,
+    ExpressionStatement,
+    ForAllStatement,
+    ReturnStatement,
+    SelectionStatement,
+)
 
 ASTObject = Union[ASTNode, ir.Identifier, ir.Type, ir.DataType]
 
@@ -44,6 +63,13 @@ ASTObject = Union[ASTNode, ir.Identifier, ir.Type, ir.DataType]
 
 
 class BasePass(ABC):
+    """Abstract Visitor Pattern Class for AST Node relevant objects
+
+    Args:
+        is_recursive (bool): If true, recursively visit child nodes.
+
+    """
+
     _is_recursive: bool
 
     def __init__(self, is_recursive: bool = True) -> None:
@@ -53,19 +79,25 @@ class BasePass(ABC):
         return self.visit(node)
 
     def visit(self, node: ASTObject) -> Any:
+        """A unified entry point that determines how to visit an AST object node"""
         method: Callable[[ASTObject], Any] = self.default
+
         for cls in type(node).mro():
             if issubclass(cls, ASTObject):
                 name: str = "visit_" + cls.__name__
                 if hasattr(self, name):
                     method = getattr(self, name)
+
         return method(node)
 
     def default(self, node: ASTObject) -> Any:
-        pass
+        """Default node visiting method"""
+        raise NotImplementedError("Default Visiting Method has not been Defined.")
 
 
 class Visitor(BasePass):
+    """ASTObject Visitor Pattern Class"""
+
     def visit(self, node: ASTObject) -> None:
         super().visit(node)
 
@@ -82,7 +114,7 @@ class Visitor(BasePass):
         self.visit_sequence(node.body)
 
     def visit_Argument(self, node: Argument) -> None:
-        self.visit(node.type)
+        self.visit(node.qualified_type)
         if node.name is not None:
             self.visit(node.name)
 
@@ -134,17 +166,20 @@ class Visitor(BasePass):
     def visit_TupleExpression(self, node: TupleExpression) -> None:
         self.visit_sequence(node.expressions)
 
+    def visit_TupleAccessExpression(self, node: TupleAccessExpression) -> None:
+        self.visit_TupleExpression(node.tuple_expression)
+        self.visit_IntLiteral(node.element_index)
+
     def visit_IdentifierExpression(self, node: IdentifierExpression) -> None:
         self.visit(node.identifier)
 
-    def visit_IntLiteral(self, node: IntLiteral) -> None:
-        pass
+    def visit_IntLiteral(self, node: IntLiteral) -> None: ...
 
-    def visit_FloatLiteral(self, node: FloatLiteral) -> None:
-        pass
+    def visit_FloatLiteral(self, node: FloatLiteral) -> None: ...
 
     def visit_QualifiedType(self, node: QualifiedType) -> None:
         self.visit(node.base_type)
+        self.visit(node.type_qualifier)
 
     def visit_NumericalType(self, numerical_type: ir.NumericalType) -> None:
         self.visit(numerical_type.data_type)
@@ -156,8 +191,7 @@ class Visitor(BasePass):
         if index_type.stride is not None:
             self.visit(index_type.stride)
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> None:
-        pass
+    def visit_Identifier(self, identifier: ir.Identifier) -> None: ...
 
     def visit_sequence(self, nodes: Sequence[ASTObject]) -> None:
         for node in nodes:

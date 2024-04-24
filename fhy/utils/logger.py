@@ -1,7 +1,12 @@
-""" """
+"""General utilites to construct a logger.
+
+Functions:
+    get_logger: creates a new logger with appropriate level and formatting.
+
+"""
+
 import logging
 from typing import Optional
-
 
 _default_format = logging.Formatter(
     "%(asctime)s | %(levelname)s | %(funcName)s():%(lineno)d | %(message)s"
@@ -9,11 +14,11 @@ _default_format = logging.Formatter(
 
 
 def get_logger(
-        name: str,
-        level: int = logging.DEBUG,
-        stream: Optional[logging.Handler] = None,
-        formatter: logging.Formatter = _default_format
-        ) -> logging.Logger:
+    name: str,
+    level: int = logging.DEBUG,
+    stream: Optional[logging.Handler] = None,
+    formatter: logging.Formatter = _default_format,
+) -> logging.Logger:
     """Constructs a Logger given a name and level.
 
     Args:
@@ -31,7 +36,7 @@ def get_logger(
 
     if stream is None:
         stream = logging.StreamHandler()
-    
+
     elif not isinstance(stream, logging.Handler):
         raise TypeError(f"Invalid Stream Provided: {stream}")
 

@@ -1,4 +1,12 @@
-# TODO Jason: Add docstring
+"""All ASTNodes defined within this module are Subclasses of the core.Statement ASTNode
+
+Statement ASTNodes:
+    DeclarationStatement: Declares a Variable, with or without assignment
+    ExpressionStatement:
+    ForAllStatement: An Iteration statement evaluating an expression over a body
+
+"""
+
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -12,9 +20,9 @@ class DeclarationStatement(Statement):
     """Declaration Statements Are Declaration or Assignment to a Variable Name.
 
     Args:
-        _variable_name (Identifier):
-        _variable_type (QualifiedType):
-        _expression (Optional[Expression]):
+        variable_name (Identifier): identity of a variable
+        variable_type (QualifiedType): qualified type of variable
+        expression (Optional[Expression]): optional expression assignment to variable
 
     """
 
@@ -24,31 +32,32 @@ class DeclarationStatement(Statement):
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_variable_name", "_variable_type", "_expression"])
+        attrs.extend(["variable_name", "variable_type", "expression"])
         return attrs
-
-    # TODO Jason: Implement the functionality of this class
 
 
 @dataclass(frozen=True, kw_only=True)
 class ExpressionStatement(Statement):
     """Expression Statement"""
 
-    # TODO Jason: Add docstring
     left: Optional[Expression] = field(default=None)
     right: Expression
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["_left", "_index", "_right"])
+        attrs.extend(["left", "right"])
         return attrs
-
-    # TODO Jason: Implement the functionality of this class
 
 
 @dataclass(frozen=True, kw_only=True)
 class ForAllStatement(Statement):
-    """For Loop Node"""
+    """A Statement ASTNode describing a for loop.
+
+    Args:
+        index (Expression): Expression to be iterated through
+        body (List[Statement]): Body of for loop statements to be performed iteratively
+
+    """
 
     index: Expression
     body: List[Statement] = field(default_factory=list)
@@ -58,17 +67,15 @@ class ForAllStatement(Statement):
         attrs.extend(["index", "body"])
         return attrs
 
-    # TODO Jason: Implement the functionality of this class
-
 
 @dataclass(frozen=True, kw_only=True)
 class SelectionStatement(Statement):
-    """A Branch (Conditional) Statement Block Node.
+    """A Conditional Branch Statement ASTNode.
 
     Args:
-        _predicate (Expression): Condition to Be Evaluated
-        _true_body (List[Statement]): Body of Statements Evaluated if True
-        _false_body (List[Statement]): Body of Statements Evaluated if False
+        condition (Expression): Condition to be evaluated
+        true_body (List[Statement]): Body of Statements Evaluated if True
+        false_body (List[Statement]): Body of Statements Evaluated if False
 
     """
 
@@ -78,14 +85,19 @@ class SelectionStatement(Statement):
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["predicate", "true_body", "false_body"])
+        attrs.extend(["condition", "true_body", "false_body"])
         return attrs
-
-    # TODO Jason: Implement the functionality of this class
 
 
 @dataclass(frozen=True, kw_only=True)
 class ReturnStatement(Statement):
+    """A control flow return Statement ASTNode.
+
+    Args:
+        expression (Expression): expression value to be returned
+
+    """
+
     expression: Expression
 
     def visit_attrs(self) -> List[str]:

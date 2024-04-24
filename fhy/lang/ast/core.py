@@ -1,43 +1,85 @@
-# TODO Jason: Add docstring
-from abc import ABC, ABCMeta, abstractmethod
+"""Defines Core Abstract ASTNodes of FhY Language Grammar Constructs.
+
+Core Nodes:
+    Root: Project Root Node
+    Module: Module Node
+
+Core Abstract Nodes:
+    Component: Base Components
+    Function: Base Function Node
+    Statement: Base Statement Node
+
+"""
+
+from abc import ABC
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List
 
 from fhy.ir import Expression as IRExpression
 from fhy.ir import Identifier
 
 from .base import ASTNode
-from .directory import register_ast_node
 
 
-@register_ast_node
+@dataclass(frozen=True, kw_only=True)
+class Root(ASTNode):
+    """FhY project root ASTNode containing References to modules as children.
+
+    Args:
+        modules (List[Component]): list of modules available to project root
+
+    """
+
+    modules: List["Module"] = field(default_factory=list)
+
+    def visit_attrs(self) -> List[str]:
+        attrs = super().visit_attrs()
+        attrs.extend(["modules"])
+        return attrs
+
+
 @dataclass(frozen=True, kw_only=True)
 class Module(ASTNode):
-    # TODO Jason: Add docstring
+    """FhY Module ASTNode, containing references to available components.
+
+    Args:
+        components (List[Component]):
+
+    """
+
     components: List["Component"] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
-        return ["components"]
+        attrs = super().visit_attrs()
+        attrs.extend(["components"])
+        return attrs
 
 
 class Component(ASTNode, ABC):
-    # TODO Jason: Add docstring
+    """Abstract FhY Component ASTNode"""
+
     ...
 
 
 @dataclass(frozen=True, kw_only=True)
 class Function(Component, ABC):
+    """Abstract FhY Function Component ASTNode"""
+
     name: Identifier
 
     def visit_attrs(self) -> List[str]:
-        return ["name"]
+        attrs = super().visit_attrs()
+        attrs.extend(["name"])
+        return attrs
 
 
 class Statement(ASTNode, ABC):
-    # TODO Jason: Add docstring
+    """Abstract Statement ASTNode"""
+
     ...
 
 
 class Expression(ASTNode, IRExpression, ABC):
-    # TODO Jason: Add docstring
+    """Abstract Expression ASTNode + ir.Expression Node"""
+
     ...

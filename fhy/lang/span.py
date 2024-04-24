@@ -1,8 +1,22 @@
-# TODO Jason: Add docstring
-from typing import Optional
+"""Container Classes to define source positions of an object.
+
+Classes:
+    Slice: start and stop Positions
+    Source: source file or namespace definition
+    Span: full context of an object (Source + Slice)
+
+"""
 
 
-class _Span:
+class Slice:
+    """General definition of start and stop positions.
+
+    Args:
+        start (int): start position
+        stop (int): stop position
+
+    """
+
     start: int
     end: int
 
@@ -16,9 +30,16 @@ class _Span:
 
 # TODO: Jason: Create Source object that can track the source file
 class Source(object):
+    """Defines source file or namespace.
+
+    Args:
+        namespace (str): valid filepath or namespace
+
+    """
+
     namespace: str
 
-    def __init__(self, namespace) -> None:
+    def __init__(self, namespace: str) -> None:
         self.namespace = namespace
 
     def __repr__(self) -> str:
@@ -26,10 +47,25 @@ class Source(object):
 
 
 class Span(object):
-    # TODO Jason: Add docstring
+    """Context to describe Locations of an object.
+
+    Args:
+        start_line (int): line start position
+        end_line (int): line end position
+        start_column (int): column start position
+        end_column (int): column end position
+        source (Source): source object defining file or namespace
+
+    Attributes:
+        source (Source): file or namespace source
+        line (_Span): start and stop line positions
+        column(_Span):start and stop column positions
+
+    """
+
     source: Source
-    line: _Span
-    column: _Span
+    line: Slice
+    column: Slice
 
     def __init__(
         self,
@@ -37,11 +73,11 @@ class Span(object):
         end_line: int,
         start_column: int,
         end_column: int,
-        source: Optional[Source] = None,
+        source: Source = Source("_null"),
     ) -> None:
         self.source = source
-        self.line = _Span(start_line, end_line)
-        self.column = _Span(start_column, end_column)
+        self.line = Slice(start_line, end_line)
+        self.column = Slice(start_column, end_column)
 
     def __repr__(self) -> str:
         text = ""
@@ -49,5 +85,3 @@ class Span(object):
             text += f"{self.source} "
         text += f"Lines {self.line} Columns: {self.column}"
         return text
-
-    # TODO Jason: Implement the functionality of this class

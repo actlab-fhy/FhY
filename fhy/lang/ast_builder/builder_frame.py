@@ -1,15 +1,25 @@
-""" """
+"""General Constructor of an ASTNode and ir.Type nodes.
+
+Classes:
+    ASTNodeBuilderFrame
+    TypeBuilderFrame
+
+Functions:
+    create_builder_frame: Primary Entry Point to dynamically construct Node Builders.
+
+Exceptions:
+    FieldAttributeError
+
+"""
+
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, Field, MISSING
-from typing import Any, Dict, List, Set, Type, Optional, Union
+from dataclasses import MISSING, Field, dataclass, field
+from typing import Any, Dict, List, Optional, Set, Type, Union
 
 from fhy import ir
 
 from ..ast import ASTNode, Expression
-from ..ast.directory import get_ast_node_type_info, ASTNodeTypeInfo
-
-
-# TODO: File kept around temporarily in case contents needed; please delete
+from ..ast.directory import ASTNodeTypeInfo, get_ast_node_type_info
 
 
 class FieldAttributeError(Exception):
@@ -17,6 +27,8 @@ class FieldAttributeError(Exception):
 
 
 class ASTBuilderFrame(ABC):
+    """Abstract AST Builder Frame"""
+
     _cls: type
 
     def __init__(self, cls: type) -> None:
@@ -27,12 +39,10 @@ class ASTBuilderFrame(ABC):
         return self._cls
 
     @abstractmethod
-    def update(self, **kwargs: Any) -> None:
-        ...
+    def update(self, **kwargs: Any) -> None: ...
 
     @abstractmethod
-    def build(self) -> Union[ASTNode, ir.Type]:
-        ...
+    def build(self) -> Union[ASTNode, ir.Type]: ...
 
 
 class ASTNodeBuilderFrame(ASTBuilderFrame):
@@ -47,6 +57,7 @@ class ASTNodeBuilderFrame(ASTBuilderFrame):
         FieldAttributeError:
 
     """
+
     _type_info: ASTNodeTypeInfo
 
     def __init__(self, cls: Type[ASTNode], **kwargs: Any) -> None:
@@ -57,9 +68,13 @@ class ASTNodeBuilderFrame(ASTBuilderFrame):
             if not hasattr(self, key):
                 if key in kwargs:
                     setattr(self, key, kwargs[key])
-                elif hasattr(self.cls, "__dataclass_fields__") and key in getattr(self.cls, "__dataclass_fields__"):
+                elif hasattr(self.cls, "__dataclass_fields__") and key in getattr(
+                    self.cls, "__dataclass_fields__"
+                ):
                     field: Any = getattr(self.cls, "__dataclass_fields__")[key]
-                    assert isinstance(field, Field), f"Dataclass field {key} is not a dataclasses Field object"
+                    assert isinstance(
+                        field, Field
+                    ), f"Dataclass field {key} is not a dataclasses Field object"
                     if field.default is not MISSING:
                         setattr(self, key, field.default)
                     elif field.default_factory is not MISSING:
@@ -82,19 +97,21 @@ class ASTNodeBuilderFrame(ASTBuilderFrame):
             setattr(self, key, value)
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name not in getattr(super(), "__annotations__").keys() and name not in getattr(self, "__annotations__").keys() and name not in self._node_annotations.keys():
+        if (
+            name not in getattr(super(), "__annotations__").keys()
+            and name not in getattr(self, "__annotations__").keys()
+            and name not in self._node_annotations.keys()
+        ):
             raise FieldAttributeError(f"Unsupported Attribute Assignment: {name}")
         super().__setattr__(name, value)
 
 
 class _TypeInfo(ABC):
     @abstractmethod
-    def build_type(self) -> ir.Type:
-        ...
+    def build_type(self) -> ir.Type: ...
 
     @abstractmethod
-    def update(self, **kwargs: Any):
-        ...
+    def update(self, **kwargs: Any): ...
 
 
 @dataclass
@@ -127,7 +144,11 @@ class _IndexTypeInfo(Type):
             raise Exception()
         if self.upper_bound is None:
             raise Exception()
-        return ir.IndexType(lower_bound=self.lower_bound, upper_bound=self.upper_bound, stride=self.stride)
+        return ir.IndexType(
+            lower_bound=self.lower_bound,
+            upper_bound=self.upper_bound,
+            stride=self.stride,
+        )
 
     def update(self, **kwargs: Any) -> None:
         if "lower_bound" in kwargs:
@@ -158,9 +179,18 @@ class TypeBuilderFrame(ASTBuilderFrame):
 
 
 def create_builder_frame(cls: type, **kwargs: Any) -> ASTBuilderFrame:
+    """Dynamically construct a Node Builder class instance for the provided cls.
+
+    Notes:
+        variable keyword arguments are fed directly into the respective builder classes.
+
+    Raises:
+        TypeError: when not issublcass(cls, (ASTNode, ir.Type))
+
+    """
     if issubclass(cls, ASTNode):
         return ASTNodeBuilderFrame(cls, **kwargs)
     elif issubclass(cls, ir.Type):
         return TypeBuilderFrame(cls, **kwargs)
     else:
-        raise Exception()
+        raise TypeError(f"Unsupported Class Node. No defined Builder available: {cls}")

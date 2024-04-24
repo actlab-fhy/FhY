@@ -2,7 +2,7 @@ import argparse
 import logging
 import os
 from contextlib import contextmanager
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from antlr4 import (
     BailErrorStrategy,
@@ -116,13 +116,21 @@ def construct_ast(input_str: str) -> ASTNode:
     return _ast
 
 
-def default_output_path(filepath: str) -> str:
-    """Construct a default output path for a given file"""
-    parent_relative = os.path.join(filepath, os.pardir)
-    parent_dir = os.path.abspath(parent_relative)
-    basename = os.path.basename(filepath).split(".")[0]
+def output_path(filepath: str, override_dir: Optional[str]) -> str:
+    """Construct an output path for a given file"""
+    if override_dir is None:
+        parent_relative = os.path.join(filepath, os.pardir)
+        parent_dir = os.path.abspath(parent_relative)
+    else:
+        if not os.path.exists(override_dir):
+            raise FileNotFoundError(
+                f"Output Filepath Directory Not Found: {override_dir}"
+            )
+        parent_dir = os.path.abspath(override_dir)
 
+    basename = os.path.basename(filepath).split(".")[0]
     new_path = os.path.join(parent_dir, f"{basename}_out.ast")
+
     return new_path
 
 

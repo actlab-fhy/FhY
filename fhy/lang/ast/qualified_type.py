@@ -1,22 +1,20 @@
-""" """
+"""Defines a Qualified Type ASTNode"""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from fhy import ir
 
 from .core import ASTNode
-from .directory import register_ast_node
 
 
-@register_ast_node
 @dataclass(frozen=True, kw_only=True)
 class QualifiedType(ASTNode):
-    """Qualified Type Container
+    """Qualified Type ASTNode defining both primitive and qualified types.
 
     Args:
-        base_type (Type): Primitive or Generic Type (e.g. float, int, T)
-        type_qualifier (Optional[TypeQualifier]): Qualifying Type Identifier
+        base_type (Type): Primitive or Generic Type
+        type_qualifier (TypeQualifier): Qualifying Type Identifier
 
     """
 
