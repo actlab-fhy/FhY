@@ -1,27 +1,14 @@
-from typing import Any, Callable, List, Optional, Type
+from typing import Any, List, Optional, Type
 
 import pytest
-from antlr4 import (
-    BailErrorStrategy,
-    CommonTokenStream,
-    InputStream,
-    ParserRuleContext,
-    RecognitionException,
-)
-from antlr4.error.ErrorListener import ErrorListener
 
 from fhy import ir
 from fhy.lang import ast
-from fhy.lang.ast_builder import from_parse_tree
-from fhy.lang.parser import FhYLexer, FhYParser
+
+from ..utils import construct_ast, lexer, list_to_types, parser
 
 # TODO: make all identifier name equality not in terms of name hint after scope and
 #       loading identifiers with table is implemented
-
-
-# TODO: move to a utils module; only for error messages from assertions
-def list_to_types(xs: List[Any]) -> List[type]:
-    return [type(x) for x in xs]
 
 
 def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) -> bool:
@@ -68,43 +55,6 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
         return True
     else:
         return False
-
-
-class ThrowingErrorListener(ErrorListener):
-    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        raise SyntaxError(f"Syntax error at {line}:{column} - {msg}")
-
-
-@pytest.fixture(scope="module")
-def lexer() -> Callable[[str], FhYLexer]:
-    def create_lexer(input_str: str):
-        input_stream = InputStream(input_str)
-        lexer = FhYLexer(input_stream)
-        lexer.removeErrorListeners()
-        lexer.addErrorListener(ThrowingErrorListener())
-        return lexer
-
-    return create_lexer
-
-
-@pytest.fixture(scope="module")
-def parser(lexer):
-    def create_parser(input_str):
-        lexer_instance = lexer(input_str)
-        token_stream = CommonTokenStream(lexer_instance)
-        parser = FhYParser(token_stream)
-        parser._errHandler = BailErrorStrategy()
-        parser.removeErrorListeners()
-        parser.addErrorListener(ThrowingErrorListener())
-        return parser
-
-    return create_parser
-
-
-def _parse_file_contents(parser, file_contents: str) -> ParserRuleContext:
-    parse_tree = parser(file_contents).module()
-    assert parse_tree is not None, "Expected parse tree for module"
-    return parse_tree
 
 
 def _assert_is_expected_module(node: ast.ASTNode, expected_num_components: int) -> None:
@@ -344,9 +294,7 @@ def _assert_is_expected_return_statement(
 def test_empty_file(parser):
     """Test that an empty file is converted correctly."""
     source_file_content = ""
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     assert isinstance(_ast, ast.Module), 'Expected "Module" AST node'
     assert len(_ast.components) == 0, "Expected empty module"
@@ -355,9 +303,7 @@ def test_empty_file(parser):
 def test_empty_procedure(parser):
     """Test that an empty procedure is converted correctly."""
     source_file_content = "proc foo(){}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -371,9 +317,7 @@ def test_empty_procedure_with_qualified_argument(parser):
 
     """
     source_file_content = "proc foo(input int32 x){}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -393,9 +337,7 @@ def test_empty_procedure_with_qualified_argument(parser):
 
 def test_empty_procedure_with_a_qualified_argument_with_shape(parser):
     source_file_content = "proc foo(input int32[m, n] x){}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -422,11 +364,7 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(parser):
 def test_empty_operation(parser):
     """test that an Empty Operation is Converted Correctly"""
     source_file_content = "op foo(){}"
-    parse_tree = parser(source_file_content).module()
-    assert parse_tree is not None
-
-    _ast = from_parse_tree(parse_tree)
-
+    _ast = construct_ast(parser, source_file_content)
     _assert_is_expected_module(_ast, 1)
 
     operation = _ast.components[0]
@@ -436,11 +374,7 @@ def test_empty_operation(parser):
 def test_empty_operation_return_type(parser):
     """Tests that an Empty Operation with a Return Type is Converted Correctly"""
     source_file_content = "op foo(input int32[n, m] x) -> output int32[n, m] {}"
-    parse_tree = parser(source_file_content).module()
-
-    _ast = from_parse_tree(parse_tree)
-
-    _assert_is_expected_module(_ast, 1)
+    _ast = construct_ast(parser, source_file_content)
 
     operation = _ast.components[0]
     _assert_is_expected_operation(operation, "foo", 1, 0)
@@ -479,11 +413,7 @@ def test_empty_operation_return_type(parser):
 def test_declaration_statement(parser):
     """Tests a single Delcaration Statement."""
     source_file_content = "proc foo(){temp int32 i;}"
-    parse_tree = parser(source_file_content).module()
-
-    _ast = from_parse_tree(parse_tree)
-
-    _assert_is_expected_module(_ast, 1)
+    _ast = construct_ast(parser, source_file_content)
 
     procedure = _ast.components[0]
     _assert_is_expected_procedure(procedure, "foo", 0, 1)
@@ -501,10 +431,7 @@ def test_declaration_statement(parser):
 
 def test_selection_statement(parser):
     source_file_content = "proc foo() {if (1) {i = 1;} else {j = 1;}}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
-
+    _ast = construct_ast(parser, source_file_content)
     _assert_is_expected_module(_ast, 1)
 
     procedure = _ast.components[0]
@@ -564,9 +491,7 @@ def test_selection_statement(parser):
 
 def test_for_all_statement(parser):
     source_file_content = "proc foo() {forall (i) {j = 1;}}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -608,9 +533,7 @@ def test_for_all_statement(parser):
 def test_return_statement(parser):
     """Tests a Return Statement"""
     source_file_content = "op foo() -> temp int32 {temp int32 i = 5; return i;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -626,9 +549,7 @@ def test_return_statement(parser):
 def test_unary_expressions(parser):
     """Tests a Unary Expression (Negative)"""
     source_file_content = "op foo() -> temp int32 {temp int32 i = -5;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -659,9 +580,7 @@ def test_unary_expressions(parser):
 def test_binary_expressions(parser):
     """Tests a Binary Expression (Multiplication)"""
     source_file_content = "op foo() -> temp float32 {temp float32 i = 5 * 6;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -699,9 +618,7 @@ def test_binary_expressions(parser):
 def test_ternary_expressions(parser):
     """Tests a Ternary Conditional Expression"""
     source_file_content = "op foo() {temp float32 i = 5 < 6 ? 7 : 8;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -757,9 +674,7 @@ def test_ternary_expressions(parser):
 def test_index_type(parser):
     """Test Construction of an Index Type"""
     source_file_content = "proc bar() {temp index[1:m] i;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -786,9 +701,7 @@ def test_index_type(parser):
 
 def test_function_expression(parser):
     source_file_content = "proc bar() {temp int32 i = foo(A);}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -832,9 +745,7 @@ def test_function_expression(parser):
 def test_tensor_access_expressions(parser):
     """Tests construction of TensorAccess Expressions."""
     source_file_content = "proc bar() {A[i] = 1;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -861,8 +772,7 @@ def test_tuple_type(parser):
     source_file_content = (
         "op bar() -> output int32[m,n] {output (int32[m, n], int32) i;}"
     )
-    parse_tree = _parse_file_contents(parser, source_file_content)
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
     _assert_is_expected_module(_ast, 1)
 
     operation = _ast.components[0]
@@ -889,10 +799,10 @@ def test_tuple_type(parser):
 
 
 def test_int_literal(parser):
-    source_file_content = "op bar() -> output int32 {1; 0b0101; 0B01; 0x1; 0XFF; 0o1; 0O7;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    source_file_content = (
+        "op bar() -> output int32 {1; 0b0101; 0B01; 0x1; 0XFF; 0o1; 0O7;}"
+    )
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -907,14 +817,14 @@ def test_int_literal(parser):
         assert isinstance(
             statement.right, ast.IntLiteral
         ), "Expected IntLiteral in ExpressionStatement"
-        assert statement.right.value == value, f"Expected IntLiteral Value to be {value}"
+        assert (
+            statement.right.value == value
+        ), f"Expected IntLiteral Value to be {value}"
 
 
 def test_float_literal(parser):
     source_file_content = "op bar() -> output float32 {1.0; .2; 1.; 1e2; 1.2e3;}"
-    parse_tree = _parse_file_contents(parser, source_file_content)
-
-    _ast = from_parse_tree(parse_tree)
+    _ast = construct_ast(parser, source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -929,4 +839,6 @@ def test_float_literal(parser):
         assert isinstance(
             statement.right, ast.FloatLiteral
         ), "Expected FloatLiteral in ExpressionStatement"
-        assert statement.right.value == value, f"Expected FloatLiteral Value to be {value}"
+        assert (
+            statement.right.value == value
+        ), f"Expected FloatLiteral Value to be {value}"
