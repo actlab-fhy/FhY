@@ -13,6 +13,7 @@ class Type(ABC):
 
 class PrimitiveDataType(StrEnum):
     """Supported Primitive Data Types."""
+    INT = "int"
 
     INT32 = "int32"
     FLOAT32 = "float32"
@@ -39,6 +40,9 @@ class DataType(object):
         """Primitive Data Type"""
         return self._primitive_data_type
 
+    def __repr__(self) -> str:
+        return f"DataType({self._primitive_data_type})"
+
 
 class NumericalType(Type):
     """Vector Array of a given DataType and Shape.
@@ -52,10 +56,10 @@ class NumericalType(Type):
     _data_type: DataType
     _shape: List[Expression]
 
-    def __init__(self, data_type: DataType, shape: List[Expression]) -> None:
+    def __init__(self, data_type: DataType, shape: Optional[List[Expression]] = None) -> None:
         super().__init__()
         self._data_type = data_type
-        self._shape = shape
+        self._shape = shape or []
 
     @property
     def data_type(self) -> DataType:
@@ -64,6 +68,9 @@ class NumericalType(Type):
     @property
     def shape(self) -> List[Expression]:
         return self._shape
+
+    def __repr__(self) -> str:
+        return f"NumericalType({self._data_type}, [{','.join(repr(s) for s in self._shape)}])"
 
 
 class IndexType(Type):
@@ -104,6 +111,9 @@ class IndexType(Type):
     @property
     def stride(self) -> Optional[Expression]:
         return self._stride
+
+    def __repr__(self) -> str:
+        return f"IndexType({self._lower_bound}, {self._upper_bound}, {self._stride})"
 
 
 class TupleType(Type):

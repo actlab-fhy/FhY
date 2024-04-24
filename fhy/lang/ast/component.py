@@ -11,10 +11,24 @@ Component ASTNodes:
 from dataclasses import dataclass, field
 from typing import List
 
-from .core import ASTNode, Function
+from .core import ASTNode, Function, Component
 from .expression import Identifier
 from .qualified_type import QualifiedType
 from .statement import Statement
+
+
+@dataclass(frozen=True, kw_only=True)
+class Import(Component):
+    """Import ASTNode
+
+    Args:
+        module_path (List[Identifier]): List of Identifiers representing the path to the module
+
+    """
+    module_path: List[Identifier]
+
+    def visit_attrs(self) -> List[str]:
+        return ["module_path"]
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -12,7 +12,7 @@ from typing import Any, Callable, Sequence, Union
 from fhy import ir
 
 from .base import ASTNode
-from .component import Argument, Operation, Procedure
+from .component import Argument, Operation, Procedure, Import
 from .core import Module
 from .expression import (
     ArrayAccessExpression,
@@ -35,7 +35,7 @@ from .statement import (
     SelectionStatement,
 )
 
-ASTObject = Union[ASTNode, ir.Identifier, ir.Type, ir.DataType]
+ASTObject = Union[ASTNode, ir.Identifier, ir.Type, ir.DataType, ir.TypeQualifier]
 
 
 # def iter_fields(node: ASTNode) -> Generator[Tuple[str, Any], None, None]:
@@ -92,7 +92,7 @@ class BasePass(ABC):
 
     def default(self, node: ASTObject) -> Any:
         """Default node visiting method"""
-        raise NotImplementedError("Default Visiting Method has not been Defined.")
+        raise NotImplementedError(f"AST node {type(node)} is not supported yet and the default method is not implemented.")
 
 
 class Visitor(BasePass):
@@ -101,10 +101,14 @@ class Visitor(BasePass):
     def visit(self, node: ASTObject) -> Any:
         super().visit(node)
 
-    def visit_Module(self, node: Module) -> Any:
+    def visit_Module(self, node: Module) -> None:
+        self.visit(node.name)
         self.visit_sequence(node.components)
 
-    def visit_Operation(self, node: Operation) -> Any:
+    def visit_Import(self, node: Import) -> None:
+        self.visit_sequence(node.module_path)
+
+    def visit_Operation(self, node: Operation) -> None:
         self.visit_sequence(node.args)
         self.visit(node.return_type)
         self.visit_sequence(node.body)
@@ -191,7 +195,11 @@ class Visitor(BasePass):
         if index_type.stride is not None:
             self.visit(index_type.stride)
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> Any: ...
+    def visit_DataType(self, data_type: ir.DataType) -> None: ...
+
+    def visit_TypeQualifier(self, type_qualifier: ir.TypeQualifier) -> None: ...
+
+    def visit_Identifier(self, identifier: ir.Identifier) -> None: ...
 
     def visit_sequence(self, nodes: Sequence[ASTObject]) -> Any:
         for node in nodes:
