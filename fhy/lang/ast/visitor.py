@@ -98,101 +98,101 @@ class BasePass(ABC):
 class Visitor(BasePass):
     """ASTObject Visitor Pattern Class"""
 
-    def visit(self, node: ASTObject) -> None:
+    def visit(self, node: ASTObject) -> Any:
         super().visit(node)
 
-    def visit_Module(self, node: Module) -> None:
+    def visit_Module(self, node: Module) -> Any:
         self.visit_sequence(node.components)
 
-    def visit_Operation(self, node: Operation) -> None:
+    def visit_Operation(self, node: Operation) -> Any:
         self.visit_sequence(node.args)
         self.visit(node.return_type)
         self.visit_sequence(node.body)
 
-    def visit_Procedure(self, node: Procedure) -> None:
+    def visit_Procedure(self, node: Procedure) -> Any:
         self.visit_sequence(node.args)
         self.visit_sequence(node.body)
 
-    def visit_Argument(self, node: Argument) -> None:
+    def visit_Argument(self, node: Argument) -> Any:
         self.visit(node.qualified_type)
         if node.name is not None:
             self.visit(node.name)
 
-    def visit_DeclarationStatement(self, node: DeclarationStatement) -> None:
+    def visit_DeclarationStatement(self, node: DeclarationStatement) -> Any:
         self.visit(node.variable_name)
         self.visit(node.variable_type)
         if node.expression is not None:
             self.visit(node.expression)
 
-    def visit_ExpressionStatement(self, node: ExpressionStatement) -> None:
+    def visit_ExpressionStatement(self, node: ExpressionStatement) -> Any:
         if node.left is not None:
             self.visit(node.left)
         self.visit(node.right)
 
-    def visit_SelectionStatement(self, node: SelectionStatement) -> None:
+    def visit_SelectionStatement(self, node: SelectionStatement) -> Any:
         self.visit(node.condition)
         self.visit_sequence(node.true_body)
         self.visit_sequence(node.false_body)
 
-    def visit_ForAllStatement(self, node: ForAllStatement) -> None:
+    def visit_ForAllStatement(self, node: ForAllStatement) -> Any:
         self.visit(node.index)
         self.visit_sequence(node.body)
 
-    def visit_ReturnStatement(self, node: ReturnStatement) -> None:
+    def visit_ReturnStatement(self, node: ReturnStatement) -> Any:
         self.visit(node.expression)
 
-    def visit_UnaryExpression(self, node: UnaryExpression) -> None:
+    def visit_UnaryExpression(self, node: UnaryExpression) -> Any:
         self.visit(node.expression)
 
-    def visit_BinaryExpression(self, node: BinaryExpression) -> None:
+    def visit_BinaryExpression(self, node: BinaryExpression) -> Any:
         self.visit(node.left)
         self.visit(node.right)
 
-    def visit_TernaryExpression(self, node: TernaryExpression) -> None:
+    def visit_TernaryExpression(self, node: TernaryExpression) -> Any:
         self.visit(node.condition)
         self.visit(node.true)
         self.visit(node.false)
 
-    def visit_FunctionExpression(self, node: FunctionExpression) -> None:
+    def visit_FunctionExpression(self, node: FunctionExpression) -> Any:
         self.visit(node.function)
         self.visit_sequence(node.template_types)
         self.visit_sequence(node.indices)
         self.visit_sequence(node.args)
 
-    def visit_ArrayAccessExpression(self, node: ArrayAccessExpression) -> None:
+    def visit_ArrayAccessExpression(self, node: ArrayAccessExpression) -> Any:
         self.visit(node.array_expression)
         self.visit_sequence(node.indices)
 
-    def visit_TupleExpression(self, node: TupleExpression) -> None:
+    def visit_TupleExpression(self, node: TupleExpression) -> Any:
         self.visit_sequence(node.expressions)
 
-    def visit_TupleAccessExpression(self, node: TupleAccessExpression) -> None:
+    def visit_TupleAccessExpression(self, node: TupleAccessExpression) -> Any:
         self.visit_TupleExpression(node.tuple_expression)
         self.visit_IntLiteral(node.element_index)
 
-    def visit_IdentifierExpression(self, node: IdentifierExpression) -> None:
+    def visit_IdentifierExpression(self, node: IdentifierExpression) -> Any:
         self.visit(node.identifier)
 
-    def visit_IntLiteral(self, node: IntLiteral) -> None: ...
+    def visit_IntLiteral(self, node: IntLiteral) -> Any: ...
 
-    def visit_FloatLiteral(self, node: FloatLiteral) -> None: ...
+    def visit_FloatLiteral(self, node: FloatLiteral) -> Any: ...
 
-    def visit_QualifiedType(self, node: QualifiedType) -> None:
+    def visit_QualifiedType(self, node: QualifiedType) -> Any:
         self.visit(node.base_type)
         self.visit(node.type_qualifier)
 
-    def visit_NumericalType(self, numerical_type: ir.NumericalType) -> None:
+    def visit_NumericalType(self, numerical_type: ir.NumericalType) -> Any:
         self.visit(numerical_type.data_type)
         self.visit_sequence(numerical_type.shape)
 
-    def visit_IndexType(self, index_type: ir.IndexType) -> None:
+    def visit_IndexType(self, index_type: ir.IndexType) -> Any:
         self.visit(index_type.lower_bound)
         self.visit(index_type.upper_bound)
         if index_type.stride is not None:
             self.visit(index_type.stride)
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> None: ...
+    def visit_Identifier(self, identifier: ir.Identifier) -> Any: ...
 
-    def visit_sequence(self, nodes: Sequence[ASTObject]) -> None:
+    def visit_sequence(self, nodes: Sequence[ASTObject]) -> Any:
         for node in nodes:
             self.visit(node)

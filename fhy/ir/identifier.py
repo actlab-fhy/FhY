@@ -1,9 +1,10 @@
-# TODO Jason: Add docstring
+"""Variable Identifier Class Object to assign Unique ID"""
+
 from typing import Any
 
 
 class Identifier(object):
-    """Abstracted identifier node for providing a unique ID.
+    """Identifier node to assign a unique ID.
 
     Args:
         name_hint (str): Variable Name
@@ -22,12 +23,12 @@ class Identifier(object):
 
     @property
     def name_hint(self) -> str:
-        # TODO Jason: Add docstring
+        """Variable Name"""
         return self._name_hint
 
     @property
     def id(self) -> int:
-        # TODO Jason: Add docstring
+        """UniqueID"""
         return self._id
 
     def __eq__(self, other: Any) -> bool:

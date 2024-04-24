@@ -1,5 +1,6 @@
-# TODO Jason: Add docstring
-from abc import ABC, abstractmethod
+"""Data Type Node Definitions"""
+
+from abc import ABC
 from enum import StrEnum
 from typing import List, Optional
 
@@ -7,12 +8,11 @@ from .expression import Expression
 
 
 class Type(ABC):
-    """Abstract Node Defining Data Types."""
+    """Abstract Node Defining Data Type."""
 
 
-# TODO: Remove StrEnum, Find another Way
 class PrimitiveDataType(StrEnum):
-    """Core Supported Primitive Types"""
+    """Supported Primitive Data Types."""
 
     INT32 = "int32"
     FLOAT32 = "float32"
@@ -22,7 +22,7 @@ class DataType(object):
     """Data Type Defines Core Type Primitive, but of Flexible Bit Width.
 
     Args:
-        _primitive_type: (PrimitiveType):
+        primitive_data_type: (PrimitiveType):
 
     """
 
@@ -36,17 +36,16 @@ class DataType(object):
 
     @property
     def primitive_data_type(self) -> PrimitiveDataType:
+        """Primitive Data Type"""
         return self._primitive_data_type
-
-    # TODO Jason: Implement the functionality of this class
 
 
 class NumericalType(Type):
-    """Vector Array of a given DataType and Shape
+    """Vector Array of a given DataType and Shape.
 
     Args:
-        _data_type (DataType): Type information of data contained in vector
-        _shape (List[Expression]): Shape of vector
+        data_type (DataType): Type information of data contained in vector
+        shape (List[Expression]): Shape of vector
 
     """
 
@@ -71,9 +70,9 @@ class IndexType(Type):
     """An Indexer, or Slice
 
     Args:
-        _lower_bound (Expression): start index [inclusive]
-        _upper_bound (Expression): end index [inclusive]
-        _stride (Optional[Expression]): increment
+        lower_bound (Expression): start index [inclusive]
+        upper_bound (Expression): end index [inclusive]
+        stride (Optional[Expression]): increment
 
     Notes:
         * Grammatically similar to a python slice or range(start, stop, step)
@@ -106,10 +105,15 @@ class IndexType(Type):
     def stride(self) -> Optional[Expression]:
         return self._stride
 
-    # TODO Jason: Implement the functionality of this class
-
 
 class TupleType(Type):
+    """Tuple Data Type
+
+    Args:
+        types (List[Type]): types of each element within the tuple
+
+    """
+
     _types: List[Type]
 
     def __init__(self, types: List[Type]) -> None:
@@ -117,11 +121,9 @@ class TupleType(Type):
         self._types = types
 
 
-# TODO: Again, Replace Usage of StrEnum, or something.
 class TypeQualifier(StrEnum):
-    """Variables Have Type Qualifiers which Define Permisions."""
+    """Supported type qualifiers define a variable's permisions."""
 
-    # TODO Jason: Add docstring
     INPUT = "input"
     OUTPUT = "output"
     STATE = "state"
