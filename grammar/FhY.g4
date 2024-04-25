@@ -9,9 +9,19 @@ module
     ;
 
 component
-    : function_declaration
+    : import_component
+    | function_declaration
     | function_definition
     ;
+
+/*
+ * Import Rules
+ */
+
+import_component
+    : IMPORT identifier_expression SEMICOLON
+    ;
+
 
 /*
  * Function Rules
@@ -150,8 +160,12 @@ primitive_expression
 
 atom
     : tuple=OPEN_PARENTHESES ((expression COMMA) | (expression (COMMA expression)+))? CLOSE_PARENTHESES
-    | identifier=IDENTIFIER
+    | identifier_expression
     | literal
+    ;
+
+identifier_expression
+    : IDENTIFIER (DOT IDENTIFIER)*
     ;
 
 /*
@@ -166,6 +180,18 @@ literal
 /*
  * Keyword Tokens
  */
+
+IMPORT
+    : 'import'
+    ;
+
+FROM
+    : 'from'
+    ;
+
+AS
+    : 'as'
+    ;
 
 FUNCTION_KEYWORD
     : PROCEDURE

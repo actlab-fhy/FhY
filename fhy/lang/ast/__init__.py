@@ -9,8 +9,9 @@
 We also have visitor and listener patterns for FhY ASTNodes.
 
 """
+
 from .base import ASTNode
-from .component import Argument, Native, Operation, Procedure
+from .component import Argument, Import, Native, Operation, Procedure
 from .core import Component, Expression, Function, Module, Statement
 from .expression import (
     ArrayAccessExpression,
@@ -35,4 +36,4 @@ from .statement import (
     ReturnStatement,
     SelectionStatement,
 )
-from .visitor import BasePass, Visitor
+from .visitor import BasePass, Listener, Visitor

@@ -10,8 +10,10 @@ Statement ASTNodes:
 from dataclasses import dataclass, field
 from typing import List, Optional
 
+from fhy import ir
+
 from .core import Statement
-from .expression import Expression, Identifier
+from .expression import Expression
 from .qualified_type import QualifiedType
 
 
@@ -26,7 +28,7 @@ class DeclarationStatement(Statement):
 
     """
 
-    variable_name: Identifier
+    variable_name: ir.Identifier
     variable_type: QualifiedType
     expression: Optional[Expression] = field(default=None)
 

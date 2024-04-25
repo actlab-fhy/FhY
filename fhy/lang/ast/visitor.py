@@ -13,7 +13,7 @@ from fhy import ir
 
 from ..span import Source, Span
 from .base import ASTNode
-from .component import Argument, Operation, Procedure
+from .component import Argument, Import, Operation, Procedure
 from .core import Module
 from .expression import (
     ArrayAccessExpression,
@@ -36,7 +36,7 @@ from .statement import (
     SelectionStatement,
 )
 
-ASTObject = Union[ASTNode, ir.Identifier, ir.Type, ir.DataType]
+ASTObject = Union[ASTNode, ir.Identifier, ir.Type, ir.DataType, ir.TypeQualifier]
 
 
 # def iter_fields(node: ASTNode) -> Generator[Tuple[str, Any], None, None]:
@@ -96,7 +96,10 @@ class BasePass(ABC):
 
     def default(self, node: ASTObject) -> Any:
         """Default node visiting method"""
-        raise NotImplementedError("Default Visiting Method has not been Defined.")
+        raise NotImplementedError(
+            f"AST node {type(node)} is not supported yet and the default method "
+            "is not implemented."
+        )
 
 
 class Visitor(BasePass):
@@ -106,7 +109,11 @@ class Visitor(BasePass):
         super().visit(node)
 
     def visit_Module(self, node: Module) -> None:
+        self.visit(node.name)
         self.visit_sequence(node.components)
+
+    def visit_Import(self, node: Import) -> None:
+        self.visit_sequence(node.module_path)
 
     def visit_Operation(self, node: Operation) -> None:
         self.visit_sequence(node.args)
@@ -185,8 +192,6 @@ class Visitor(BasePass):
         self.visit(node.base_type)
         self.visit(node.type_qualifier)
 
-    def visit_DataType(self, node: ir.DataType) -> None: ...
-
     def visit_NumericalType(self, numerical_type: ir.NumericalType) -> None:
         self.visit(numerical_type.data_type)
         self.visit_sequence(numerical_type.shape)
@@ -196,6 +201,10 @@ class Visitor(BasePass):
         self.visit(index_type.upper_bound)
         if index_type.stride is not None:
             self.visit(index_type.stride)
+
+    def visit_DataType(self, data_type: ir.DataType) -> None: ...
+
+    def visit_TypeQualifier(self, type_qualifier: ir.TypeQualifier) -> None: ...
 
     def visit_Identifier(self, identifier: ir.Identifier) -> None: ...
 

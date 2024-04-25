@@ -95,6 +95,17 @@ class ParseTreeConverter(FhYVisitor):
         return ast.Module(components=components, span=span)
 
     # =====================
+    # IMPORT VISITORS
+    # =====================
+    def visitImport_component(self, ctx: FhYParser.Import_componentContext) -> ast.Import:
+        identifier_expression_ctx: FhYParser.Identifier_expressionContext = ctx.identifier_expression()
+        module_path: List[ir.Identifier] = []
+        for module_name in identifier_expression_ctx.IDENTIFIER():
+            module_path.append(ir.Identifier(module_name.getText()))
+        span = _get_source_info(ctx)
+        return ast.Import(module_path=module_path, span=span)
+
+    # =====================
     # FUNCTION VISITORS
     # =====================
     def visitFunction_declaration(
@@ -512,18 +523,11 @@ class ParseTreeConverter(FhYVisitor):
         else:
             raise Exception()
 
-    def visitAtom(self, ctx: FhYParser.AtomContext) -> ast.Expression:
-        # TODO: add tuples
-        span = _get_source_info(ctx)
-        if (identifier_ctx := ctx.IDENTIFIER()) is not None:
-            identifer = self._get_identifier(identifier_ctx.getText())
-            return ast.IdentifierExpression(identifier=identifer, span=span)
-
-        elif (literal_ctx := ctx.literal()) is not None:
-            return self.visitLiteral(literal_ctx)
-
-        else:
-            raise NotImplementedError()
+    def visitIdentifier_expression(self, ctx: FhYParser.Identifier_expressionContext) -> ast.IdentifierExpression:
+        return ast.IdentifierExpression(
+            identifier=self._get_identifier(ctx.getText()),
+            span=_get_source_info(ctx)
+        )
 
     def visitLiteral(self, ctx: FhYParser.LiteralContext) -> ast.Literal:
         span = _get_source_info(ctx)

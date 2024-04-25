@@ -46,7 +46,7 @@ class Module(ASTNode):
         components (List[Component]):
 
     """
-
+    name: Identifier = field(default=Identifier("module"))
     components: List["Component"] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:

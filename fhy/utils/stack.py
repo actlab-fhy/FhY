@@ -86,6 +86,7 @@ class Stack(Generic[T]):
         return len(self._stack)
 
     def __iter__(self) -> Iterator[T]:
+        self._iter_index = 0
         return self
 
     def __next__(self) -> T:

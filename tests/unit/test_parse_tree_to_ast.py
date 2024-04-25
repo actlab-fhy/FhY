@@ -69,6 +69,20 @@ def _assert_is_expected_module(node: ast.ASTNode, expected_num_components: int) 
     ), f"Expected module to have {expected_num_components} components"
 
 
+def _assert_is_expected_import(
+    node: ast.ASTNode, expected_import_path: str
+) -> None:
+    assert isinstance(
+        node, ast.Import
+    ), f'Expected "Import" AST node, got "{type(node)}"'
+    assert all(isinstance(identifier, ir.Identifier) for identifier in node.module_path), (
+        f'Expected all path components to be "Identifier", got "{list_to_types(node.module_path)}'
+    )
+    assert all(module.name_hint == expected_module for module, expected_module in zip(node.module_path, expected_import_path)), (
+        f'Expected import path to be "{expected_import_path}", got "{node.module_path}"'
+    )
+
+
 def _assert_is_expected_procedure(
     node: ast.ASTNode,
     expected_name: str,
@@ -789,7 +803,7 @@ def test_tuple_type(parser):
     ), "Expected QualifiedType"
     _tuple = statement.variable_type.base_type
     assert isinstance(
-        _tuple, ir.type.TupleType
+        _tuple, ir.TupleType
     ), f"Expected TupleType. Received: {_tuple}"
 
     assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
@@ -842,3 +856,13 @@ def test_float_literal(parser):
         assert (
             statement.right.value == value
         ), f"Expected FloatLiteral Value to be {value}"
+
+
+def test_absolute_import(parser):
+    source_file_content = "import foo.bar;"
+    _ast = construct_ast(parser, source_file_content)
+
+    _assert_is_expected_module(_ast, 1)
+
+    import_component = _ast.components[0]
+    _assert_is_expected_import(import_component, ["foo", "bar"])
