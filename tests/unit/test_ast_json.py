@@ -196,3 +196,11 @@ def test_json_load(module):
     expected_obj = load_text(expected_str)
 
     assert result == expected_obj, "Expected AlmostJson Objects to be Equal"
+
+
+def test_load_json_to_ast(module):
+     obj, node = module
+     indent = "  "
+     serialized: str = dump(node, indent)
+     result = load(serialized)
+     assert isinstance(result, Module), "Expected to Load an ast.Module Node."
