@@ -24,6 +24,13 @@ class Slice:
         self.start = start
         self.stop = stop
 
+    def __eq__(self, value: object) -> bool:
+        return (
+            isinstance(value, Slice)
+            and self.start == value.start
+            and self.stop == value.stop
+        )
+
     def __repr__(self) -> str:
         return f"{self.start:,d}:{self.stop:,d}"
 
@@ -41,6 +48,9 @@ class Source(object):
 
     def __init__(self, namespace: str) -> None:
         self.namespace = namespace
+
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, Source) and self.namespace == value.namespace
 
     def __repr__(self) -> str:
         return self.namespace
@@ -78,6 +88,14 @@ class Span(object):
         self.source = source
         self.line = Slice(start_line, end_line)
         self.column = Slice(start_column, end_column)
+
+    def __eq__(self, value: object) -> bool:
+        return (
+            isinstance(value, Span)
+            and self.source == value.source
+            and self.line == value.line
+            and self.column == value.column
+        )
 
     def __repr__(self) -> str:
         text = ""

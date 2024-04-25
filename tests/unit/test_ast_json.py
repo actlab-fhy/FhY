@@ -199,8 +199,15 @@ def test_json_load(module):
 
 
 def test_load_json_to_ast(module):
-     obj, node = module
-     indent = "  "
-     serialized: str = dump(node, indent)
-     result = load(serialized)
-     assert isinstance(result, Module), "Expected to Load an ast.Module Node."
+    """Test Serialization of AST Node and reloading that text returns same Object.
+    In otherwords: ASTNode --> JSONtext --> ASTNode
+
+    """
+    obj, node = module
+    indent = "  "
+
+    serialized: str = dump(node, indent)
+    result = load(serialized)
+    assert isinstance(result, Module), "Expected to Load an ast.Module Node."
+
+    assert node == result, "Expected Identical Module Nodes."
