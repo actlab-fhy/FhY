@@ -13,6 +13,7 @@ class Type(ABC):
 
 class PrimitiveDataType(StrEnum):
     """Supported Primitive Data Types."""
+
     INT = "int"
 
     INT32 = "int32"
@@ -56,7 +57,9 @@ class NumericalType(Type):
     _data_type: DataType
     _shape: List[Expression]
 
-    def __init__(self, data_type: DataType, shape: Optional[List[Expression]] = None) -> None:
+    def __init__(
+        self, data_type: DataType, shape: Optional[List[Expression]] = None
+    ) -> None:
         super().__init__()
         self._data_type = data_type
         self._shape = shape or []
