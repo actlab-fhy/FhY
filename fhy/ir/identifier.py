@@ -1,5 +1,4 @@
 """Variable Identifier Class Object to assign Unique ID"""
-
 from typing import Any
 
 
@@ -37,5 +36,5 @@ class Identifier(object):
     def __hash__(self) -> int:
         return hash(self._id)
 
-    # TODO: Jason: Resolve how this identifier class
-    #       can handle identifiers used in different scopes
+    def __repr__(self) -> str:
+        return f"Identifier({self._name_hint}::{self._id})"

@@ -1,2 +1,3 @@
 # TODO Jason: Add docstring
-from .base import Table, TableFrame, TableKey
+from .base import Table
+from .frames import SymbolTableFrame, FunctionSymbolTableFrame, VariableSymbolTableFrame
