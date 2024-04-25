@@ -1,14 +1,11 @@
-import pytest
-
 from fhy.ir import (
     DataType,
     Identifier,
     NumericalType,
     PrimitiveDataType,
-    Type,
     TypeQualifier,
 )
-from fhy.lang.ast import Argument, Module, Native, Operation, Procedure, QualifiedType
+from fhy.lang.ast import Module, Operation, QualifiedType
 from fhy.lang.printer import pprint_ast
 
 

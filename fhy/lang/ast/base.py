@@ -15,7 +15,7 @@ Typical Usage:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List
 
 from ..span import Span
 
@@ -25,11 +25,11 @@ class ASTNode(ABC):
     """Core abstract AST node.
 
     Args:
-        span (Optional[Span]): Define Position in source Code
+        span (Span): Define Position in source Code
 
     """
 
-    span: Optional[Span] = field(default=None)
+    span: Span = field(default=Span(0, 0, 0, 0))
 
     @classmethod
     def keyname(cls) -> str:
