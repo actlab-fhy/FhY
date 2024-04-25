@@ -13,7 +13,7 @@ from fhy.ir import (
     TypeQualifier,
 )
 from fhy.lang.ast import Argument, Module, Operation, QualifiedType
-from fhy.lang.printer.to_json import ASTtoJSON, dump
+from fhy.lang.printer.to_json import AlmostJson, ASTtoJSON, dump, load, to_almost_json
 from fhy.lang.span import Source, Span
 
 
@@ -178,3 +178,21 @@ def test_module_to_json_object(module) -> None:
 #     expected: str = json.dumps(obj, indent=indent)
 
 #     assert result == expected, "Resulting Json String was not serialized as expected."
+
+
+def load_text(text: str):
+    return json.loads(text, object_hook=to_almost_json)
+
+
+def test_json_load(module):
+    """Tests Loading of Json String to AlmostJson Class"""
+    obj, node = module
+    indent = "  "
+    serialized: str = dump(node, indent)
+    result = load_text(serialized)
+    assert isinstance(result, AlmostJson), "Expected loaded object to be AlmostJSON cls"
+
+    expected_str: str = json.dumps(obj)
+    expected_obj = load_text(expected_str)
+
+    assert result == expected_obj, "Expected AlmostJson Objects to be Equal"
