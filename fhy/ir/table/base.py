@@ -1,7 +1,6 @@
 # TODO Jason: Add docstring
 from typing import Dict, Generic, TypeVar
 
-
 K = TypeVar("K")
 V = TypeVar("V")
 

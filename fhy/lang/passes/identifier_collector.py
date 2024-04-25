@@ -1,12 +1,13 @@
 from typing import Set
+
+from fhy import ir
 from fhy.lang import ast
 from fhy.lang.ast.visitor import ASTObject
-from fhy import ir
 
 
 class IdentifierCollector(ast.Visitor):
-    """Collects all identifiers in the AST for any given node
-    """
+    """Collects all identifiers in the AST for any given node"""
+
     _identifers: Set[ir.Identifier]
 
     def __init__(self) -> None:

@@ -1,2 +1,2 @@
-from .symbol_table_builder import build_symbol_table
 from .identifier_collector import collect_identifiers
+from .symbol_table_builder import build_symbol_table

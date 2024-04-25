@@ -1,7 +1,8 @@
 from typing import Any, Dict, Set
-from .module import Module
-from .table import Table, SymbolTableFrame
+
 from .identifier import Identifier
+from .module import Module
+from .table import SymbolTableFrame, Table
 
 
 class Program(object):

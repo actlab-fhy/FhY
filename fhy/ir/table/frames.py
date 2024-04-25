@@ -1,6 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import List, Tuple, Set
+from typing import List, Set, Tuple
+
 from fhy.ir.identifier import Identifier
 from fhy.ir.type import Type, TypeQualifier
 

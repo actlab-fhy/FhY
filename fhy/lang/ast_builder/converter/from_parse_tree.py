@@ -126,7 +126,8 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Function_definitionContext
     ) -> Union[ast.Operation, ast.Procedure]:
         # TODO: add template types and indices (3rd and 4th returned values here)
-        # TODO: considering getting function name here as the open scope needed to be moved to function header so the function name is still in the parent scope
+        # TODO: consider getting function name here as the open scope needed to be moved
+        #       to function header so the function name is still in the parent scope
         keyword, name, _, _, args, return_type = self.visitFunction_header(
             ctx.function_header()
         )

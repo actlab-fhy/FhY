@@ -73,7 +73,8 @@ class NumericalType(Type):
         return self._shape
 
     def __repr__(self) -> str:
-        return f"NumericalType({self._data_type}, [{','.join(repr(s) for s in self._shape)}])"
+        shape = ','.join(repr(s) for s in self._shape)
+        return f"NumericalType({self._data_type}, [{shape}])"
 
 
 class IndexType(Type):
