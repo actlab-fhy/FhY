@@ -113,7 +113,7 @@ class Visitor(BasePass):
         self.visit_sequence(node.components)
 
     def visit_Import(self, node: Import) -> None:
-        self.visit_sequence(node.module_path)
+        self.visit(node.name)
 
     def visit_Operation(self, node: Operation) -> None:
         self.visit_sequence(node.args)

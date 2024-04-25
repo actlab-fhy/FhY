@@ -11,6 +11,11 @@ class SymbolTableFrame(ABC):
 
 
 @dataclass(frozen=True, kw_only=True)
+class ImportSymbolTableFrame(SymbolTableFrame):
+    name: Identifier
+
+
+@dataclass(frozen=True, kw_only=True)
 class VariableSymbolTableFrame(SymbolTableFrame):
     type: Type
     type_qualifier: TypeQualifier

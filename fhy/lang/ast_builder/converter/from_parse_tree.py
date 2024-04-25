@@ -99,11 +99,12 @@ class ParseTreeConverter(FhYVisitor):
     # =====================
     def visitImport_component(self, ctx: FhYParser.Import_componentContext) -> ast.Import:
         identifier_expression_ctx: FhYParser.Identifier_expressionContext = ctx.identifier_expression()
-        module_path: List[ir.Identifier] = []
+        name_hint_components: list[str] = []
         for module_name in identifier_expression_ctx.IDENTIFIER():
-            module_path.append(ir.Identifier(module_name.getText()))
+            name_hint_components.append(module_name.getText())
+        name_hint = ".".join(name_hint_components)
         span = _get_source_info(ctx)
-        return ast.Import(module_path=module_path, span=span)
+        return ast.Import(name=self._get_identifier(name_hint), span=span)
 
     # =====================
     # FUNCTION VISITORS
@@ -117,8 +118,8 @@ class ParseTreeConverter(FhYVisitor):
     def visitFunction_definition(
         self, ctx: FhYParser.Function_definitionContext
     ) -> Union[ast.Operation, ast.Procedure]:
-        self._open_scope()
         # TODO: add template types and indices (3rd and 4th returned values here)
+        # TODO: considering getting function name here as the open scope needed to be moved to function header so the function name is still in the parent scope
         keyword, name, _, _, args, return_type = self.visitFunction_header(
             ctx.function_header()
         )
@@ -161,14 +162,16 @@ class ParseTreeConverter(FhYVisitor):
 
         keyword: str = func_kw.getText()
 
-        if (_id := ctx.IDENTIFIER()) is None:
+        if (name_ctx := ctx.IDENTIFIER()) is None:
             location = _get_source_info(ctx.parentCtx)
             line, col = location.line, location.column
             text = f"Lines {line.start}:{col.start} - {line.end}:{col.end}"
             raise SyntaxError(f"No Function Name Provided. {text}")
 
-        name_hint: str = _id.getText()
+        name_hint: str = name_ctx.getText()
         name: ir.Identifier = self._get_identifier(name_hint)
+
+        self._open_scope()
 
         args_ctx: FhYParser.Function_argsContext = ctx.function_args(0)
         args: List[ast.Argument] = self.visitFunction_args(args_ctx)

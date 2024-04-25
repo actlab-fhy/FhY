@@ -20,15 +20,11 @@ from .statement import Statement
 @dataclass(frozen=True, kw_only=True)
 class Import(Component):
     """Import ASTNode
-
-    Args:
-        module_path (List[Identifier]): List of Identifiers representing the path to the module
-
     """
-    module_path: List[Identifier]
+    name: Identifier
 
     def visit_attrs(self) -> List[str]:
-        return ["module_path"]
+        return ["name"]
 
 
 @dataclass(frozen=True, kw_only=True)
