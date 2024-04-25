@@ -70,17 +70,17 @@ def _assert_is_expected_module(node: ast.ASTNode, expected_num_components: int) 
 
 
 def _assert_is_expected_import(
-    node: ast.ASTNode, expected_import_path: str
+    node: ast.ASTNode, expected_import: str
 ) -> None:
     assert isinstance(
         node, ast.Import
     ), f'Expected "Import" AST node, got "{type(node)}"'
-    assert all(isinstance(identifier, ir.Identifier) for identifier in node.module_path), (
-        f'Expected all path components to be "Identifier", got "{list_to_types(node.module_path)}'
-    )
-    assert all(module.name_hint == expected_module for module, expected_module in zip(node.module_path, expected_import_path)), (
-        f'Expected import path to be "{expected_import_path}", got "{node.module_path}"'
-    )
+    assert isinstance(
+        node.name, ir.Identifier
+    ), f'Expected import name to be "Identifier", got "{type(node.name)}"'
+    assert (
+        node.name.name_hint == expected_import
+    ), f'Expected import name to be "{expected_import}", got "{node.name.name_hint}"'
 
 
 def _assert_is_expected_procedure(
@@ -865,4 +865,4 @@ def test_absolute_import(parser):
     _assert_is_expected_module(_ast, 1)
 
     import_component = _ast.components[0]
-    _assert_is_expected_import(import_component, ["foo", "bar"])
+    _assert_is_expected_import(import_component, "foo.bar")

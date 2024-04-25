@@ -1,6 +1,7 @@
 """All Nodes defined within this Module are subclasses of core.Component ASTNode
 
 Component ASTNodes:
+    Import:
     Argument: Argument identifier node
     Procedure: FhY procedure function node
     Operation: FhY operation Function node
@@ -19,19 +20,13 @@ from .statement import Statement
 
 @dataclass(frozen=True, kw_only=True)
 class Import(Component):
-    """Import ASTNode
+    """Import ASTNode"""
 
-    Args:
-        module_path (List[Identifier]): List of Identifiers representing the path to
-            the module
-
-    """
-
-    module_path: List[Identifier]
+    name: Identifier
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["module_path"])
+        attrs.extend(["name"])
         return attrs
 
 

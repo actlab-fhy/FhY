@@ -5,6 +5,7 @@ from .module import Module
 from .program import Program
 from .table import (
     FunctionSymbolTableFrame,
+    ImportSymbolTableFrame,
     SymbolTableFrame,
     Table,
     VariableSymbolTableFrame,
