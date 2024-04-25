@@ -1,6 +1,6 @@
-"""
+""" """
 
-"""
+import json
 from typing import Tuple
 
 import pytest
@@ -10,12 +10,11 @@ from fhy.ir import (
     Identifier,
     NumericalType,
     PrimitiveDataType,
-    Type,
     TypeQualifier,
 )
-from fhy.lang.ast import Argument, Module, Native, Operation, Procedure, QualifiedType
+from fhy.lang.ast import Argument, Module, Operation, QualifiedType
 from fhy.lang.printer.to_json import ASTtoJSON, dump
-from fhy.lang.span import Slice, Source, Span
+from fhy.lang.span import Source, Span
 
 
 @pytest.fixture(scope="module")
@@ -26,14 +25,9 @@ def span() -> Tuple[dict, Span]:
             "start_line": 0,
             "end_line": 10,
             "start_column": 0,
-                "end_column": 20,
-                "source": {
-                    "cls_name": "Source",
-                    "attributes": {
-                        "namespace": "test"
-                    }
-                }
-        }
+            "end_column": 20,
+            "source": {"cls_name": "Source", "attributes": {"namespace": "test"}},
+        },
     }
     sp = Span(0, 10, 0, 20, Source("test"))
     return obj, sp
@@ -46,14 +40,11 @@ def construct_id(name: str) -> Tuple[dict, Span]:
         "attributes": {
             "name_hint": name,
             "_id": _id._id,
-        }
+        },
     }
 
     return obj, _id
 
-
-def qualified_type():
-    ...
 
 @pytest.fixture(scope="module")
 def arg1(span) -> Tuple[dict, Argument]:
@@ -76,17 +67,15 @@ def arg1(span) -> Tuple[dict, Argument]:
                         "attributes": {
                             "data_type": {
                                 "cls_name": "DataType",
-                                "attributes": {
-                                    "primitive_data_type": "int32"
-                                }
+                                "attributes": {"primitive_data_type": "int32"},
                             },
                             "shape": [shape_1_obj, shape_2_obj],
-                        }
+                        },
                     },
-                    "type_qualifier": "input"
-                }
+                    "type_qualifier": "input",
+                },
             },
-        }
+        },
     }
 
     arg = Argument(
@@ -95,13 +84,11 @@ def arg1(span) -> Tuple[dict, Argument]:
         qualified_type=QualifiedType(
             span=span_cls,
             base_type=NumericalType(
-                data_type=DataType(
-                    primitive_data_type=PrimitiveDataType.INT32
-                ),
-                shape=[shape_1_id, shape_2_id]
+                data_type=DataType(primitive_data_type=PrimitiveDataType.INT32),
+                shape=[shape_1_id, shape_2_id],
             ),
-            type_qualifier=TypeQualifier.INPUT
-        )
+            type_qualifier=TypeQualifier.INPUT,
+        ),
     )
 
     return obj, arg
@@ -129,17 +116,15 @@ def operation(span, arg1) -> Tuple[dict, Operation]:
                         "attributes": {
                             "data_type": {
                                 "cls_name": "DataType",
-                                "attributes": {
-                                    "primitive_data_type": "int32"
-                                }
+                                "attributes": {"primitive_data_type": "int32"},
                             },
                             "shape": [],
-                        }
+                        },
                     },
-                    "type_qualifier": "output"
-                }
-            }
-        }
+                    "type_qualifier": "output",
+                },
+            },
+        },
     }
 
     op = Operation(
@@ -150,13 +135,11 @@ def operation(span, arg1) -> Tuple[dict, Operation]:
         return_type=QualifiedType(
             span=span_cls,
             base_type=NumericalType(
-                data_type=DataType(
-                    primitive_data_type=PrimitiveDataType.INT32
-                ),
-                shape=[]
+                data_type=DataType(primitive_data_type=PrimitiveDataType.INT32),
+                shape=[],
             ),
             type_qualifier=TypeQualifier.OUTPUT,
-        )
+        ),
     )
 
     return obj, op
@@ -169,23 +152,29 @@ def module(span, operation) -> Tuple[dict, Module]:
 
     obj = {
         "cls_name": "Module",
-        "attributes": {
-            "span": span_obj,
-            "components": [op_obj]
-        }
+        "attributes": {"span": span_obj, "components": [op_obj]},
     }
 
-    module = Module(
-        span=span_cls,
-        components=[op_cls]
-    )
+    module = Module(span=span_cls, components=[op_cls])
 
     return obj, module
 
 
-def test_module_to_json_object(module):
+def test_module_to_json_object(module) -> None:
     obj, node = module
 
     result: dict = ASTtoJSON().visit_Module(node)
 
     assert result == obj, "Resulting Json Object was not Constructed as expected."
+
+
+# def test_module_json_str(module):
+#     obj, node = module
+#     indent = "  "
+#     # NOTE: This is harder to test, because the string order matters
+#     #       I'm not entirely convinced we care about this, as long as the objects
+#     #       (see test above) are the same.
+#     result: str = dump(node, indent)
+#     expected: str = json.dumps(obj, indent=indent)
+
+#     assert result == expected, "Resulting Json String was not serialized as expected."
