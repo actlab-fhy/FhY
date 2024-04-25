@@ -11,7 +11,7 @@ Component ASTNodes:
 from dataclasses import dataclass, field
 from typing import List
 
-from .core import ASTNode, Function, Component
+from .core import ASTNode, Component, Function
 from .expression import Identifier
 from .qualified_type import QualifiedType
 from .statement import Statement
@@ -22,13 +22,17 @@ class Import(Component):
     """Import ASTNode
 
     Args:
-        module_path (List[Identifier]): List of Identifiers representing the path to the module
+        module_path (List[Identifier]): List of Identifiers representing the path to
+            the module
 
     """
+
     module_path: List[Identifier]
 
     def visit_attrs(self) -> List[str]:
-        return ["module_path"]
+        attrs = super().visit_attrs()
+        attrs.extend(["module_path"])
+        return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +49,9 @@ class Argument(ASTNode):
     qualified_type: QualifiedType
 
     def visit_attrs(self) -> List[str]:
-        return ["name", "qualified_type"]
+        attrs = super().visit_attrs()
+        attrs.extend(["name", "qualified_type"])
+        return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
