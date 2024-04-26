@@ -134,7 +134,7 @@ class _NumericalTypeInfo(_TypeInfo):
 
 
 @dataclass
-class _IndexTypeInfo(Type):
+class _IndexTypeInfo(_TypeInfo):
     lower_bound: Optional[Expression] = field(default=None)
     upper_bound: Optional[Expression] = field(default=None)
     stride: Optional[Expression] = field(default=None)
@@ -165,9 +165,9 @@ class TypeBuilderFrame(ASTBuilderFrame):
     def __init__(self, cls: Type[ir.Type], **kwargs: Any) -> None:
         super().__init__(cls)
         if issubclass(cls, ir.NumericalType):
-            self._type_info = _NumericalTypeInfo()
+            self._type_info = _NumericalTypeInfo(**kwargs)
         elif issubclass(cls, ir.IndexType):
-            self._type_info = _IndexTypeInfo()
+            self._type_info = _IndexTypeInfo(**kwargs)
         else:
             raise Exception()
 
