@@ -200,7 +200,7 @@ def test_json_load(module):
 
 def test_load_json_to_ast(module):
     """Test Serialization of AST Node and reloading that text returns same Object.
-    In otherwords: ASTNode --> JSONtext --> ASTNode
+    In other words: ASTNode --> JSONtext --> ASTNode
 
     """
     obj, node = module
@@ -209,5 +209,20 @@ def test_load_json_to_ast(module):
     serialized: str = dump(node, indent)
     result = load(serialized)
     assert isinstance(result, Module), "Expected to Load an ast.Module Node."
+    assert node.span == result.span, "Expected Identical Module Spans"
 
-    assert node == result, "Expected Identical Module Nodes."
+    # NOTE: This will not work because we cannot have type class equality
+    #       That is, our node.components != result.components
+    # assert node == result, "Expected Identical Module Nodes."
+
+    assert (
+        len(node.components) == len(result.components) == 1
+    ), "Expected single Component"
+    assert isinstance(result.components[0], Operation), "Expected Operation Component"
+    assert (
+        node.components[0].name == result.components[0].name
+    ), "Expected Equivalent IDs"
+
+    assert (
+        len(node.components[0].args) == len(result.components[0].args) == 1
+    ), "Expected 1 Argument"

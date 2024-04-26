@@ -41,12 +41,6 @@ class DataType(object):
         """Primitive Data Type"""
         return self._primitive_data_type
 
-    def __eq__(self, value: object) -> bool:
-        return (
-            isinstance(value, DataType)
-            and self.primitive_data_type == value.primitive_data_type
-        )
-
     def __repr__(self) -> str:
         return f"DataType({self._primitive_data_type})"
 
@@ -77,13 +71,6 @@ class NumericalType(Type):
     @property
     def shape(self) -> List[Expression]:
         return self._shape
-
-    def __eq__(self, value: object) -> bool:
-        return (
-            isinstance(value, NumericalType)
-            and self.data_type == value.data_type
-            and self.shape == value.shape
-        )
 
     def __repr__(self) -> str:
         shape = ",".join(repr(s) for s in self._shape)
@@ -129,16 +116,6 @@ class IndexType(Type):
     def stride(self) -> Optional[Expression]:
         return self._stride
 
-    def __eq__(self, value: object) -> bool:
-        return (
-            isinstance(value, IndexType)
-            and self.lower_bound == value.lower_bound
-            and self.upper_bound == value.upper_bound
-            and self.stride == value.stride
-            if self.stride is not None
-            else self.stride is value.stride
-        )
-
     def __repr__(self) -> str:
         return f"IndexType({self._lower_bound}, {self._upper_bound}, {self._stride})"
 
@@ -156,9 +133,6 @@ class TupleType(Type):
     def __init__(self, types: List[Type]) -> None:
         super().__init__()
         self._types = types
-
-    def __eq__(self, value: object) -> bool:
-        return isinstance(value, TupleType) and self._types == value._types
 
 
 class TypeQualifier(StrEnum):
