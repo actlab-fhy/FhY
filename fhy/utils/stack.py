@@ -59,7 +59,7 @@ class Stack(Generic[T]):
         self._stack.append(item)
 
     def pop(self) -> T:
-        """Removes a single element (righthand) from the stack.
+        """Removes a single element (right-hand) from the stack.
 
         Raises:
             IndexError: When function is called on an empty stack.
@@ -71,7 +71,7 @@ class Stack(Generic[T]):
             raise IndexError("Cannot pop from an empty stack.")
 
     def peek(self) -> T:
-        """Views the current (righthand) element from the stack.
+        """Views the current (right-hand) element from the stack.
 
         Raises:
             IndexError: When function is called on an empty stack.
