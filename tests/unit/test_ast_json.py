@@ -12,9 +12,32 @@ from fhy.ir import (
     PrimitiveDataType,
     TypeQualifier,
 )
-from fhy.lang.ast import Argument, Module, Operation, QualifiedType
+from fhy.lang.ast import (
+    Argument,
+    BinaryExpression,
+    BinaryOperation,
+    DeclarationStatement,
+    IntLiteral,
+    Module,
+    Operation,
+    Procedure,
+    QualifiedType,
+)
 from fhy.lang.printer.to_json import AlmostJson, ASTtoJSON, dump, load, to_almost_json
 from fhy.lang.span import Source, Span
+
+
+def construct_id(name: str) -> Tuple[dict, Span]:
+    _id = Identifier(name)
+    obj = {
+        "cls_name": "Identifier",
+        "attributes": {
+            "name_hint": name,
+            "_id": _id._id,
+        },
+    }
+
+    return obj, _id
 
 
 @pytest.fixture(scope="module")
@@ -33,65 +56,134 @@ def span() -> Tuple[dict, Span]:
     return obj, sp
 
 
-def construct_id(name: str) -> Tuple[dict, Span]:
-    _id = Identifier(name)
-    obj = {
-        "cls_name": "Identifier",
-        "attributes": {
-            "name_hint": name,
-            "_id": _id._id,
-        },
-    }
+@pytest.fixture(scope="module")
+def int_literal(span) -> Tuple[dict, IntLiteral]:
+    def _build(value: int):
+        span_obj, span_cls = span
+        obj = dict(
+            cls_name="IntLiteral",
+            attributes=dict(
+                span=span_obj,
+                value=value
+            )
+        )
+        literal = IntLiteral(span=span_cls, value=value)
+        return obj, literal
 
-    return obj, _id
+    return _build
 
 
 @pytest.fixture(scope="module")
-def arg1(span) -> Tuple[dict, Argument]:
+def qualified(span) -> Tuple[dict, QualifiedType]:
     span_obj, span_cls = span
-    arg_id_obj, arg_id = construct_id("rupaul")
     shape_1_obj, shape_1_id = construct_id("m")
     shape_2_obj, shape_2_id = construct_id("n")
+    obj = {
+        "cls_name": "QualifiedType",
+        "attributes": {
+            "span": span_obj,
+            "base_type": {
+                "cls_name": "NumericalType",
+                "attributes": {
+                    "data_type": {
+                        "cls_name": "DataType",
+                        "attributes": {"primitive_data_type": "int32"},
+                    },
+                    "shape": [shape_1_obj, shape_2_obj],
+                },
+            },
+            "type_qualifier": "input",
+        },
+    }
+
+    qualified_type = QualifiedType(
+        span=span_cls,
+        base_type=NumericalType(
+            data_type=DataType(primitive_data_type=PrimitiveDataType.INT32),
+            shape=[shape_1_id, shape_2_id],
+        ),
+        type_qualifier=TypeQualifier.INPUT,
+    )
+
+    return obj, qualified_type
+
+
+@pytest.fixture(scope="module")
+def arg1(span, qualified) -> Tuple[dict, Argument]:
+    span_obj, span_cls = span
+    qtype_obj, qtype_cls = qualified
+    arg_id_obj, arg_id = construct_id("rupaul")
 
     obj = {
         "cls_name": "Argument",
         "attributes": {
             "span": span_obj,
             "name": arg_id_obj,
-            "qualified_type": {
-                "cls_name": "QualifiedType",
-                "attributes": {
-                    "span": span_obj,
-                    "base_type": {
-                        "cls_name": "NumericalType",
-                        "attributes": {
-                            "data_type": {
-                                "cls_name": "DataType",
-                                "attributes": {"primitive_data_type": "int32"},
-                            },
-                            "shape": [shape_1_obj, shape_2_obj],
-                        },
-                    },
-                    "type_qualifier": "input",
-                },
-            },
+            "qualified_type": qtype_obj,
         },
     }
 
     arg = Argument(
         span=span_cls,
         name=arg_id,
-        qualified_type=QualifiedType(
-            span=span_cls,
-            base_type=NumericalType(
-                data_type=DataType(primitive_data_type=PrimitiveDataType.INT32),
-                shape=[shape_1_id, shape_2_id],
-            ),
-            type_qualifier=TypeQualifier.INPUT,
-        ),
+        qualified_type=qtype_cls,
     )
 
     return obj, arg
+
+
+@pytest.fixture(scope="module")
+def binary(span, int_literal) -> Tuple[dict, BinaryExpression]:
+    span_obj, span_cls = span
+    addition = BinaryOperation.ADDITION
+    lit_obj_left, lit_cls_left = int_literal(5)
+    lit_obj_right, lit_cls_right = int_literal(10)
+
+    obj = {
+        "cls_name": "BinaryExpression",
+        "attributes": {
+            "span": span_obj,
+            "operation": addition.value,
+            "left": lit_obj_left,
+            "right": lit_obj_right,
+        }
+    }
+
+    bexpress = BinaryExpression(
+        span=span_cls,
+        operation=addition,
+        left=lit_cls_left,
+        right=lit_cls_right
+    )
+
+    return obj, bexpress
+
+
+@pytest.fixture(scope="module")
+def declaration(span, qualified, binary) -> Tuple[dict, Operation]:
+    span_obj, span_cls = span
+    qtype_obj, qtype_cls = qualified
+    binary_obj, binary_cls = binary
+    varname_obj, varname_id = construct_id("bar")
+
+    obj = {
+        "cls_name": "DeclarationStatement",
+        "attributes": {
+            "span": span_obj,
+            "variable_name": varname_obj,
+            "variable_type": qtype_obj,
+            "expression": binary_obj,
+        }
+    }
+
+    statement = DeclarationStatement(
+        span=span_cls,
+        variable_name=varname_id,
+        variable_type=qtype_cls,
+        expression=binary_cls
+    )
+
+    return obj, statement
 
 
 @pytest.fixture(scope="module")
@@ -146,16 +238,44 @@ def operation(span, arg1) -> Tuple[dict, Operation]:
 
 
 @pytest.fixture(scope="module")
-def module(span, operation) -> Tuple[dict, Module]:
+def procedure(span, arg1, declaration) -> Tuple[dict, Procedure]:
+    span_obj, span_cls = span
+    arg1_obj, arg1_cls = arg1
+    declare_obj, declare_cls = declaration
+    name_id_obj, name_id = construct_id("bar")
+
+    obj = {
+        "cls_name": "Procedure",
+        "attributes": {
+            "span": span_obj,
+            "name": name_id_obj,
+            "args": [arg1_obj],
+            "body": [declare_obj],
+        },
+    }
+
+    op = Procedure(
+        span=span_cls,
+        name=name_id,
+        args=[arg1_cls],
+        body=[declare_cls]
+    )
+
+    return obj, op
+
+
+@pytest.fixture(scope="module")
+def module(span, operation, procedure) -> Tuple[dict, Module]:
     span_obj, span_cls = span
     op_obj, op_cls = operation
+    proc_obj, proc_cls = procedure
 
     obj = {
         "cls_name": "Module",
-        "attributes": {"span": span_obj, "components": [op_obj]},
+        "attributes": {"span": span_obj, "components": [op_obj, proc_obj]},
     }
 
-    module = Module(span=span_cls, components=[op_cls])
+    module = Module(span=span_cls, components=[op_cls, proc_cls])
 
     return obj, module
 
@@ -216,7 +336,7 @@ def test_load_json_to_ast(module):
     # assert node == result, "Expected Identical Module Nodes."
 
     assert (
-        len(node.components) == len(result.components) == 1
+        len(node.components) == len(result.components) == 2
     ), "Expected single Component"
     assert isinstance(result.components[0], Operation), "Expected Operation Component"
     assert (

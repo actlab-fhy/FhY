@@ -784,8 +784,9 @@ def dump(node: ast.ASTNode, indent: str = "  ") -> str:
     return json.dumps(obj, indent=indent)
 
 
-def to_almost_json(obj):
-    if "cls_name" in obj and "attributes" in obj:
+def to_almost_json(obj: Any):
+    """Json `Object Hook` to convert to `AlmostJson` if meets Protocol Criteria"""
+    if isinstance(obj, dict) and set(obj.keys()) == {"cls_name", "attributes"}:
         return AlmostJson(
             cls_name=obj["cls_name"],
             attributes=obj["attributes"],
