@@ -968,9 +968,10 @@ def test_syntax_error_bad_declaration_statement(parser):
 
 
 # TODO: Corner Case - Have this raise an Error.
-# def test_invalid_function_keyword(parser):
-#     """This interesting bit creates an Empty Module... Instead of Raising an Error."""
-#     source_file_content = "def foo(input int32[m,n] A) {}"
-#     _ast = construct_ast(parser, source_file_content)
-#     print(_ast.__class__)
-#     print(_ast.components)
+@pytest.mark.skip(reason="Bug. Expected Syntax Error, but Creates Empty Module")
+def test_invalid_function_keyword(parser):
+    """This interesting bit creates an Empty Module... Instead of Raising an Error."""
+    source_file_content = "def foo(input int32[m,n] A) {}"
+    _ast = construct_ast(parser, source_file_content)
+    print(_ast.__class__)
+    print(_ast.components)

@@ -60,13 +60,7 @@ def span() -> Tuple[dict, Span]:
 def int_literal(span) -> Tuple[dict, IntLiteral]:
     def _build(value: int):
         span_obj, span_cls = span
-        obj = dict(
-            cls_name="IntLiteral",
-            attributes=dict(
-                span=span_obj,
-                value=value
-            )
-        )
+        obj = dict(cls_name="IntLiteral", attributes=dict(span=span_obj, value=value))
         literal = IntLiteral(span=span_cls, value=value)
         return obj, literal
 
@@ -146,14 +140,11 @@ def binary(span, int_literal) -> Tuple[dict, BinaryExpression]:
             "operation": addition.value,
             "left": lit_obj_left,
             "right": lit_obj_right,
-        }
+        },
     }
 
     bexpress = BinaryExpression(
-        span=span_cls,
-        operation=addition,
-        left=lit_cls_left,
-        right=lit_cls_right
+        span=span_cls, operation=addition, left=lit_cls_left, right=lit_cls_right
     )
 
     return obj, bexpress
@@ -173,14 +164,14 @@ def declaration(span, qualified, binary) -> Tuple[dict, Operation]:
             "variable_name": varname_obj,
             "variable_type": qtype_obj,
             "expression": binary_obj,
-        }
+        },
     }
 
     statement = DeclarationStatement(
         span=span_cls,
         variable_name=varname_id,
         variable_type=qtype_cls,
-        expression=binary_cls
+        expression=binary_cls,
     )
 
     return obj, statement
@@ -254,12 +245,7 @@ def procedure(span, arg1, declaration) -> Tuple[dict, Procedure]:
         },
     }
 
-    op = Procedure(
-        span=span_cls,
-        name=name_id,
-        args=[arg1_cls],
-        body=[declare_cls]
-    )
+    op = Procedure(span=span_cls, name=name_id, args=[arg1_cls], body=[declare_cls])
 
     return obj, op
 

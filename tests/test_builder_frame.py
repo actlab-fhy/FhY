@@ -76,11 +76,11 @@ def test_create_builder_frame(register_node):
     assert isinstance(result, ASTNodeBuilderFrame), "Expected ASTNodeBuilderFrame"
 
 
-@pytest.mark.parametrize("register_node, expected", [
-                         (ir.NumericalType, _NumericalTypeInfo),
-                         (ir.IndexType, _IndexTypeInfo)
-                         ],
-                         indirect=["register_node"])
+@pytest.mark.parametrize(
+    "register_node, expected",
+    [(ir.NumericalType, _NumericalTypeInfo), (ir.IndexType, _IndexTypeInfo)],
+    indirect=["register_node"],
+)
 def test_create_type_builder_frame(register_node, expected):
     result = create_builder_frame(register_node)
     assert isinstance(result, TypeBuilderFrame), "Expected TypeBuilderFrame"

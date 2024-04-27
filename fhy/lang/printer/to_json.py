@@ -1,7 +1,7 @@
 """Conversion of AST to json"""
 
 import json
-from typing import Any, Callable, List, Optional, Sequence, TypeAlias, Union
+from typing import Any, Callable, List, Optional, Sequence, Union
 
 from fhy import ir
 from fhy.lang import ast
