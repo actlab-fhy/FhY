@@ -29,7 +29,7 @@ class ASTNode(ABC):
 
     """
 
-    span: Span = field(default_factory=lambda : Span(0, 0, 0, 0))
+    span: Span = field(default_factory=lambda: Span(0, 0, 0, 0))
 
     @classmethod
     def keyname(cls) -> str:
@@ -42,8 +42,8 @@ class ASTNode(ABC):
     def visit_attrs(self) -> List[str]:
         """Returns a list of relevant node fields"""
         return ["span"]
-    
+
     def __eq__(self, value: object) -> bool:
         return isinstance(value, self.__class__) and all(
             getattr(value, a) == getattr(self, a) for a in self.visit_attrs()
-            )
+        )

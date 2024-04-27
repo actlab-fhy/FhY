@@ -11,6 +11,7 @@ from abc import ABC
 from typing import Any, Callable, Sequence, Union
 
 from fhy import ir
+from fhy.utils.alias import ASTObject
 
 from ..span import Source, Span
 from .base import ASTNode
@@ -36,9 +37,6 @@ from .statement import (
     ReturnStatement,
     SelectionStatement,
 )
-
-ASTObject = Union[ASTNode, ir.Identifier, ir.Type, ir.DataType, ir.TypeQualifier]
-
 
 # def iter_fields(node: ASTNode) -> Generator[Tuple[str, Any], None, None]:
 #     """Iterates through Relevant Attributes of a Node.
@@ -73,7 +71,7 @@ def get_cls_name(obj: Any) -> str:
 
 
 class BasePass(ABC):
-    """Abstract Visitor Pattern Class for AST Node relevant objects
+    """Abstract Visitor Pattern Class for Node objects
 
     Args:
         is_recursive (bool): If true, recursively visit child nodes.
@@ -85,29 +83,29 @@ class BasePass(ABC):
     def __init__(self, is_recursive: bool = True) -> None:
         self._is_recursive = is_recursive
 
-    def __call__(self, node: ASTObject, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, node: Any, *args: Any, **kwargs: Any) -> Any:
         return self.visit(node)
 
-    def visit(self, node: ASTObject) -> Any:
+    def visit(self, node: Any) -> Any:
         """A unified entry point that determines how to visit an AST object node"""
         name = f"visit_{get_cls_name(node)}"
-        method: Callable[[ASTObject], Any] = getattr(self, name, self.default)
+        method: Callable[[Any], Any] = getattr(self, name, self.default)
 
         return method(node)
 
-    def default(self, node: ASTObject) -> Any:
+    def default(self, node: Any) -> Any:
         """Default node visiting method"""
-        raise NotImplementedError(
-            f"AST node {type(node)} is not supported yet and the default method "
-            "is not implemented."
-        )
+        raise NotImplementedError(f"Node `{type(node)}` is not supported.")
 
 
 class Visitor(BasePass):
     """ASTObject Visitor Pattern Class"""
 
-    def visit(self, node: ASTObject) -> None:
-        super().visit(node)
+    def visit(self, node: Union[ASTObject, Sequence[ASTObject]]) -> None:
+        if isinstance(node, list):
+            self.visit_sequence(node)
+        else:
+            super().visit(node)
 
     def visit_Module(self, node: Module) -> None:
         self.visit(node.name)
@@ -179,7 +177,7 @@ class Visitor(BasePass):
         self.visit_sequence(node.expressions)
 
     def visit_TupleAccessExpression(self, node: TupleAccessExpression) -> None:
-        self.visit_TupleExpression(node.tuple_expression)
+        self.visit(node.tuple_expression)
         self.visit_IntLiteral(node.element_index)
 
     def visit_IdentifierExpression(self, node: IdentifierExpression) -> None:
@@ -207,13 +205,16 @@ class Visitor(BasePass):
 
     def visit_TypeQualifier(self, type_qualifier: ir.TypeQualifier) -> None: ...
 
+    def visit_PrimitiveDataType(self, primitive: ir.PrimitiveDataType) -> None: ...
+
     def visit_Identifier(self, identifier: ir.Identifier) -> None: ...
 
     def visit_sequence(self, nodes: Sequence[ASTObject]) -> None:
         for node in nodes:
             self.visit(node)
 
-    def visit_Span(self, span: Span) -> None: ...
+    def visit_Span(self, span: Span) -> None:
+        self.visit_Source(span.source)
 
     def visit_Source(self, source: Source) -> None: ...
 
@@ -221,7 +222,7 @@ class Visitor(BasePass):
 class Listener(BasePass):
     """ASTObject Listener Pattern Class"""
 
-    def default(self, node: Union[ASTObject, list, Span, Source]) -> None:
+    def default(self, node: Union[ASTObject, Sequence[ASTObject]]) -> None:
         if isinstance(node, list):
             return self.enter_sequence(node)
         super().default(node)

@@ -124,7 +124,10 @@ class _NumericalTypeInfo(_TypeInfo):
             raise Exception()
         if self.shape is None:
             raise Exception()
-        return ir.NumericalType(data_type=self.data_type, shape=self.shape)
+        return ir.NumericalType(
+            data_type=self.data_type,
+            shape=self.shape,  # type: ignore[arg-type]
+        )
 
     def update(self, **kwargs: Any):
         if "data_type" in kwargs:

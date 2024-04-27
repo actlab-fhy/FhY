@@ -136,7 +136,7 @@ class TupleType(Type):
 
 
 class TypeQualifier(StrEnum):
-    """Supported type qualifiers define a variable's permisions."""
+    """Supported type qualifiers define a variable's permissions."""
 
     INPUT = "input"
     OUTPUT = "output"
