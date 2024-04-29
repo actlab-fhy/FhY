@@ -22,23 +22,6 @@ from .base import ASTNode
 
 
 @dataclass(frozen=True, kw_only=True)
-class Root(ASTNode):
-    """FhY project root ASTNode containing References to modules as children.
-
-    Args:
-        modules (List[Component]): list of modules available to project root
-
-    """
-
-    modules: List["Module"] = field(default_factory=list)
-
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
-        attrs.extend(["modules"])
-        return attrs
-
-
-@dataclass(frozen=True, kw_only=True)
 class Module(ASTNode):
     """FhY Module ASTNode, containing references to available components.
 

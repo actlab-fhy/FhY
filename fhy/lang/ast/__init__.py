@@ -17,6 +17,7 @@ from .expression import (
     ArrayAccessExpression,
     BinaryExpression,
     BinaryOperation,
+    ComplexLiteral,
     FloatLiteral,
     FunctionExpression,
     IdentifierExpression,
