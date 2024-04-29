@@ -1,3 +1,17 @@
+"""Methods to construct a Symbol Table from an AST Node.
+
+Functions:
+    build_symbol_table: Primary Entry Point to construct a Symbol Table from an ASTnode.
+
+Classes:
+    SymbolTableBuilder: The Workhorse behind building a symbol table from AST
+
+Exceptions:
+    UndeclaredIdentifierException: A symbol was used before being declared.
+    AlreadyDeclaredIdentifierException: A symbol was declared more than once.
+
+"""
+
 from typing import Any, Dict, Set
 
 from fhy import ir
@@ -20,9 +34,15 @@ class AlreadyDeclaredIdentifierException(Exception):
 
 
 class SymbolTableBuilder(ast.Visitor):
-    """Builds a symbol table for the given AST module and throws an exception if a
-    variable is used before being declared or if a variable is declared more than once
-    in the same namespace.
+    """Builds a symbol table for the given AST module node.
+
+    The class will throw an exception if a variable is used before being declared or if
+    a variable is declared more than once within the same namespace.
+
+    Raises:
+        UndeclaredIdentifierException: A variable is used before being Declared.
+        AlreadyDeclaredIdentifierException: A variable is declared more than once within
+            the same namespace.
 
     """
 
@@ -171,9 +191,19 @@ class SymbolTableBuilder(ast.Visitor):
         super().visit_IdentifierExpression(node)
 
 
-def build_symbol_table(
-    node: ast.Module
-) -> ir.SymbolTable:
+def build_symbol_table(node: ast.Module) -> ir.SymbolTable:
+    """Build a Symbol Table from a Module AST Node.
+
+    Returns:
+        (ir.SymbolTable) Symbol table cataloging all variables from the provided module,
+            by appropriate frame.
+
+    Raises:
+        UndeclaredIdentifierException: A variable is used before being Declared.
+        AlreadyDeclaredIdentifierException: A variable is declared more than once within
+            the same namespace.
+
+    """
     builder = SymbolTableBuilder()
     builder(node)
     return builder.symbol_table
