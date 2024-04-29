@@ -26,29 +26,29 @@ class SymbolTableBuilder(ast.Visitor):
 
     """
 
-    _symbol_tables: Dict[ir.Identifier, ir.Table[ir.Identifier, ir.SymbolTableFrame]]
+    _symbol_table: Dict[ir.Identifier, ir.Table[ir.Identifier, ir.SymbolTableFrame]]
 
     _table_stack: Stack[ir.Table[ir.Identifier, ir.SymbolTableFrame]]
 
     def __init__(self) -> None:
         super().__init__()
 
-        self._symbol_tables = {}
+        self._symbol_table = ir.SymbolTable()
 
         self._table_stack = Stack[ir.Table[ir.Identifier, ir.SymbolTableFrame]]()
 
     @property
-    def symbol_tables(
+    def symbol_table(
         self,
-    ) -> Dict[ir.Identifier, ir.Table[ir.Identifier, ir.SymbolTableFrame]]:
-        return self._symbol_tables
+    ) -> ir.SymbolTable:
+        return self._symbol_table
 
     def _push_namespace(self, namespace_name_hint: str) -> None:
         namespace_name = ir.Identifier(namespace_name_hint)
-        self._symbol_tables[namespace_name] = ir.Table[
+        self._symbol_table[namespace_name] = ir.Table[
             ir.Identifier, ir.SymbolTableFrame
         ]()
-        self._table_stack.push(self._symbol_tables[namespace_name])
+        self._table_stack.push(self._symbol_table[namespace_name])
 
     def _pop_namespace(self) -> None:
         self._table_stack.pop()
@@ -172,8 +172,8 @@ class SymbolTableBuilder(ast.Visitor):
 
 
 def build_symbol_table(
-    node: ast.Module,
-) -> Dict[ir.Identifier, ir.Table[ir.Identifier, ir.SymbolTableFrame]]:
+    node: ast.Module
+) -> ir.SymbolTable:
     builder = SymbolTableBuilder()
     builder(node)
-    return builder.symbol_tables
+    return builder.symbol_table
