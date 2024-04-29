@@ -1,4 +1,4 @@
-"""All Defined Nodes within this module are Sublasses of the core Expression ASTNode.
+"""All Defined Nodes within this module are Subclasses of the core Expression ASTNode.
 
 The Expression ASTNode is also a subclass of `fhy.ir.Expression`.
 
@@ -146,7 +146,7 @@ class TernaryExpression(Expression):
         false_expression (Expression): Expression evaluated if false
 
     Notes:
-        {condition} ? {true_expression} : {false_xpression}
+        {condition} ? {true_expression} : {false_expression}
 
     """
 

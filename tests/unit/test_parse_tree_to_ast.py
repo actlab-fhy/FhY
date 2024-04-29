@@ -5,7 +5,7 @@ import pytest
 from fhy import ir
 from fhy.lang import ast
 
-from ..utils import construct_ast, lexer, list_to_types, parser
+from ..utils import list_to_types
 
 # TODO: make all identifier name equality not in terms of name hint after scope and
 #       loading identifiers with table is implemented
@@ -341,19 +341,19 @@ def _assert_is_expected_return_statement(
     )
 
 
-def test_empty_file(parser):
+def test_empty_file(construct_ast):
     """Test that an empty file is converted correctly."""
     source_file_content = ""
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     assert isinstance(_ast, ast.Module), wrong_node_babe(ast.Module, _ast)
     assert len(_ast.components) == 0, "Expected empty module"
 
 
-def test_empty_procedure(parser):
+def test_empty_procedure(construct_ast):
     """Test that an empty procedure is converted correctly."""
     source_file_content = "proc foo(){}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -361,13 +361,13 @@ def test_empty_procedure(parser):
     _assert_is_expected_procedure(procedure, "foo", 0, 0)
 
 
-def test_empty_procedure_with_qualified_argument(parser):
+def test_empty_procedure_with_qualified_argument(construct_ast):
     """Test that an empty procedure with a single qualified
     argument is converted correctly.
 
     """
     source_file_content = "proc foo(input int32 x){}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -385,9 +385,9 @@ def test_empty_procedure_with_qualified_argument(parser):
     _assert_is_expected_numerical_type(arg_base_type, ir.PrimitiveDataType.INT32, [])
 
 
-def test_empty_procedure_with_a_qualified_argument_with_shape(parser):
+def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
     source_file_content = "proc foo(input int32[m, n] x){}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -411,20 +411,20 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(parser):
     )
 
 
-def test_empty_operation(parser):
+def test_empty_operation(construct_ast):
     """test that an Empty Operation is Converted Correctly"""
     source_file_content = "op foo(){}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
 
     operation = _ast.components[0]
     _assert_is_expected_operation(operation, "foo", 0, 0)
 
 
-def test_empty_operation_return_type(parser):
+def test_empty_operation_return_type(construct_ast):
     """Tests that an Empty Operation with a Return Type is Converted Correctly"""
     source_file_content = "op foo(input int32[n, m] x) -> output int32[n, m] {}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     operation = _ast.components[0]
     _assert_is_expected_operation(operation, "foo", 1, 0)
@@ -460,10 +460,10 @@ def test_empty_operation_return_type(parser):
     )
 
 
-def test_declaration_statement(parser):
+def test_declaration_statement(construct_ast):
     """Tests a single Delcaration Statement."""
     source_file_content = "proc foo(){temp int32 i;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     procedure = _ast.components[0]
     _assert_is_expected_procedure(procedure, "foo", 0, 1)
@@ -479,9 +479,9 @@ def test_declaration_statement(parser):
     _assert_is_expected_shape(statement_qualified_type_shape, [])
 
 
-def test_selection_statement(parser):
+def test_selection_statement(construct_ast):
     source_file_content = "proc foo() {if (1) {i = 1;} else {j = 1;}}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
 
     procedure = _ast.components[0]
@@ -545,9 +545,9 @@ def test_selection_statement(parser):
     ), f"Expected right expression value to be 1, got {false_branch.right.value}"
 
 
-def test_for_all_statement(parser):
+def test_for_all_statement(construct_ast):
     source_file_content = "proc foo() {forall (i) {j = 1;}}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -593,10 +593,10 @@ def test_for_all_statement(parser):
     ), f"Expected right expression value to be 1, got {body_statement.right.value}"
 
 
-def test_return_statement(parser):
+def test_return_statement(construct_ast):
     """Tests a Return Statement"""
     source_file_content = "op foo() -> temp int32 {temp int32 i = 5; return i;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -609,10 +609,10 @@ def test_return_statement(parser):
     )
 
 
-def test_unary_expressions(parser):
+def test_unary_expressions(construct_ast):
     """Tests a Unary Expression (Negative)"""
     source_file_content = "op foo() -> temp int32 {temp int32 i = -5;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -643,10 +643,10 @@ def test_unary_expressions(parser):
     ), f"Expected operand value to be 5, got {statement_expression_operand.value}"
 
 
-def test_binary_expressions(parser):
+def test_binary_expressions(construct_ast):
     """Tests a Binary Expression (Multiplication)"""
     source_file_content = "op foo() -> temp float32 {temp float32 i = 5 * 6;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -686,10 +686,10 @@ def test_binary_expressions(parser):
     )
 
 
-def test_ternary_expressions(parser):
+def test_ternary_expressions(construct_ast):
     """Tests a Ternary Conditional Expression"""
     source_file_content = "op foo() {temp float32 i = 5 < 6 ? 7 : 8;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -753,10 +753,10 @@ def test_ternary_expressions(parser):
     )
 
 
-def test_index_type(parser):
+def test_index_type(construct_ast):
     """Test Construction of an Index Type"""
     source_file_content = "proc bar() {temp index[1:m] i;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -781,9 +781,9 @@ def test_index_type(parser):
     )
 
 
-def test_function_expression(parser):
+def test_function_expression(construct_ast):
     source_file_content = "proc bar() {temp int32 i = foo(A);}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -829,10 +829,10 @@ def test_function_expression(parser):
     )
 
 
-def test_tensor_access_expressions(parser):
+def test_tensor_access_expressions(construct_ast):
     """Tests construction of TensorAccess Expressions."""
     source_file_content = "proc bar() {A[i] = 1;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -855,11 +855,11 @@ def test_tensor_access_expressions(parser):
     )
 
 
-def test_tuple_type(parser):
+def test_tuple_type(construct_ast):
     source_file_content = (
         "op bar() -> output int32[m,n] {output (int32[m, n], int32) i;}"
     )
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
 
     operation = _ast.components[0]
@@ -884,11 +884,11 @@ def test_tuple_type(parser):
     assert isinstance(t2, ir.NumericalType), wrong_node_babe(ir.NumericalType, t2)
 
 
-def test_int_literal(parser):
+def test_int_literal(construct_ast):
     source_file_content = (
         "op bar() -> output int32 {1; 0b0101; 0B01; 0x1; 0XFF; 0o1; 0O7;}"
     )
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -908,9 +908,9 @@ def test_int_literal(parser):
         ), f"Expected IntLiteral Value to be {value}"
 
 
-def test_float_literal(parser):
+def test_float_literal(construct_ast):
     source_file_content = "op bar() -> output float32 {1.0; .2; 1.; 1e2; 1.2e3;}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -930,9 +930,9 @@ def test_float_literal(parser):
         ), f"Expected FloatLiteral Value to be {value}"
 
 
-def test_absolute_import(parser):
+def test_absolute_import(construct_ast):
     source_file_content = "import foo.bar;"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)
 
@@ -940,38 +940,38 @@ def test_absolute_import(parser):
     _assert_is_expected_import(import_component, "foo.bar")
 
 
-def test_syntax_error_no_argument_name(parser):
+def test_syntax_error_no_argument_name(construct_ast):
     """Tests a Syntax Error is Raised when an function Argument is defined without
     a Name.
 
     """
     source_file_content = "op foo(input int32[m,n]) {}"
     with pytest.raises(SyntaxError) as info:
-        _ast = construct_ast(parser, source_file_content)
+        _ast = construct_ast(source_file_content)
     print(info.value)
 
 
-def test_syntax_error_no_operation_name(parser):
+def test_syntax_error_no_operation_name(construct_ast):
     """Tests a Syntax Error is Raised when an Operation is defined without a Name"""
     source_file_content = "op (input int32[m,n] A) {}"
     with pytest.raises(SyntaxError) as info:
-        _ast = construct_ast(parser, source_file_content)
+        _ast = construct_ast(source_file_content)
     print(info.value)
 
 
-def test_syntax_error_bad_declaration_statement(parser):
+def test_syntax_error_bad_declaration_statement(construct_ast):
     """Tests a Syntax Error is Raised when a variable is Declared without a Name."""
     source_file_content = "op (input int32[m,n] A) {temp int32[m,n];}"
     with pytest.raises(SyntaxError) as info:
-        _ast = construct_ast(parser, source_file_content)
+        _ast = construct_ast(source_file_content)
     print(info.value)
 
 
 # TODO: Corner Case - Have this raise an Error.
 @pytest.mark.skip(reason="Bug. Expected Syntax Error, but Creates Empty Module")
-def test_invalid_function_keyword(parser):
+def test_invalid_function_keyword(construct_ast):
     """This interesting bit creates an Empty Module... Instead of Raising an Error."""
     source_file_content = "def foo(input int32[m,n] A) {}"
-    _ast = construct_ast(parser, source_file_content)
+    _ast = construct_ast(source_file_content)
     print(_ast.__class__)
     print(_ast.components)

@@ -1,5 +1,7 @@
 """ """
 
+from typing import Callable, Generator, Optional, Type, TypeVar
+
 import pytest
 
 from fhy import ir
@@ -15,24 +17,33 @@ from fhy.lang.ast_builder.builder_frame import (
 )
 from fhy.lang.span import Span
 
+T = TypeVar("T")
+
 
 @pytest.fixture
-def register_node(request):
+def register_node() -> Generator[Callable[[Type[T]], Type[T]], None, None]:
     """Registers an AST Node and Removes Node from Registry on Teardown"""
-    # Dynamic Fixture Argument (of another Fixture)
-    node = request.param
-    yield directory.register_ast_node(node)
+    node_cls: Optional[Type[T]] = None
+
+    def _inner(node_type: Type[T]) -> Type[T]:
+        nonlocal node_cls
+        node_cls = directory.register_ast_node(node_type)
+        return node_cls
+
+    yield _inner
 
     # Teardown
-    directory._ast_node_types.pop(node)
-    assert (
-        node not in directory._ast_node_types
-    ), "Fixture Teardown Incomplete. Node Still Registered"
+    if node_cls is not None:
+        directory._ast_node_types.pop(node_cls)
+        assert (
+            node_cls not in directory._ast_node_types
+        ), "Fixture Teardown Incomplete. Node Still Registered"
 
 
-@pytest.mark.parametrize("register_node", [Module], indirect=True)
 def test_builder_frame_attributes(register_node):
-    builder = ASTNodeBuilderFrame(register_node)
+    """Tests that a Builder Frame populates Relevant Attributes of a given Node Type."""
+    node_type: Type[Module] = register_node(Module)
+    builder = ASTNodeBuilderFrame(node_type)
 
     # Attributes of Node should Exist in Builder
     for j in ("span", "components"):
@@ -43,9 +54,10 @@ def test_builder_frame_attributes(register_node):
     ), "Builder should not have `_bad_attribute`"
 
 
-@pytest.mark.parametrize("register_node", [Module], indirect=True)
 def test_builder_frame_assignment_error(register_node):
-    builder = ASTNodeBuilderFrame(register_node)
+    """Tests that Attempts to Assign an Irrelevant Attributes raises an Error."""
+    node_type: Type[Module] = register_node(Module)
+    builder = ASTNodeBuilderFrame(node_type)
 
     # Confirm users cannot Assign Attributes not Defined by the Node Class
     with pytest.raises(FieldAttributeError):
@@ -53,35 +65,43 @@ def test_builder_frame_assignment_error(register_node):
     assert not hasattr(builder, "_bad_apple"), "User should not be able to Assign Attr."
 
 
-@pytest.mark.parametrize("register_node", [Module], indirect=True)
 def test_builder_frame_initial_attribute_values(register_node):
-    builder = ASTNodeBuilderFrame(register_node)
+    """Tests that a Builder Frame assigns Default Values defined by Node Type."""
+    node_type: Type[Module] = register_node(Module)
+    builder = ASTNodeBuilderFrame(node_type)
 
-    # We expect Initial Values of attributes to take on default values from node cls
     assert isinstance(builder.components, list), "Expected components to be a list."
     assert isinstance(builder.span, Span), "Expected span to be a Span"
 
 
-@pytest.mark.parametrize("register_node", [Module], indirect=True)
 def test_builder_frame_update(register_node):
-    builder = ASTNodeBuilderFrame(register_node)
+    """Tests that a Builder Frame correctly Updates Attribute Values."""
+    node_type: Type[Module] = register_node(Module)
+    builder = ASTNodeBuilderFrame(node_type)
 
     builder.update(components=["test"])
     assert builder.components == ["test"], "Expected components to be updated"
 
 
-@pytest.mark.parametrize("register_node", [Module], indirect=True)
 def test_create_builder_frame(register_node):
-    result = create_builder_frame(register_node)
+    """Tests the Primary Entry Point function, create_builder_frame, works as
+    expected.
+
+    """
+    node_type: Type[Module] = register_node(Module)
+    result = create_builder_frame(node_type)
+
     assert isinstance(result, ASTNodeBuilderFrame), "Expected ASTNodeBuilderFrame"
+    assert result.cls == Module, "Expected Module Class Defined by Builder."
 
 
 @pytest.mark.parametrize(
-    "register_node, expected",
+    "node_cls, expected",
     [(ir.NumericalType, _NumericalTypeInfo), (ir.IndexType, _IndexTypeInfo)],
-    indirect=["register_node"],
 )
-def test_create_type_builder_frame(register_node, expected):
-    result = create_builder_frame(register_node)
+def test_create_type_builder_frame(register_node, node_cls, expected):
+    """Tests the TypeBuilderFrame works as expected from API entry point"""
+    node_type = register_node(node_cls)
+    result = create_builder_frame(node_type)
     assert isinstance(result, TypeBuilderFrame), "Expected TypeBuilderFrame"
     assert isinstance(result._type_info, expected), f"Expected: {expected}"

@@ -1,4 +1,4 @@
-"""General utilites to construct a logger.
+"""General utilities to construct a logger.
 
 Functions:
     get_logger: creates a new logger with appropriate level and formatting.
@@ -22,7 +22,7 @@ def get_logger(
     """Constructs a Logger given a name and level.
 
     Args:
-        name (str):
+        name (str): logger name
         level (int): Valid Logging Level
         stream (logging.Handler): Output Stream of logging. Defaults to StreamHandler.
         formatter (logging.Formatter): Format of Logging Message
