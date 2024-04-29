@@ -1,3 +1,5 @@
+"""Unit Test the Pretty Print Module."""
+
 from fhy.ir import (
     DataType,
     Identifier,
@@ -10,6 +12,7 @@ from fhy.lang.printer import pprint_ast
 
 
 def test_empty_program():
+    """Test Pretty Printing an Empty Program Module AST."""
     ast = Module()
 
     output: str = pprint_ast(ast)
@@ -18,6 +21,7 @@ def test_empty_program():
 
 
 def test_empty_operation():
+    """Test Pretty Printing a Module AST with an Operation Body component."""
     operation_name = Identifier("foo")
     ast = Module(
         components=[

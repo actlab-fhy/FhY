@@ -1,19 +1,12 @@
-"""
-...
+"""Integration Tests - Compiling Source Code from File using Fhy Entry Point."""
 
-"""
-
-import difflib
 import os
-import subprocess
+import re
 from glob import glob
-from io import StringIO
 
 import pytest
 
-from fhy.lang.printer import pprint_ast
-
-from ..utils import construct_ast, lexer, parser
+from .utils import access_cli, get_diff
 
 HERE = os.path.abspath(os.path.join(__file__, os.pardir))
 OUTPUT = os.path.join(HERE, "Samples", "Output")
@@ -31,53 +24,24 @@ def grab_expected_output_file(filepath: str) -> str:
     return outpath
 
 
-def get_diff(a, b):
-    """Helper Utility to print a diff between two strings"""
-    for i, s in enumerate(difflib.ndiff(a, b)):
-        if s[0] == " ":
-            continue
-        elif s[0] == "-":
-            print('Delete "{}" from position {}'.format(s[-1], i))
-        elif s[0] == "+":
-            print('Add "{}" to position {}'.format(s[-1], i))
+def iter_lines(text: str):
+    """Simple Utility to iterate through lines of text, without the newline character
+    present at the end of the line.
 
-
-@pytest.mark.parametrize("file", examples)
-def test_single_file_examples(parser, file):
-    """Tests the Construction Internally First"""
-    with open(file, "r") as stream:
-        text = stream.read()
-
-    ast = construct_ast(parser, text)
-    result: str = pprint_ast(ast, "  ", False)
-
-    pathout = grab_expected_output_file(file)
-    with open(pathout, "r") as st:
-        expected = st.read()
-
-    print(result)
-    assert result == expected, f"Did not Create Expected Output: {file}"
-
-
-def access_cli(filepath: str, *args) -> str:
-    """Access FhY Entry Point using subprocess and return the decoded stdout"""
-    result = subprocess.run(["fhy", filepath, *args], stdout=subprocess.PIPE)
-    output = result.stdout.decode()
-    return output
+    """
+    yield from re.split("\r\n|\r|\n", text)
 
 
 # NOTE: We might change how the FhY Entrypoint Outputs information
 def cleanup_pretty_print_output(output: str) -> str:
-    stream = StringIO(output)
-    stream.seek(0)
     test: bool = False
     lines = []
-    for line in stream.readlines():
+    for line in iter_lines(output):
         if test:
             lines.append(line)
         elif line.startswith("="):
             test = True
-    value = "".join(lines[:-1])
+    value = "\n".join(lines[:-1])
     if value.endswith("\n"):
         return value[:-1]
     return value

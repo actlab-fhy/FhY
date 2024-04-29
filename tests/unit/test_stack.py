@@ -1,7 +1,4 @@
-"""
-Unit Test the Stack for basic expected Behavior.
-
-"""
+"""Unit Test the stack module for basic expected behavior."""
 
 import pytest
 
@@ -78,7 +75,7 @@ def test_stack_iteration(text_stack):
 
     # NOTE: Do we want the stack to be iterable multiple times?
     #       Currently, the stack remains at the last index, which is 2 in this case.
-    # assert text_stack._iter_index == 0, "We should return to 0 after iteration"
+    # assert text_stack._iter_index == 0, "Should return to 0 after iteration"
 
 
 def test_stack_next(text_stack):
