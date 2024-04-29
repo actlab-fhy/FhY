@@ -16,47 +16,56 @@ examples = glob(SAMPLES)
 
 
 def grab_expected_output_file(filepath: str) -> str:
+    """Grab Expected Output File from an Input Text Filepath."""
     basename: str = os.path.basename(filepath).split(".")[0]
     name = f"{basename}_output.fhy"
-    outpath = os.path.join(OUTPUT, name)
-    if not os.path.exists(outpath):
+    path_out = os.path.join(OUTPUT, name)
+    if not os.path.exists(path_out):
         raise FileNotFoundError(f"Expected Output File Does Not Exist: {basename}")
-    return outpath
+
+    return path_out
 
 
 def iter_lines(text: str):
-    """Simple Utility to iterate through lines of text, without the newline character
+    """Simple Utility to iterate through lines of text, without the newline character(s)
     present at the end of the line.
 
+    Note:
+        We are grouping together multiple new line characters here
+
+    Example:
+        .. code-block:: python
+
+            text = "test\n\r\n\n\n\nstring\n\n\n"
+            assert list(iter_lines(text)) == ["test", "string", ""]
+            assert "\n".join(iter_lines(text)) == "test\nstring\n
+
     """
-    yield from re.split("\r\n|\r|\n", text)
+    yield from re.split("[\r\n]+", text)
 
 
 # NOTE: We might change how the FhY Entrypoint Outputs information
 def cleanup_pretty_print_output(output: str) -> str:
-    test: bool = False
-    lines = []
-    for line in iter_lines(output):
-        if test:
-            lines.append(line)
-        elif line.startswith("="):
-            test = True
-    value = "\n".join(lines[:-1])
-    if value.endswith("\n"):
-        return value[:-1]
-    return value
+    generator = iter_lines(output)
+    for line in generator:
+        if line.startswith("=") and line.endswith("="):
+            break
+
+    # Return the remaining output, removing newline character at the end
+    return "\n".join(generator).strip()
 
 
 @pytest.mark.parametrize("file", examples)
 def test_single_file_examples_through_cli_pretty(file):
-    """Tests FhY Entry Point using Pretty Print"""
-    result = cleanup_pretty_print_output(access_cli(file, "--pretty"))
+    """Tests FhY Entry Point using Pretty Print on a collection of Example Files."""
+    output = access_cli(file, "--pretty")
+    result = cleanup_pretty_print_output(output)
 
-    pathout = grab_expected_output_file(file)
-    with open(pathout, "r") as st:
+    out_path = grab_expected_output_file(file)
+    with open(out_path, "r") as st:
         expected = st.read()
 
     if result != expected:
         get_diff(result, expected)
 
-        assert result == expected, "Unexpected Output from FhY"
+    assert result == expected, "Unexpected Output from FhY"
