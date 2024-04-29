@@ -124,7 +124,10 @@ class _NumericalTypeInfo(_TypeInfo):
             raise Exception()
         if self.shape is None:
             raise Exception()
-        return ir.NumericalType(data_type=self.data_type, shape=self.shape)
+        return ir.NumericalType(
+            data_type=self.data_type,
+            shape=self.shape,  # type: ignore[arg-type]
+        )
 
     def update(self, **kwargs: Any):
         if "data_type" in kwargs:
@@ -134,7 +137,7 @@ class _NumericalTypeInfo(_TypeInfo):
 
 
 @dataclass
-class _IndexTypeInfo(Type):
+class _IndexTypeInfo(_TypeInfo):
     lower_bound: Optional[Expression] = field(default=None)
     upper_bound: Optional[Expression] = field(default=None)
     stride: Optional[Expression] = field(default=None)
@@ -165,9 +168,9 @@ class TypeBuilderFrame(ASTBuilderFrame):
     def __init__(self, cls: Type[ir.Type], **kwargs: Any) -> None:
         super().__init__(cls)
         if issubclass(cls, ir.NumericalType):
-            self._type_info = _NumericalTypeInfo()
+            self._type_info = _NumericalTypeInfo(**kwargs)
         elif issubclass(cls, ir.IndexType):
-            self._type_info = _IndexTypeInfo()
+            self._type_info = _IndexTypeInfo(**kwargs)
         else:
             raise Exception()
 

@@ -147,13 +147,13 @@ class ParseTreeConverter(FhYVisitor):
         elif keyword == "op":
             # NOTE: Normally we require a return type. But in our testing suites,
             #       we don't follow this rule. Will need validation at some point.
-            #       I also don't what to surpress mypy warnings right now.
+            #       I also don't what to suppress mypy warnings right now.
             return ast.Operation(
                 name=name, args=args, return_type=return_type, body=body, span=span
             )
         else:
             line, col = span.line, span.column
-            text = f"Lines {line.start}:{col.start} - {line.end}:{col.end}"
+            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise SyntaxError(f"Invalid Function Keyword Provided. {text}: {keyword}")
 
     def visitFunction_header(
@@ -164,7 +164,7 @@ class ParseTreeConverter(FhYVisitor):
         if (kw_ctx := ctx.FUNCTION_KEYWORD()) is None:
             location = _get_source_info(ctx)
             line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.end}:{col.end}"
+            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise SyntaxError(f"No Function Keyword Provided. {text}")
 
         keyword: str = kw_ctx.getText()
@@ -172,7 +172,7 @@ class ParseTreeConverter(FhYVisitor):
         if (name_ctx := ctx.IDENTIFIER()) is None:
             location = _get_source_info(ctx)
             line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.end}:{col.end}"
+            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise SyntaxError(f"No Function Name Provided. {text}")
 
         name_hint: str = name_ctx.getText()
@@ -205,7 +205,7 @@ class ParseTreeConverter(FhYVisitor):
         if (_id := ctx.IDENTIFIER()) is None:
             location = _get_source_info(ctx)
             line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.end}:{col.end}"
+            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise SyntaxError(f"Function Argument Name not Provided. {text}")
 
         name_hint: str = _id.getText()
@@ -243,7 +243,7 @@ class ParseTreeConverter(FhYVisitor):
         if (_id := ctx.IDENTIFIER()) is None:
             location = _get_source_info(ctx)
             line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.end}:{col.end}"
+            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise SyntaxError(f"Variable Name not Declared. {text}")
         name_hint: str = _id.getText()
         name = self._get_identifier(name_hint)
@@ -564,7 +564,7 @@ class ParseTreeConverter(FhYVisitor):
 
         else:
             line, col = span.line, span.column
-            text = f"Lines {line.start}:{col.start} - {line.end}:{col.end}"
+            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise NotImplementedError(f"Unsupported Type Literal. {text}")
 
     # =====================

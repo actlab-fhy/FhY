@@ -1,4 +1,7 @@
-""" """
+"""
+Tests Node registration wrapper feature and behaviors.
+
+"""
 
 from dataclasses import dataclass
 
@@ -47,7 +50,7 @@ def setup_ast_node(request):
     reason="Retrieving an Unregistered ASTNode", raises=directory.UnregisteredASTNode
 )
 def test_unregistered_node_error():
-    """Tests that retrieiving an unregistered class raises
+    """Tests that retrieving an unregistered class raises
     an UnregisteredASTNode Exception.
 
     """
@@ -61,7 +64,7 @@ def test_register_ast_node(setup_ast_node):
 
     assert issubclass(
         node, ASTNode
-    ), "Expected __GenericTestNode to be a Sublcass of ASTNode"
+    ), "Expected __GenericTestNode to be a Subclass of ASTNode"
     assert (
         node in directory._ast_node_types
     ), "Expected __GenericTestNode to be Registered"
@@ -77,7 +80,7 @@ def test_register_ast_node_with_bad_subclassing(setup_ast_node):
 
     assert issubclass(
         node, ASTNode
-    ), "Expected __SubclassedTestNode to be a Sublcass of ASTNode"
+    ), "Expected __SubclassedTestNode to be a Subclass of ASTNode"
     assert (
         node in directory._ast_node_types
     ), "Expected __SubclassedTestNode to be Registered"

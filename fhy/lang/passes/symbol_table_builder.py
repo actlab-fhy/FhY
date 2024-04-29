@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Set
 
 from fhy import ir
 from fhy.lang import ast
@@ -142,8 +142,9 @@ class SymbolTableBuilder(ast.Visitor):
 
         if isinstance(node.qualified_type.base_type, ir.NumericalType):
             shape_dimension_identifiers: Set[ir.Identifier] = set()
-            for dimension in node.qualified_type.base_type.shape:
-                shape_dimension_identifiers.update(collect_identifiers(dimension))
+            for shape in node.qualified_type.base_type.shape:
+                shape_dimension_identifiers.update(collect_identifiers(shape))
+
             for dimension in shape_dimension_identifiers:
                 if not self._is_symbol_defined(dimension):
                     var_frame = ir.VariableSymbolTableFrame(
@@ -171,7 +172,7 @@ class SymbolTableBuilder(ast.Visitor):
 
 
 def build_symbol_table(
-    node: ast.ASTNode,
+    node: ast.Module
 ) -> ir.SymbolTable:
     builder = SymbolTableBuilder()
     builder(node)

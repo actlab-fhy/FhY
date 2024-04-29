@@ -1,16 +1,22 @@
 import pytest
-from fhy.lang import ast
-import fhy.lang.ast
-from fhy.lang.passes import build_symbol_table
-from fhy.lang.passes.symbol_table_builder import UndeclaredIdentifierException, AlreadyDeclaredIdentifierException
-from fhy import ir
-from ..utils import construct_ast, lexer, list_to_types, parser
-from fhy.lang.printer import pprint_ast
+
 import fhy.lang
+import fhy.lang.ast
+from fhy import ir
+from fhy.lang import ast
+from fhy.lang.passes import build_symbol_table
+from fhy.lang.passes.symbol_table_builder import (
+    AlreadyDeclaredIdentifierException,
+    UndeclaredIdentifierException,
+)
+from fhy.lang.printer import pprint_ast
+
+from ..utils import construct_ast, lexer, list_to_types, parser
 
 
-
-def _get_symbol_table_string_keys(symbol_table: ir.Table[ir.Identifier, ir.SymbolTableFrame]) -> set[str]:
+def _get_symbol_table_string_keys(
+    symbol_table: ir.Table[ir.Identifier, ir.SymbolTableFrame],
+) -> set[str]:
     return {symbol.name_hint for symbol in symbol_table.keys()}
 
 
@@ -107,7 +113,9 @@ def test_fails_with_already_defined_procedure(parser):
 
 
 def test_import_variable(parser):
-    source_file_content = "import constants.pi; proc main() {temp int32 a = constants.pi;}"
+    source_file_content = (
+        "import constants.pi; proc main() {temp int32 a = constants.pi;}"
+    )
     _ast = construct_ast(parser, source_file_content)
 
     symbol_table = build_symbol_table(_ast)
@@ -117,7 +125,9 @@ def test_import_variable(parser):
     module_namespace_symbol_table = list(symbol_table.values())[0]
     assert len(module_namespace_symbol_table) == 2
     assert "main" in _get_symbol_table_string_keys(module_namespace_symbol_table)
-    assert "constants.pi" in _get_symbol_table_string_keys(module_namespace_symbol_table)
+    assert "constants.pi" in _get_symbol_table_string_keys(
+        module_namespace_symbol_table
+    )
 
     main_namespace_symbol_table = list(symbol_table.values())[1]
     assert len(main_namespace_symbol_table) == 1
