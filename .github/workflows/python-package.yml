@@ -1,13 +1,16 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python package
+name: Python package CI
 
 on:
   push:
     branches: [ "main", "dev" ]
   pull_request:
     branches: [ "main", "dev" ]
+
+env:
+  FORCE_COLOR: "1"  # Tox output is colorless
 
 jobs:
   build:
@@ -21,7 +24,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -31,29 +34,23 @@ jobs:
         distribution: 'zulu'
         java-version: 11
 
-    - name: Generate Files Using Antlr
+    - name: Generate Files from FhY Grammar Using Antlr
       run: |
         python -m pip install -U pip setuptools wheel
         python -m pip install -r requirements.txt
         ./build_grammer.sh
 
-    - name: Install dependencies
-      run: |
-        pip install -e .[dev]
+    - name: Install tox
+        run: |
+          pip install tox
 
-    - name: Code Linting
-      run: |
-        ruff check fhy/ --config pyproject.toml
-  
-    - name: Static Type Checking
-      run: |
-        mypy fhy/ --config-file pyproject.toml
-  
-    - name: Unit Testing
+    - name: PyTest Unit Testing & Code Coverage
+        run: tox -e py
+
+    - name: Code Linting & Formatting
       if: always()
-      run: |
-        pytest .
+      run: tox -e lint
 
-    # - name: Doc Generation
-    #   run: |
-    #     make docs/ html
+    - name: MyPy Static Type Check
+      if: always()
+      run: tox -e type
