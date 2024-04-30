@@ -9,13 +9,14 @@ Functions:
 """
 
 from collections import ChainMap
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from antlr4 import ParserRuleContext  # type: ignore[import-untyped]
 
 from fhy import ir
 from fhy.lang import ast
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
+from fhy.utils.alias import Expressions
 
 from ...span import Span
 
@@ -27,6 +28,7 @@ def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:
 
     if all((start, stop)):
         return Span(start.line, stop.line, start.column, stop.column)
+
     elif not parent and (parent_ctx := getattr(ctx, "parentCtx", None)) is not None:
         return _get_source_info(parent_ctx, True)
 
@@ -39,10 +41,6 @@ def _initialize_builtin_identifiers() -> Dict[str, ir.Identifier]:
     }
 
 
-# TODO: Change function signatures to enable type checking
-# TODO: after the todo abovce remove all the unnecessary asserts for types
-
-
 class ParseTreeConverter(FhYVisitor):
     """Constructs an AST representation from a FhY Concrete Syntax Tree Node Visitor.
 
@@ -53,7 +51,7 @@ class ParseTreeConverter(FhYVisitor):
         scoping contexts. In particular, the scope is used to determine whether a
         variable has been previously declared before assigning an Identifier. Otherwise,
         a variable would would be assigned multiple IDs every time we encounter it
-        within a given scope.
+        (independent of scope).
 
     """
 
@@ -76,25 +74,19 @@ class ParseTreeConverter(FhYVisitor):
             self._scopes[name_hint] = identifier
             return identifier
 
-    def convert(self, ctx: FhYParser.ModuleContext) -> ast.Module:
-        node = self.visitModule(ctx)
-        assert isinstance(node, ast.Module), f'Expected "Module", got {type(node)}'
-        return node
-
     # =====================
     # MODULE VISITORS
     # =====================
     def visitModule(self, ctx: FhYParser.ModuleContext) -> ast.Module:
+        span = _get_source_info(ctx)
+
         self._open_scope()
         components: List[ast.Component] = []
         for component_ctx in ctx.component():
             component = self.visitComponent(component_ctx)
-            assert isinstance(
-                component, ast.Component
-            ), f"Expected `Component`. Received: `{type(component)}`"
             components.append(component)
-        span = _get_source_info(ctx)
         self._close_scope()
+
         return ast.Module(components=components, span=span)
 
     # =====================
@@ -120,7 +112,11 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Function_declarationContext
     ) -> Any:
         # TODO: Implement
-        raise NotImplementedError()
+        span = _get_source_info(ctx)
+        line, col = span.line, span.column
+        text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
+
+        raise NotImplementedError(f"Function Declarations are not Supported. {text}")
 
     def visitFunction_definition(
         self, ctx: FhYParser.Function_definitionContext
@@ -128,7 +124,7 @@ class ParseTreeConverter(FhYVisitor):
         # TODO: add template types and indices (3rd and 4th returned values here)
         # TODO: consider getting function name here as the open scope needed to be moved
         #       to function header so the function name is still in the parent scope
-        keyword, name, _, _, args, return_type = self.visitFunction_header(
+        keyword, name, template, indices, args, return_type = self.visitFunction_header(
             ctx.function_header()
         )
 
@@ -144,6 +140,7 @@ class ParseTreeConverter(FhYVisitor):
                 raise Exception()
 
             return ast.Procedure(name=name, args=args, body=body, span=span)
+
         elif keyword == "op":
             if return_type is None:
                 line, col = span.line, span.column
@@ -157,6 +154,7 @@ class ParseTreeConverter(FhYVisitor):
                 body=body,
                 span=span,
             )
+
         else:
             line, col = span.line, span.column
             text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
@@ -165,16 +163,23 @@ class ParseTreeConverter(FhYVisitor):
     def visitFunction_header(
         self, ctx: FhYParser.Function_headerContext
     ) -> Tuple[
-        str, ir.Identifier, None, None, List[ast.Argument], Optional[ast.QualifiedType]
+        str,
+        ir.Identifier,
+        None,
+        None,
+        List[ast.Argument],
+        Optional[ast.QualifiedType],
     ]:
+        # TODO: If a Function Keyword is not Found, it is not parsed.
+        #       Currently, We can Never get here
         if (kw_ctx := ctx.FUNCTION_KEYWORD()) is None:
             location = _get_source_info(ctx)
             line, col = location.line, location.column
             text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise SyntaxError(f"No Function Keyword Provided. {text}")
-
         keyword: str = kw_ctx.getText()
 
+        # NOTE: This error is raised by Antlr before we get here
         if (name_ctx := ctx.IDENTIFIER()) is None:
             location = _get_source_info(ctx)
             line, col = location.line, location.column
@@ -189,10 +194,20 @@ class ParseTreeConverter(FhYVisitor):
         args_ctx: FhYParser.Function_argsContext = ctx.function_args(0)
         args: List[ast.Argument] = self.visitFunction_args(args_ctx)
 
+        # TODO: Implement Support for Function template and indices
+        # template: List[ir.Identifier] = []
+        # if (template_ctx := ctx.function_template_types) is not None:
+        #     template.extend(self.visitIdentifier_list(template_ctx))
+
+        # indices = List[ast.Argument] = []
+        # if (index_ctx := ctx.function_indices) is not None:
+        #     indices.extend(self.visitFunction_args(index_ctx))
+
         return_type: Optional[ast.QualifiedType] = None
         if (return_type_ctx := ctx.qualified_type()) is not None:
             return_type = self.visitQualified_type(return_type_ctx)
 
+        # return keyword, name, template, indices, args, return_type
         return keyword, name, None, None, args, return_type
 
     def visitFunction_args(
@@ -216,8 +231,8 @@ class ParseTreeConverter(FhYVisitor):
 
         name_hint: str = _id.getText()
         name = self._get_identifier(name_hint)
-
         span = _get_source_info(ctx)
+
         return ast.Argument(qualified_type=qualified_type, name=name, span=span)
 
     def visitFunction_body(
@@ -235,10 +250,8 @@ class ParseTreeConverter(FhYVisitor):
         if ctx.statement() is not None:
             for statement_ctx in ctx.statement():
                 statement = self.visitStatement(statement_ctx)
-                assert isinstance(
-                    statement, ast.Statement
-                ), f'Expected "Statement", got {type(statement)}'
                 statements.append(statement)
+
         return statements
 
     def visitDeclaration_statement(
@@ -246,11 +259,14 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.DeclarationStatement:
         qualified_type = self.visitQualified_type(ctx.qualified_type())
 
+        # NOTE: This validation step is performed for type safety, but we will never
+        #       actually get here, because this is a valid Expression Statement.
         if (_id := ctx.IDENTIFIER()) is None:
             location = _get_source_info(ctx)
             line, col = location.line, location.column
             text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
             raise SyntaxError(f"Variable Name not Declared. {text}")
+
         name_hint: str = _id.getText()
         name = self._get_identifier(name_hint)
         expression = None
@@ -271,16 +287,9 @@ class ParseTreeConverter(FhYVisitor):
         left_expression = None
         if (primitive_expression_ctx := ctx.primitive_expression()) is not None:
             left_expression = self.visitPrimitive_expression(primitive_expression_ctx)
-            assert isinstance(
-                left_expression, ast.Expression
-            ), f'Expected "Expression", got {type(left_expression)}'
 
         right_expression_ctx = ctx.expression()
         right_expression = self.visitExpression(right_expression_ctx)
-        assert isinstance(
-            right_expression, ast.Expression
-        ), f'Expected "Expression", got {type(right_expression)}'
-
         span = _get_source_info(ctx)
 
         return ast.ExpressionStatement(
@@ -292,9 +301,7 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.SelectionStatement:
         condition_ctx = ctx.expression()
         condition = self.visitExpression(condition_ctx)
-        assert isinstance(
-            condition, ast.Expression
-        ), f'Expected "Expression", got {type(condition)}'
+
         self._open_scope()
         true_body_ctx = ctx.statement_series(0)
         true_body = self.visitStatement_series(true_body_ctx)
@@ -314,15 +321,11 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.ForAllStatement:
         index_ctx = ctx.expression()
         index = self.visitExpression(index_ctx)
-        assert isinstance(
-            index, ast.Expression
-        ), f'Expected "Expression", got {type(index)}'
+
         self._open_scope()
         body_ctx = ctx.statement_series()
         body = self.visitStatement_series(body_ctx)
-        assert all(
-            isinstance(statement, ast.Statement) for statement in body
-        ), 'Expected all elements to be "Statement"'
+
         self._close_scope()
         span = _get_source_info(ctx)
         return ast.ForAllStatement(index=index, body=body, span=span)
@@ -332,10 +335,8 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.ReturnStatement:
         expression_ctx = ctx.expression()
         expression = self.visitExpression(expression_ctx)
-        assert isinstance(
-            expression, ast.Expression
-        ), f'Expected "Expression", got {type(expression)}'
         span = _get_source_info(ctx)
+
         return ast.ReturnStatement(expression=expression, span=span)
 
     # =====================
@@ -343,8 +344,8 @@ class ParseTreeConverter(FhYVisitor):
     # =====================
     def visitExpression_list(
         self, ctx: FhYParser.Expression_listContext
-    ) -> List[ast.Expression]:
-        expressions: List[ast.Expression] = []
+    ) -> Sequence[Expressions]:
+        expressions: List[Expressions] = []
         if ctx.expression() is not None:
             for expression_ctx in ctx.expression():
                 expressions.append(self.visitExpression(expression_ctx))
@@ -357,11 +358,8 @@ class ParseTreeConverter(FhYVisitor):
 
         elif ctx.unary_expression is not None:
             operand = self.visitExpression(ctx.expression(0))
-            assert isinstance(
-                operand, ast.Expression
-            ), f'Expected "Expression", got {type(operand)}'
             operator_ctx = ctx.SUBTRACTION() or ctx.BITWISE_NOT() or ctx.LOGICAL_NOT()
-            assert operator_ctx is not None, "Expected unary operator"
+
             return ast.UnaryExpression(
                 span=span,
                 operation=ast.UnaryOperation(operator_ctx.getText()),
@@ -382,13 +380,8 @@ class ParseTreeConverter(FhYVisitor):
             ]
         ):
             left = self.visitExpression(ctx.expression(0))
-            assert isinstance(
-                left, ast.Expression
-            ), f'Expected "Expression", got {type(left)}'
             right = self.visitExpression(ctx.expression(1))
-            assert isinstance(
-                right, ast.Expression
-            ), f'Expected "Expression", got {type(right)}'
+
             operator = (
                 ctx.MULTIPLICATION()
                 or ctx.DIVISION()
@@ -407,7 +400,7 @@ class ParseTreeConverter(FhYVisitor):
                 or ctx.LOGICAL_AND()
                 or ctx.LOGICAL_OR()
             )
-            assert operator is not None, "Expected binary operator"
+
             return ast.BinaryExpression(
                 span=span,
                 operation=ast.BinaryOperation(operator.getText()),
@@ -417,17 +410,9 @@ class ParseTreeConverter(FhYVisitor):
 
         elif ctx.ternary_expression is not None:
             condition = self.visitExpression(ctx.expression(0))
-            assert isinstance(
-                condition, ast.Expression
-            ), f'Expected "Expression", got {type(condition)}'
             true_expression = self.visitExpression(ctx.expression(1))
-            assert isinstance(
-                true_expression, ast.Expression
-            ), f'Expected "Expression", got {type(true_expression)}'
             false_expression = self.visitExpression(ctx.expression(2))
-            assert isinstance(
-                false_expression, ast.Expression
-            ), f'Expected "Expression", got {type(false_expression)}'
+
             return ast.TernaryExpression(
                 span=span,
                 condition=condition,
@@ -439,13 +424,13 @@ class ParseTreeConverter(FhYVisitor):
             primitive_expression = self.visitPrimitive_expression(
                 primitive_expression_ctx
             )
-            assert isinstance(
-                primitive_expression, ast.Expression
-            ), f'Expected "Expression", got {type(primitive_expression)}'
+
             return primitive_expression
 
         else:
-            raise Exception()
+            line, col = span.line, span.column
+            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
+            raise NotImplementedError(f"Invalid Primitive Expression. {text}")
 
     def visitPrimitive_expression(
         self, ctx: FhYParser.Primitive_expressionContext
@@ -457,9 +442,7 @@ class ParseTreeConverter(FhYVisitor):
         #     primitive_expression = self.visitPrimitive_expression(
         #         primitive_expression_ctx
         #     )
-        #     assert isinstance(
-        #         primitive_expression, ast.Expression
-        #     ), f'Expected "Expression", got {type(primitive_expression)}'
+
         #     return ast.TupleAccessExpression(
         #         span=span,
         #         tuple_expression=primitive_expression,
@@ -471,9 +454,6 @@ class ParseTreeConverter(FhYVisitor):
             function_expression = self.visitPrimitive_expression(
                 function_expression_ctx
             )
-            assert isinstance(
-                function_expression, ast.Expression
-            ), f'Expected "Expression", got {type(function_expression)}'
 
             expression_list_counter: int = 0
 
@@ -482,9 +462,6 @@ class ParseTreeConverter(FhYVisitor):
                 template_types = self.visitExpression_list(
                     ctx.expression_list(expression_list_counter)
                 )
-                assert all(
-                    isinstance(expr, ast.Expression) for expr in template_types
-                ), 'Expected all elements to be "Expression"'
                 expression_list_counter += 1
 
             indices: List[ast.Expression] = []
@@ -492,17 +469,11 @@ class ParseTreeConverter(FhYVisitor):
                 indices = self.visitExpression_list(
                     ctx.expression_list(expression_list_counter)
                 )
-                assert all(
-                    isinstance(expr, ast.Expression) for expr in indices
-                ), 'Expected all elements to be "Expression"'
                 expression_list_counter += 1
 
             args = self.visitExpression_list(
                 ctx.expression_list(expression_list_counter)
             )
-            assert all(
-                isinstance(expr, ast.Expression) for expr in args
-            ), 'Expected all elements to be "Expression"'
 
             return ast.FunctionExpression(
                 function=function_expression,
@@ -515,15 +486,8 @@ class ParseTreeConverter(FhYVisitor):
         elif ctx.array_access_expression is not None:
             array_expression_ctx = ctx.primitive_expression()
             array_expression = self.visitPrimitive_expression(array_expression_ctx)
-            assert isinstance(
-                array_expression, ast.Expression
-            ), f'Expected "Expression", got {type(array_expression)}'
-
             indices_ctx = ctx.expression_list(0)
             indices = self.visitExpression_list(indices_ctx)
-            assert all(
-                isinstance(expr, ast.Expression) for expr in indices
-            ), 'Expected all elements to be "Expression"'
 
             return ast.ArrayAccessExpression(
                 array_expression=array_expression, indices=indices, span=span
@@ -531,13 +495,12 @@ class ParseTreeConverter(FhYVisitor):
 
         elif (atom_ctx := ctx.atom()) is not None:
             atom_expression = self.visitAtom(atom_ctx)
-            assert isinstance(
-                atom_expression, ast.Expression
-            ), f'Expected "Expression", got {type(atom_expression)}'
+
             return atom_expression
 
         else:
-            raise Exception()
+            # TODO: Replace with better Exception / reporting
+            raise Exception("Invalid Primitive Expression")
 
     def visitIdentifier_expression(
         self, ctx: FhYParser.Identifier_expressionContext
@@ -582,11 +545,19 @@ class ParseTreeConverter(FhYVisitor):
         type_qualifier: Optional[ir.TypeQualifier] = None
         if (type_qualifier_ctx := ctx.IDENTIFIER()) is not None:
             type_qualifier = ir.TypeQualifier(type_qualifier_ctx.getText())
+
+        else:
+            # TODO: Do we expect to support unqualified types?
+            #       Do we need a placeholder base qual to be replaced by analysis pass?
+            # TODO: Replace this exception with better error handling.
+            raise Exception("Invalid Type Qualifier")
+
         base_type = self.visitType(ctx.type_())
         span = _get_source_info(ctx)
+
         return ast.QualifiedType(
             base_type=base_type,
-            type_qualifier=type_qualifier,  # type: ignore[arg-type]
+            type_qualifier=type_qualifier,
             span=span,
         )
 
@@ -594,18 +565,13 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Numerical_typeContext
     ) -> ir.NumericalType:
         data_type = self.visitDtype(ctx.dtype())
-        assert isinstance(
-            data_type, ir.DataType
-        ), f'Expected "DataType", got {type(data_type)}'
-        shape: List[ast.Expression] = []
+        shape: Sequence[Expressions] = []
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
-            assert all(
-                isinstance(expr, ast.Expression) for expr in shape
-            ), 'Expected all elements to be "Expression"'
+
         return ir.NumericalType(
             data_type=data_type,
-            shape=shape,  # type: ignore[arg-type]
+            shape=list(shape),
         )
 
     def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.DataType:
@@ -613,16 +579,7 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> ir.IndexType:
         low, high, stride = self.visitRange(ctx.range_())
-        assert isinstance(
-            low, ast.Expression
-        ), f'Expected "Expression", got {type(low)}'
-        assert isinstance(
-            high, ast.Expression
-        ), f'Expected "Expression", got {type(high)}'
-        if stride is not None:
-            assert isinstance(
-                stride, ast.Expression
-            ), f'Expected "Expression", got {type(stride)}'
+
         return ir.IndexType(lower_bound=low, upper_bound=high, stride=stride)
 
     def visitRange(
@@ -630,29 +587,17 @@ class ParseTreeConverter(FhYVisitor):
     ) -> Tuple[ast.Expression, ast.Expression, Optional[ast.Expression]]:
         low_ctx = ctx.expression(0)
         low = self.visitExpression(low_ctx)
-        assert isinstance(
-            low, ast.Expression
-        ), f'Expected "Expression", got {type(low)}'
-
         high_ctx = ctx.expression(1)
         high = self.visitExpression(high_ctx)
-        assert isinstance(
-            high, ast.Expression
-        ), f'Expected "Expression", got {type(high)}'
 
-        stride = None
+        stride: Optional[ast.Expression] = None
         if (stride_ctx := ctx.expression(2)) is not None:
             stride = self.visitExpression(stride_ctx)
-            assert isinstance(
-                stride, ast.Expression
-            ), f'Expected "Expression", got {type(stride)}'
 
         return low, high, stride
 
     def visitTuple_type(self, ctx: FhYParser.Tuple_typeContext) -> ir.type.TupleType:
         types: List[ir.Type] = []
-        if ctx.OPEN_PARENTHESES() is None or ctx.CLOSE_PARENTHESES() is None:
-            raise SyntaxError("Invalid Tuple Expression")
         if (context := ctx.type_()) is not None:
             for t in context:
                 types.append(self.visitType(t))
@@ -665,6 +610,7 @@ def from_parse_tree(parse_tree: FhYParser.ModuleContext) -> ast.Module:
     converter = ParseTreeConverter()
     _ast: ast.Module = converter.visitModule(parse_tree)
     if _ast is None:
+        # TODO: Raise Better, Custom Exception (e.g. FhYASTBuildError)
         raise Exception("AST Not Built")
 
     return _ast

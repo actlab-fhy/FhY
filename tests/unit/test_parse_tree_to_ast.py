@@ -953,15 +953,19 @@ def test_syntax_error_no_argument_name(construct_ast):
 
 def test_syntax_error_no_operation_name(construct_ast):
     """Tests a Syntax Error is Raised when an Operation is defined without a Name"""
-    source_file_content = "op (input int32[m,n] A) {}"
+    source_file_content = "op (input int32[m,n] A) -> output int32 {}"
+    # NOTE: This raises the Antlr Syntax Error, not from our visitor class.
     with pytest.raises(SyntaxError) as info:
         _ast = construct_ast(source_file_content)
     print(info.value)
 
 
-def test_syntax_error_bad_declaration_statement(construct_ast):
-    """Tests a Syntax Error is Raised when a variable is Declared without a Name."""
-    source_file_content = "op (input int32[m,n] A) {temp int32[m,n];}"
+def test_syntax_error_no_operation_return_type(construct_ast):
+    """Tests a Syntax Error is Raised when an Operation is defined without a return
+    type.
+
+    """
+    source_file_content = "op func(input int32[m,n] A) {}"
     with pytest.raises(SyntaxError) as info:
         _ast = construct_ast(source_file_content)
     print(info.value)
@@ -971,7 +975,7 @@ def test_syntax_error_bad_declaration_statement(construct_ast):
 @pytest.mark.skip(reason="Bug. Expected Syntax Error, but Creates Empty Module")
 def test_invalid_function_keyword(construct_ast):
     """This interesting bit creates an Empty Module... Instead of Raising an Error."""
-    source_file_content = "def foo(input int32[m,n] A) {}"
+    source_file_content = "def foo(input int32[m,n] A) -> output int32[m,n] {}"
     _ast = construct_ast(source_file_content)
     print(_ast.__class__)
     print(_ast.components)
