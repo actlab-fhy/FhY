@@ -113,11 +113,10 @@ class ASTPrettyPrinter(BasePass):
         self._decrement_indent()
         condition = self.visit(selection_statement.condition)
 
-        text = f"if ({condition}) " + "{\n" + true_body + f"\n{self._spacer}" + "}"
+        text = f"if {condition} " + "{\n" + true_body + f"\n{self._spacer}" + "}"
 
-        # TODO: Confirm this Comes out right...
-        if false_body != "":
-            text += " else {\n" + true_body + f"\n{self._spacer}" + "}"
+        if len(false_body) > 0:
+            text += " else {\n" + false_body + f"\n{self._spacer}" + "}"
 
         return text
 
