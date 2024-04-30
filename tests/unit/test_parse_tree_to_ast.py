@@ -413,7 +413,7 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
 
 def test_empty_operation(construct_ast):
     """test that an Empty Operation is Converted Correctly"""
-    source_file_content = "op foo(){}"
+    source_file_content = "op foo() -> output int32 {}"
     _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
 
@@ -688,7 +688,7 @@ def test_binary_expressions(construct_ast):
 
 def test_ternary_expressions(construct_ast):
     """Tests a Ternary Conditional Expression"""
-    source_file_content = "op foo() {temp float32 i = 5 < 6 ? 7 : 8;}"
+    source_file_content = "op foo() -> output int32 {temp float32 i = 5 < 6 ? 7 : 8;}"
     _ast = construct_ast(source_file_content)
 
     _assert_is_expected_module(_ast, 1)

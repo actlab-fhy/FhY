@@ -145,11 +145,17 @@ class ParseTreeConverter(FhYVisitor):
 
             return ast.Procedure(name=name, args=args, body=body, span=span)
         elif keyword == "op":
-            # NOTE: Normally we require a return type. But in our testing suites,
-            #       we don't follow this rule. Will need validation at some point.
-            #       I also don't what to suppress mypy warnings right now.
+            if return_type is None:
+                line, col = span.line, span.column
+                text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
+                raise SyntaxError(f"No Operation Return Type Provided. {text}")
+
             return ast.Operation(
-                name=name, args=args, return_type=return_type, body=body, span=span
+                name=name,
+                args=args,
+                return_type=return_type,
+                body=body,
+                span=span,
             )
         else:
             line, col = span.line, span.column

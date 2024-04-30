@@ -5,7 +5,7 @@ from typing import Callable, Generator, Optional, Type, TypeVar
 import pytest
 
 from fhy import ir
-from fhy.lang.ast import directory
+from fhy.lang.ast import IntLiteral, directory
 from fhy.lang.ast.core import Module
 from fhy.lang.ast_builder.builder_frame import (
     ASTNodeBuilderFrame,
@@ -105,3 +105,23 @@ def test_create_type_builder_frame(register_node, node_cls, expected):
     result = create_builder_frame(node_type)
     assert isinstance(result, TypeBuilderFrame), "Expected TypeBuilderFrame"
     assert isinstance(result._type_info, expected), f"Expected: {expected}"
+
+
+def test_index_type_info_build(register_node):
+    """Tests update and build of Index Type Node."""
+    node_cls = ir.IndexType
+    node_type = register_node(node_cls)
+    builder: TypeBuilderFrame = create_builder_frame(node_type)
+    lower = IntLiteral(value=1)
+    upper = IntLiteral(value=5)
+    builder.update(
+        lower_bound=lower,
+        upper_bound=upper,
+    )
+    # Builder correctly updated values
+    assert builder._type_info.lower_bound == lower, "Expected Same Lower Bound"
+    assert builder._type_info.upper_bound == upper, "Expected Same Upper Bound"
+
+    # Builder correctly constructs node
+    result = builder.build()
+    assert isinstance(result, node_cls), "Expected Builder to construct IndexType"
