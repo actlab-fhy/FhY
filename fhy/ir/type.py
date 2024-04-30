@@ -1,4 +1,4 @@
-"""Data Type Node Definitions"""
+"""Data Type Node Definitions."""
 
 from abc import ABC
 from enum import StrEnum
@@ -133,6 +133,10 @@ class TupleType(Type):
     def __init__(self, types: List[Type]) -> None:
         super().__init__()
         self._types = types
+
+    @property
+    def types(self):
+        return self._types
 
 
 class TypeQualifier(StrEnum):

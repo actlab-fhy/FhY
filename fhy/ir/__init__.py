@@ -1,14 +1,15 @@
-# TODO Jason: Add docstring
+"""FhY Intermediate Representation Tool kit."""
+
 from .expression import Expression
 from .identifier import Identifier
 from .program import Program
 from .table import (
     FunctionSymbolTableFrame,
     ImportSymbolTableFrame,
+    SymbolTable,
     SymbolTableFrame,
     Table,
     VariableSymbolTableFrame,
-    SymbolTable,
 )
 from .type import (
     DataType,

@@ -1,6 +1,7 @@
 from typing import Any, Dict, Set
+
 from .identifier import Identifier
-from .table import SymbolTableFrame, SymbolTable, Table
+from .table import SymbolTable, SymbolTableFrame, Table
 
 
 class Program(object):

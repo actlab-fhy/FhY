@@ -111,7 +111,7 @@ class BinaryOperation(StrEnum):
     LOGICAL_OR = "||"
     # TODO: Add the Following Operators to Grammar (Be careful with Precedence)
     # FLOORDIV = "//"
-    # MODULOS = "%"
+    # MODULO = "%"
     # POWER = "**"
 
 

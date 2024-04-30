@@ -729,7 +729,7 @@ class JSONtoAST(visitor.BasePass):
 
     def visit_IndexType(self, index_type: Optional[AlmostJson]) -> ir.IndexType:
         if index_type is None:
-            raise Exception("No Index Type Provided")
+            raise ValueError("No Index Type Provided")
 
         values: dict = index_type.attributes
         lower = self.visit(values.get("lower_bound"))
@@ -763,6 +763,8 @@ class JSONtoAST(visitor.BasePass):
         return ir.IndexType(lower_bound=lower, upper_bound=upper, stride=stride)
 
     def visit_TupleType(self, tuple_type: Optional[AlmostJson]) -> ir.TupleType:
+        if tuple_type is None:
+            raise ValueError("No Tuple Type Provided.")
         values: dict = tuple_type.attributes
         if (v := values.get("types")) is None:
             raise ValueError("Invalid Tuple Type. No Type definitions of Elements.")
