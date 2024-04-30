@@ -5,13 +5,14 @@ Classes:
 
 """
 
-from typing import Generic, Iterator, List, TypeVar
+from collections import deque
+from typing import Generic, Iterator, TypeVar
 
 T = TypeVar("T")
 
 
 class Stack(Generic[T]):
-    """A simple interface to control elements within a list (stack) of a defined type.
+    """A simple interface to control elements within a deque (stack) of a defined type.
 
     Example Usage:
 
@@ -42,11 +43,11 @@ class Stack(Generic[T]):
 
     """
 
-    _stack: List[T]
+    _stack: deque[T]
     _iter_index: int
 
     def __init__(self):
-        self._stack = []
+        self._stack = deque[T]()
         self._iter_index = 0
 
     def clear(self) -> None:
