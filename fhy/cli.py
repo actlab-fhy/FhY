@@ -1,20 +1,24 @@
+"""FhY Command Line Interface (CLI) Compiler Utility."""
+
 import argparse
 import logging
 import os
 from contextlib import contextmanager
+from enum import IntEnum
 from typing import List, Optional
 
-from antlr4 import (
+from antlr4 import (  # type: ignore[import-untyped]
     BailErrorStrategy,
     CommonTokenStream,
     InputStream,
 )
-from antlr4.error.ErrorListener import ErrorListener
+from antlr4.error.ErrorListener import ErrorListener  # type: ignore[import-untyped]
 
 from fhy.lang.ast import ASTNode, Module
 from fhy.lang.ast_builder import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
 from fhy.lang.printer import pprint_ast
+from fhy.lang.printer.to_json import dump
 from fhy.utils.logger import get_logger
 
 
@@ -23,6 +27,28 @@ class ThrowingErrorListener(ErrorListener):
         raise SyntaxError(f"Syntax error at {line}:{column} - {msg}")
 
 
+class UsageError(Exception):
+    """User Induced Error"""
+
+    ...
+
+
+class CompilationError(Exception):
+    """FhY Unable to Compile"""
+
+    ...
+
+
+class Status(IntEnum):
+    """Exit Codes describing the Status of CLI Request"""
+
+    OK = 0
+    FAILED = 1
+    INTERRUPTED = 2
+    USAGE_ERROR = 3
+
+
+# TODO: We might want a filehandler to output log to a file on user flag.
 def make_logger(verbose: bool = False) -> logging.Logger:
     """Constructs a Simple Logger"""
     level: int = logging.DEBUG if verbose else logging.INFO
@@ -46,19 +72,23 @@ def collect_files(directory: str, endswith: Optional[str] = None) -> List[str]:
                 files.append(f.path)
 
         else:
-            raise ValueError("")
+            raise ValueError("What ha happened was...")
 
     return files
 
 
 def confirm_files(filepath: str) -> List[str]:
+    """Confirm Valid filepath, or directory path."""
     path = os.path.abspath(filepath)
     if not os.path.exists(path):
         raise FileExistsError(f"File does not Exist: {path}")
+
     elif os.path.isdir(path):
         return collect_files(path)
+
     elif os.path.isfile(path) and path.endswith(".fhy"):
         return [path]
+
     else:
         raise FileNotFoundError(f"Invalid Filetype Provided: {path}")
 
@@ -78,6 +108,9 @@ def arguments() -> argparse.ArgumentParser:
         "-p", "--pretty", action="store_true", help="Pretty Print Constructed AST Nodes"
     )
     parser.add_argument(
+        "-j", "--json", action="store_true", help="Serialize AST Nodes to JSON Format"
+    )
+    parser.add_argument(
         "-o",
         "--output",
         required=False,
@@ -88,7 +121,7 @@ def arguments() -> argparse.ArgumentParser:
 
 
 def create_lexer(input_str: str) -> FhYLexer:
-    """Constructs the FhyLexer from an Input String Source Code"""
+    """Constructs the FhyLexer from Input String Source Code"""
     input_stream = InputStream(input_str)
     lexer = FhYLexer(input_stream)
     lexer.removeErrorListeners()
@@ -97,7 +130,7 @@ def create_lexer(input_str: str) -> FhYLexer:
 
 
 def create_parser(input_str: str) -> FhYParser:
-    """Constructs the FhyParser from an Input String Source Code"""
+    """Constructs the FhyParser from Input String Source Code"""
     lexer = create_lexer(input_str)
     token_stream = CommonTokenStream(lexer)
     parser = FhYParser(token_stream)
@@ -109,6 +142,7 @@ def create_parser(input_str: str) -> FhYParser:
 
 
 def construct_ast(input_str: str) -> ASTNode:
+    """Build an AST representation from input text."""
     fhy_parser = create_parser(input_str)
     tree = fhy_parser.module()
     _ast = from_parse_tree(tree)
@@ -161,43 +195,49 @@ def main():
     log.debug(f"Filepaths Collected: {filepaths}")
 
     if args.output is not None:
-        raise NotImplementedError("We are not supporting Cutom Ouptut Directories yet.")
+        raise NotImplementedError(
+            "We are not supporting Custom Output Directories yet."
+        )
 
     # Quick Double Check before Proceeding
     if len(filepaths) == 0:
         log.error(
             f"No Filepaths were collected from provided file arguments: {args.files}"
         )
-        raise Exception("")
+        raise UsageError("No Filepaths were collected, or defined to compile.")
 
-    # This should go into a `Root` or `Project` ASTNode
+    # NOTE: This should go into a `Root` or `Project` ASTNode
     constructed: List[Module] = []
     for file in filepaths:
         log.debug(f"Started Compiling: {file}")
 
-        # Out of an abundance of caution, raise Early during reading.
+        # Out of an abundance of caution, Fail Fast during reading.
         with open_file(file, "r") as (text, err):
             if err is not None:
-                raise err
+                raise FileExistsError(f"Unable to Read provided file: {file}") from err
             if text is None:
-                raise Exception(f"No Text was read from file: {file}")
+                raise FileExistsError(f"No Text was read from file: {file}")
 
         ast = construct_ast(text)
         if ast is None or not isinstance(ast, Module):
             log.error(f"Unable to Construct AST from: {file}")
-            raise Exception("Unable to Construct AST")
+            raise CompilationError(f"Unable to Construct AST from: {file}")
         constructed.append(ast)
 
+    # TODO: Rename this, since we are essentially returning our ASTNodes to FhY Text
+    #       Pretty Printing should be a text representation of our nodes (and not json)
     if args.pretty:
         print("\n\n")
         for fname, node in zip(filepaths, constructed):
-            header = f"// {fname}"
-            header += "\n" + "=" * len(header)
+            header = f"// {fname}\n"
+            header += "=" * len(header)
             print(header)
             print(pprint_ast(node), end="\n\n")
 
-    # TODO: Serialize the AST Nodes
-    return constructed
+    if args.json:
+        print([dump(node, None) for node in constructed])
+
+    return Status.OK
 
 
 if __name__ == "__main__":
