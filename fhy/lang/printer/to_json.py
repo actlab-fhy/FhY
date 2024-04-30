@@ -419,7 +419,6 @@ class JSONtoAST(visitor.BasePass):
             return self.default(node)
 
         name = f"visit_{node.cls_name}"
-        print(f"JSONtoAST.visit: {name}")
         method: Callable[[JSONObject], ASTObject]
         method = getattr(self, name, self.default)
 
@@ -573,7 +572,6 @@ class JSONtoAST(visitor.BasePass):
     def visit_TernaryExpression(
         self, node: Optional[AlmostJson]
     ) -> ast.TernaryExpression:
-        print("JSONtoAST. Visiting TernaryExpression Node.")
         if node is None:
             raise ValueError("Invalid TernaryExpression")
 
