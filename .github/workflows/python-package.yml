@@ -10,7 +10,7 @@ on:
     branches: [ "main", "dev" ]
 
 env:
-  FORCE_COLOR: "1"  # Tox output is colorless
+  FORCE_COLOR: "1"  # Tox output is colorless by default
 
 jobs:
   build:
@@ -41,11 +41,11 @@ jobs:
         ./build_grammer.sh
 
     - name: Install tox
-        run: |
-          pip install tox
+      run: |
+        pip install tox
 
     - name: PyTest Unit Testing & Code Coverage
-        run: tox -e py
+      run: tox -e py
 
     - name: Code Linting & Formatting
       if: always()
