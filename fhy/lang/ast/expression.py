@@ -142,11 +142,11 @@ class TernaryExpression(Expression):
 
     Args:
         condition (Expression): Expression to Evaluate Truth
-        true_expression (Expression): Expression evaluated if true
-        false_expression (Expression): Expression evaluated if false
+        true (Expression): Expression evaluated if true
+        false (Expression): Expression evaluated if false
 
     Notes:
-        {condition} ? {true_expression} : {false_expression}
+        {condition} ? {true} : {false}
 
     """
 
@@ -192,9 +192,9 @@ class FunctionExpression(Expression):
     """
 
     function: Expression
-    template_types: List[Type]
-    indices: List[Expression]
-    args: List[Expression]
+    template_types: List[Type] = field(default_factory=list)
+    indices: List[Expression] = field(default_factory=list)
+    args: List[Expression] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -213,7 +213,7 @@ class ArrayAccessExpression(Expression):
     """
 
     array_expression: Expression
-    indices: List[Expression]
+    indices: List[Expression] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()

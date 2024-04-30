@@ -46,7 +46,7 @@ class SymbolTableBuilder(ast.Visitor):
 
     """
 
-    _symbol_table: Dict[ir.Identifier, ir.Table[ir.Identifier, ir.SymbolTableFrame]]
+    _symbol_table: ir.SymbolTable
 
     _table_stack: Stack[ir.Table[ir.Identifier, ir.SymbolTableFrame]]
 

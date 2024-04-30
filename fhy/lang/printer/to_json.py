@@ -315,6 +315,15 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(span=self.visit_Span(node.span), value=node.value),
         )
 
+    def visit_ComplexLiteral(self, node: ast.ComplexLiteral) -> AlmostJson:
+        # NOTE: Complex Values are not JSON Serializable. We must Separate the
+        #       real and imaginary parts contained by a dictionary.
+        result = dict(real=node.value.real, imag=node.value.imag)
+        return AlmostJson(
+            cls_name=visitor.get_cls_name(node),
+            attributes=dict(span=self.visit_Span(node.span), value=result),
+        )
+
     def visit_DataType(self, node: ir.DataType) -> AlmostJson:
         node.primitive_data_type.value
 
@@ -357,6 +366,14 @@ class ASTtoJSON(visitor.BasePass):
         return AlmostJson(
             cls_name=visitor.get_cls_name(index_type),
             attributes=dict(lower_bound=lower, upper_bound=upper, stride=stride),
+        )
+
+    def visit_TupleType(self, tuple_type: ir.TupleType) -> AlmostJson:
+        types: List[AlmostJson] = self.visit_sequence(tuple_type._types)
+
+        return AlmostJson(
+            cls_name=visitor.get_cls_name(tuple_type),
+            attributes=dict(types=types),
         )
 
     def visit_Identifier(self, identifier: ir.Identifier) -> AlmostJson:
@@ -402,6 +419,7 @@ class JSONtoAST(visitor.BasePass):
             return self.default(node)
 
         name = f"visit_{node.cls_name}"
+        print(f"JSONtoAST.visit: {name}")
         method: Callable[[JSONObject], ASTObject]
         method = getattr(self, name, self.default)
 
@@ -555,6 +573,7 @@ class JSONtoAST(visitor.BasePass):
     def visit_TernaryExpression(
         self, node: Optional[AlmostJson]
     ) -> ast.TernaryExpression:
+        print("JSONtoAST. Visiting TernaryExpression Node.")
         if node is None:
             raise ValueError("Invalid TernaryExpression")
 
@@ -659,6 +678,19 @@ class JSONtoAST(visitor.BasePass):
 
         return ast.FloatLiteral(span=span, value=value)
 
+    def visit_ComplexLiteral(self, node: Optional[AlmostJson]) -> ast.ComplexLiteral:
+        if node is None:
+            raise ValueError("Invalid ComplexLiteral")
+
+        values: dict = node.attributes
+        span: Span = self.visit_Span(values.get("span"))
+        if (value := values.get("value")) is None:
+            raise ValueError("Invalid ComplexLiteral Value")
+
+        # Combine real and imaginary parts to construct the complex number
+        result = complex(real=value.get("real"), imag=value.get("imag"))
+        return ast.ComplexLiteral(span=span, value=result)
+
     def visit_DataType(self, node: Optional[AlmostJson]) -> ir.DataType:
         if node is None:
             raise ValueError("Invalid DataType")
@@ -729,6 +761,15 @@ class JSONtoAST(visitor.BasePass):
             )
 
         return ir.IndexType(lower_bound=lower, upper_bound=upper, stride=stride)
+
+    def visit_TupleType(self, tuple_type: Optional[AlmostJson]) -> ir.TupleType:
+        values: dict = tuple_type.attributes
+        if (v := values.get("types")) is None:
+            raise ValueError("Invalid Tuple Type. No Type definitions of Elements.")
+
+        types: List[ir.Type] = self.visit_sequence(v)
+
+        return ir.TupleType(types=types)
 
     def visit_Identifier(self, identifier: Optional[AlmostJson]) -> ir.Identifier:
         if identifier is None:
