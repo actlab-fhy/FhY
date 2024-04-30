@@ -44,10 +44,13 @@ jobs:
       run: |
         pip install tox
 
-    - name: PyTest Unit Testing & Code Coverage
+    - name: PyTest Unit Testing
       run: tox -e py
 
-    - name: Code Linting & Formatting
+    - name: PyTest Code Coverage
+      run: tox -e coverage
+
+    - name: Ruff Code Linting
       if: always()
       run: tox -e lint
 

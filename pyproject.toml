@@ -42,7 +42,7 @@ build = ["wheel", "setuptools>=67.6.1"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-n auto -rA --cov=fhy --cov-report term-missing --cov-fail-under=90"
+addopts = "-n auto -rA"
 
 [tool.coverage.report]
 omit = [
