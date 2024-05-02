@@ -1,7 +1,9 @@
-# TODO Jason: Add docstring
+"""IR base Expression Module."""
+
 from abc import ABC
 
 
 class Expression(ABC):
-    # TODO Jason: Add docstring
+    """Abstract IR Expression Node."""
+
     ...

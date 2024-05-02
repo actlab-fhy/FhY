@@ -11,7 +11,7 @@ Functions:
 
 from abc import ABC, abstractmethod
 from dataclasses import MISSING, Field, dataclass, field
-from typing import Any, Dict, List, Optional, Set, Type, Union
+from typing import Any, Dict, List, Optional, Type, Union
 
 from fhy import ir
 from fhy.utils.error import FieldAttributeError
@@ -21,7 +21,7 @@ from ..ast.directory import ASTNodeTypeInfo, get_ast_node_type_info
 
 
 class ASTBuilderFrame(ABC):
-    """Abstract AST Builder Frame"""
+    """Abstract AST Builder Frame."""
 
     _cls: type
 
@@ -86,7 +86,7 @@ class ASTNodeBuilderFrame(ASTBuilderFrame):
         return self.cls(**data)
 
     def update(self, **kwargs: Any) -> None:
-        """Updates and/or Overwrites the Class Attributes"""
+        """Updates and/or Overwrites the Class Attributes."""
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -157,6 +157,8 @@ class _IndexTypeInfo(_TypeInfo):
 
 
 class TypeBuilderFrame(ASTBuilderFrame):
+    """Type Node Builder Frame."""
+
     _type_info: Union[_TypeInfo]
 
     def __init__(self, cls: Type[ir.Type], **kwargs: Any) -> None:

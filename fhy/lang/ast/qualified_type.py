@@ -1,4 +1,4 @@
-"""Defines a Qualified Type ASTNode"""
+"""Defines a Qualified Type ASTNode."""
 
 from dataclasses import dataclass
 from typing import List

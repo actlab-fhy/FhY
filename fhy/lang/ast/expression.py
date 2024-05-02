@@ -33,7 +33,7 @@ from .core import Expression, Identifier
 
 
 class UnaryOperation(StrEnum):
-    """Unary (Single) Operators"""
+    """Unary (Single) Operators."""
 
     NEGATIVE = "-"
     BITWISE_NOT = "~"
@@ -42,7 +42,7 @@ class UnaryOperation(StrEnum):
 
 @dataclass(frozen=True, kw_only=True)
 class UnaryExpression(Expression):
-    """Expressions of Unary Operators
+    """Expressions of Unary Operators.
 
     Args:
         operation (UnaryOperation): Supported Unary Operator
@@ -60,7 +60,7 @@ class UnaryExpression(Expression):
 
 
 class BinaryOperation(StrEnum):
-    """FhY Language Binary Operators
+    """FhY Language Binary Operators.
 
     Arithmetic:
         Addition
@@ -138,7 +138,7 @@ class BinaryExpression(Expression):
 
 @dataclass(frozen=True, kw_only=True)
 class TernaryExpression(Expression):
-    """A Conditional (?) Expression Node
+    """A Conditional (?) Expression Node.
 
     Args:
         condition (Expression): Expression to Evaluate Truth
@@ -204,7 +204,7 @@ class FunctionExpression(Expression):
 
 @dataclass(frozen=True, kw_only=True)
 class ArrayAccessExpression(Expression):
-    """Array Indexing Node
+    """Array Indexing Node.
 
     Args:
         array_expression (Expression): Array Identifier Expression
@@ -247,12 +247,12 @@ class IdentifierExpression(Expression):
 
 @dataclass(frozen=True, kw_only=True)
 class Literal(Expression, ABC):
-    """Expression Literal defines concrete values"""
+    """Expression Literal defines concrete values."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class IntLiteral(Literal):
-    """Integer value ASTNode"""
+    """Integer value ASTNode."""
 
     value: int
 
@@ -264,7 +264,7 @@ class IntLiteral(Literal):
 
 @dataclass(frozen=True, kw_only=True)
 class FloatLiteral(Literal):
-    """Floating point value ASTNode"""
+    """Floating point value ASTNode."""
 
     value: float
 
@@ -276,7 +276,7 @@ class FloatLiteral(Literal):
 
 @dataclass(frozen=True, kw_only=True)
 class ComplexLiteral(Literal):
-    """Complex number value ASTNode"""
+    """Complex number value ASTNode."""
 
     value: complex
 

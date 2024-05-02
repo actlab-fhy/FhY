@@ -1,4 +1,4 @@
-"""Variable Identifier Class Object to assign Unique ID"""
+"""Variable Identifier Class Object to assign Unique ID."""
 
 from typing import Any
 

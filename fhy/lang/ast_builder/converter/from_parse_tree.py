@@ -23,7 +23,7 @@ from ...span import Span
 
 
 def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:
-    """Retrieves line and column information from a context"""
+    """Retrieves line and column information from a context."""
     start = ctx.start
     stop = ctx.stop
 

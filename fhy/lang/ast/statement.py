@@ -1,4 +1,4 @@
-"""All ASTNodes defined within this module are Subclasses of the core.Statement ASTNode
+"""All ASTNodes defined within this module are Subclasses of the core.Statement ASTNode.
 
 Statement ASTNodes:
     DeclarationStatement: Declares a Variable, with or without assignment
@@ -40,7 +40,7 @@ class DeclarationStatement(Statement):
 
 @dataclass(frozen=True, kw_only=True)
 class ExpressionStatement(Statement):
-    """Expression Statement"""
+    """Expression Statement."""
 
     left: Optional[Expression] = field(default=None)
     right: Expression

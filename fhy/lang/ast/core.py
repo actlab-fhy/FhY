@@ -40,14 +40,14 @@ class Module(ASTNode):
 
 
 class Component(ASTNode, ABC):
-    """Abstract FhY Component ASTNode"""
+    """Abstract FhY Component ASTNode."""
 
     ...
 
 
 @dataclass(frozen=True, kw_only=True)
 class Function(Component, ABC):
-    """Abstract FhY Function Component ASTNode"""
+    """Abstract FhY Function Component ASTNode."""
 
     name: Identifier
 
@@ -58,12 +58,12 @@ class Function(Component, ABC):
 
 
 class Statement(ASTNode, ABC):
-    """Abstract Statement ASTNode"""
+    """Abstract Statement ASTNode."""
 
     ...
 
 
 class Expression(ASTNode, IRExpression, ABC):
-    """Abstract Expression ASTNode + ir.Expression Node"""
+    """Abstract Expression ASTNode + ir.Expression Node."""
 
     ...

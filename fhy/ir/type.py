@@ -38,7 +38,7 @@ class DataType(object):
 
     @property
     def primitive_data_type(self) -> PrimitiveDataType:
-        """Primitive Data Type"""
+        """Primitive Data Type."""
         return self._primitive_data_type
 
     def __repr__(self) -> str:
@@ -78,7 +78,7 @@ class NumericalType(Type):
 
 
 class IndexType(Type):
-    """An Indexer, or Slice
+    """An Indexer, or Slice.
 
     Args:
         lower_bound (Expression): start index [inclusive]
@@ -121,7 +121,7 @@ class IndexType(Type):
 
 
 class TupleType(Type):
-    """Tuple Data Type
+    """Tuple Data Type.
 
     Args:
         types (List[Type]): types of each element within the tuple

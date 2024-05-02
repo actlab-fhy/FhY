@@ -1,4 +1,4 @@
-"""All Nodes defined within this Module are subclasses of core.Component ASTNode
+"""All Nodes defined within this Module are subclasses of core.Component ASTNode.
 
 Component ASTNodes:
     Import:
@@ -20,7 +20,7 @@ from .statement import Statement
 
 @dataclass(frozen=True, kw_only=True)
 class Import(Component):
-    """Import ASTNode"""
+    """Import ASTNode."""
 
     name: Identifier
 
@@ -70,7 +70,7 @@ class Procedure(Function):
 
 @dataclass(frozen=True, kw_only=True)
 class Operation(Function):
-    """FhY Operation Function ASTNode
+    """FhY Operation Function ASTNode.
 
     Args:
         args (List[Argument]): list of Arguments
@@ -91,7 +91,7 @@ class Operation(Function):
 
 @dataclass(frozen=True, kw_only=True)
 class Native(Function):
-    """FhY Native Function ASTNode"""
+    """FhY Native Function ASTNode."""
 
     args: List[Argument] = field(default_factory=list)
 

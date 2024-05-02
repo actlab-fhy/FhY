@@ -7,7 +7,7 @@ V = TypeVar("V")
 
 
 class Table(Generic[K, V]):
-    """A Generic table mapping typed key objects to typed value objects"""
+    """A Generic table mapping typed key objects to typed value objects."""
 
     _table: Dict[K, V]
 
@@ -27,7 +27,7 @@ class Table(Generic[K, V]):
         return key in self._table
 
     def keys(self) -> List[K]:
-        """Table keys"""
+        """Table keys."""
         return list(self._table.keys())
 
     def values(self) -> List[V]:

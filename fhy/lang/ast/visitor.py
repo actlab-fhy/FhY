@@ -14,7 +14,6 @@ from fhy import ir
 from fhy.utils.alias import ASTObject
 
 from ..span import Source, Span
-from .base import ASTNode
 from .component import Argument, Import, Operation, Procedure
 from .core import Module
 from .expression import (
@@ -71,7 +70,7 @@ def get_cls_name(obj: Any) -> str:
 
 
 class BasePass(ABC):
-    """Abstract Visitor Pattern Class for Node objects
+    """Abstract Visitor Pattern Class for Node objects.
 
     Args:
         is_recursive (bool): If true, recursively visit child nodes.
@@ -87,19 +86,19 @@ class BasePass(ABC):
         return self.visit(node)
 
     def visit(self, node: Any) -> Any:
-        """A unified entry point that determines how to visit an AST object node"""
+        """A unified entry point that determines how to visit an AST object node."""
         name = f"visit_{get_cls_name(node)}"
         method: Callable[[Any], Any] = getattr(self, name, self.default)
 
         return method(node)
 
     def default(self, node: Any) -> Any:
-        """Default node visiting method"""
+        """Default node visiting method."""
         raise NotImplementedError(f"Node `{type(node)}` is not supported.")
 
 
 class Visitor(BasePass):
-    """ASTObject Visitor Pattern Class"""
+    """ASTObject Visitor Pattern Class."""
 
     def visit(self, node: Union[ASTObject, Sequence[ASTObject]]) -> None:
         if isinstance(node, list):
@@ -220,7 +219,7 @@ class Visitor(BasePass):
 
 
 class Listener(BasePass):
-    """ASTObject Listener Pattern Class"""
+    """ASTObject Listener Pattern Class."""
 
     def default(self, node: Union[ASTObject, Sequence[ASTObject]]) -> None:
         if isinstance(node, list):

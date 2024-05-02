@@ -16,7 +16,7 @@ from .base import ASTNode
 
 @dataclass
 class ASTNodeTypeInfo:
-    """Container class, holding class field"""
+    """Container class, holding class field."""
 
     fields: Dict[str, type]
 
@@ -49,7 +49,7 @@ def _get_ast_node_fields(ast_node_class: type[ASTNode]) -> Dict[str, type]:
 
 
 def register_ast_node(ast_node_class: type[ASTNode]) -> type[ASTNode]:
-    """Registers an ASTNode Attribute Field Names and Type Information"""
+    """Register Attributes of ASTNode by Field Names and Type Information."""
     fields: Dict[str, type] = _get_ast_node_fields(ast_node_class)
     _ast_node_types[ast_node_class] = ASTNodeTypeInfo(fields)
     return ast_node_class
