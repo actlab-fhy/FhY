@@ -16,7 +16,7 @@ from fhy.utils.alias import ASTObject
 
 
 class IdentifierCollector(ast.Visitor):
-    """Collects all identifiers in the AST for any given node"""
+    """Collect all identifiers in the AST for any given node"""
 
     _identifiers: Set[ir.Identifier]
 
@@ -33,7 +33,7 @@ class IdentifierCollector(ast.Visitor):
 
 
 def collect_identifiers(node: ASTObject) -> Set[ir.Identifier]:
-    """Returns a set of Identifier objects from a given AST Node object."""
+    """Return a set of Identifier objects from a given AST Node object."""
     collector = IdentifierCollector()
     collector(node)
     return collector.identifiers

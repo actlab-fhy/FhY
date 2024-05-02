@@ -17,6 +17,7 @@ from fhy import ir
 from fhy.lang import ast
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
 from fhy.utils.alias import Expressions
+from fhy.utils.error import FhYASTBuildError, FhYSyntaxError
 
 from ...span import Span
 
@@ -33,6 +34,13 @@ def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:
         return _get_source_info(parent_ctx, True)
 
     return Span(0, 0, 0, 0)
+
+
+def _source_position(span: Span) -> str:
+    line, col = span.line, span.column
+    text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
+
+    return text
 
 
 def _initialize_builtin_identifiers() -> Dict[str, ir.Identifier]:
@@ -137,28 +145,32 @@ class ParseTreeConverter(FhYVisitor):
 
         if keyword == "proc":
             if return_type is not None:
-                raise Exception()
+                pos: Span = _get_source_info(ctx.function_header().qualified_type())
+                text: str = _source_position(pos)
+                raise FhYSyntaxError(f"Procedures do not have return types. {text}")
 
             return ast.Procedure(name=name, args=args, body=body, span=span)
 
         elif keyword == "op":
             if return_type is None:
-                line, col = span.line, span.column
-                text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
-                raise SyntaxError(f"No Operation Return Type Provided. {text}")
+                pos = _get_source_info(ctx.function_header())
+                text = _source_position(pos)
+                raise FhYSyntaxError(
+                    f"Operation Functions Require Return Types. {text}"
+                )
 
             return ast.Operation(
-                name=name,
-                args=args,
-                return_type=return_type,
-                body=body,
-                span=span,
+                span=span, name=name, args=args, body=body, return_type=return_type
             )
 
         else:
-            line, col = span.line, span.column
-            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
-            raise SyntaxError(f"Invalid Function Keyword Provided. {text}: {keyword}")
+            # NOTE: Defined Function Keywords are required by Antlr to parse the source
+            #       code to meet the classification of `Function_definition`. Meaning,
+            #       we have no way to reach this code. Out of an abundance of caution:
+            text = _source_position(span)
+            raise FhYSyntaxError(
+                f"Invalid Function Keyword Provided. {text}: {keyword}"
+            )
 
     def visitFunction_header(
         self, ctx: FhYParser.Function_headerContext
@@ -170,21 +182,18 @@ class ParseTreeConverter(FhYVisitor):
         List[ast.Argument],
         Optional[ast.QualifiedType],
     ]:
-        # TODO: If a Function Keyword is not Found, it is not parsed.
-        #       Currently, We can Never get here
+        span = _get_source_info(ctx)
+
+        # NOTE: Predefined Function Keywords required for parsing Function.
         if (kw_ctx := ctx.FUNCTION_KEYWORD()) is None:
-            location = _get_source_info(ctx)
-            line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
-            raise SyntaxError(f"No Function Keyword Provided. {text}")
+            text = _source_position(span)
+            raise FhYSyntaxError(f"Function Keyword Missing. {text}")
         keyword: str = kw_ctx.getText()
 
-        # NOTE: This error is raised by Antlr before we get here
+        # NOTE: This error is raised by Antlr during construction of CST.
         if (name_ctx := ctx.IDENTIFIER()) is None:
-            location = _get_source_info(ctx)
-            line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
-            raise SyntaxError(f"No Function Name Provided. {text}")
+            text = _source_position(span)
+            raise FhYSyntaxError(f"Function Name Missing. {text}")
 
         name_hint: str = name_ctx.getText()
         name: ir.Identifier = self._get_identifier(name_hint)
@@ -221,17 +230,16 @@ class ParseTreeConverter(FhYVisitor):
         return args
 
     def visitFunction_arg(self, ctx: FhYParser.Function_argContext) -> ast.Argument:
-        qualified_type = self.visitQualified_type(ctx.qualified_type())
+        span: Span = _get_source_info(ctx)
 
+        qualified_type: ast.QualifiedType
+        qualified_type = self.visitQualified_type(ctx.qualified_type())
         if (_id := ctx.IDENTIFIER()) is None:
-            location = _get_source_info(ctx)
-            line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
-            raise SyntaxError(f"Function Argument Name not Provided. {text}")
+            text = _source_position(span)
+            raise FhYSyntaxError(f"Function Argument Name not Provided. {text}")
 
         name_hint: str = _id.getText()
         name = self._get_identifier(name_hint)
-        span = _get_source_info(ctx)
 
         return ast.Argument(qualified_type=qualified_type, name=name, span=span)
 
@@ -257,23 +265,22 @@ class ParseTreeConverter(FhYVisitor):
     def visitDeclaration_statement(
         self, ctx: FhYParser.Declaration_statementContext
     ) -> ast.DeclarationStatement:
+        span: Span = _get_source_info(ctx)
+        qualified_type: ast.QualifiedType
         qualified_type = self.visitQualified_type(ctx.qualified_type())
 
-        # NOTE: This validation step is performed for type safety, but we will never
-        #       actually get here, because this is a valid Expression Statement.
+        # NOTE: This validation step is performed for type safety. A statement without
+        #       an Identifier would make a valid Expression Statement.
         if (_id := ctx.IDENTIFIER()) is None:
-            location = _get_source_info(ctx)
-            line, col = location.line, location.column
-            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
-            raise SyntaxError(f"Variable Name not Declared. {text}")
+            text: str = _source_position(span)
+            raise FhYSyntaxError(f"Variable Name not Declared. {text}")
 
         name_hint: str = _id.getText()
-        name = self._get_identifier(name_hint)
+        name: ir.Identifier = self._get_identifier(name_hint)
         expression = None
         if (expression_ctx := ctx.expression()) is not None:
             expression = self.visitExpression(expression_ctx)
 
-        span: Span = _get_source_info(ctx)
         return ast.DeclarationStatement(
             variable_type=qualified_type,
             variable_name=name,
@@ -288,9 +295,9 @@ class ParseTreeConverter(FhYVisitor):
         if (primitive_expression_ctx := ctx.primitive_expression()) is not None:
             left_expression = self.visitPrimitive_expression(primitive_expression_ctx)
 
-        right_expression_ctx = ctx.expression()
+        right_expression_ctx: FhYParser.ExpressionContext = ctx.expression()
         right_expression = self.visitExpression(right_expression_ctx)
-        span = _get_source_info(ctx)
+        span: Span = _get_source_info(ctx)
 
         return ast.ExpressionStatement(
             left=left_expression, right=right_expression, span=span
@@ -299,19 +306,21 @@ class ParseTreeConverter(FhYVisitor):
     def visitSelection_statement(
         self, ctx: FhYParser.Selection_statementContext
     ) -> ast.SelectionStatement:
-        condition_ctx = ctx.expression()
+        span: Span = _get_source_info(ctx)
+        condition_ctx: FhYParser.ExpressionContext = ctx.expression()
         condition = self.visitExpression(condition_ctx)
 
         self._open_scope()
-        true_body_ctx = ctx.statement_series(0)
+        true_body_ctx: FhYParser.Statement_seriesContext = ctx.statement_series(0)
         true_body = self.visitStatement_series(true_body_ctx)
         self._close_scope()
+
         false_body = []
         if (false_body_ctx := ctx.statement_series(1)) is not None:
             self._open_scope()
             false_body = self.visitStatement_series(false_body_ctx)
             self._close_scope()
-        span = _get_source_info(ctx)
+
         return ast.SelectionStatement(
             condition=condition, true_body=true_body, false_body=false_body, span=span
         )
@@ -319,23 +328,23 @@ class ParseTreeConverter(FhYVisitor):
     def visitIteration_statement(
         self, ctx: FhYParser.Iteration_statementContext
     ) -> ast.ForAllStatement:
-        index_ctx = ctx.expression()
+        span: Span = _get_source_info(ctx)
+        index_ctx: FhYParser.ExpressionContext = ctx.expression()
         index = self.visitExpression(index_ctx)
 
         self._open_scope()
-        body_ctx = ctx.statement_series()
+        body_ctx: FhYParser.Statement_seriesContext = ctx.statement_series()
         body = self.visitStatement_series(body_ctx)
-
         self._close_scope()
-        span = _get_source_info(ctx)
+
         return ast.ForAllStatement(index=index, body=body, span=span)
 
     def visitReturn_statement(
         self, ctx: FhYParser.Return_statementContext
     ) -> ast.ReturnStatement:
-        expression_ctx = ctx.expression()
+        span: Span = _get_source_info(ctx)
+        expression_ctx: FhYParser.ExpressionContext = ctx.expression()
         expression = self.visitExpression(expression_ctx)
-        span = _get_source_info(ctx)
 
         return ast.ReturnStatement(expression=expression, span=span)
 
@@ -352,7 +361,7 @@ class ParseTreeConverter(FhYVisitor):
         return expressions
 
     def visitExpression(self, ctx: FhYParser.ExpressionContext) -> ast.Expression:
-        span = _get_source_info(ctx)
+        span: Span = _get_source_info(ctx)
         if ctx.nested_expression is not None:
             return self.visitExpression(ctx.expression(0))
 
@@ -428,14 +437,13 @@ class ParseTreeConverter(FhYVisitor):
             return primitive_expression
 
         else:
-            line, col = span.line, span.column
-            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
-            raise NotImplementedError(f"Invalid Primitive Expression. {text}")
+            text = _source_position(span)
+            raise FhYSyntaxError(f"Invalid Primitive Expression. {text}")
 
     def visitPrimitive_expression(
         self, ctx: FhYParser.Primitive_expressionContext
     ) -> ast.Expression:
-        span = _get_source_info(ctx)
+        span: Span = _get_source_info(ctx)
         # TODO: Add support of Tuple Access Expressions
         # if ctx.tuple_access_expression is not None:
         #     primitive_expression_ctx = ctx.primitive_expression()
@@ -471,7 +479,7 @@ class ParseTreeConverter(FhYVisitor):
                 )
                 expression_list_counter += 1
 
-            args = self.visitExpression_list(
+            args: List[ast.Expression] = self.visitExpression_list(
                 ctx.expression_list(expression_list_counter)
             )
 
@@ -499,8 +507,8 @@ class ParseTreeConverter(FhYVisitor):
             return atom_expression
 
         else:
-            # TODO: Replace with better Exception / reporting
-            raise Exception("Invalid Primitive Expression")
+            text: str = _source_position(span)
+            raise FhYSyntaxError(f"Invalid Primitive Expression. {text}")
 
     def visitIdentifier_expression(
         self, ctx: FhYParser.Identifier_expressionContext
@@ -510,7 +518,7 @@ class ParseTreeConverter(FhYVisitor):
         )
 
     def visitLiteral(self, ctx: FhYParser.LiteralContext) -> ast.Literal:
-        span = _get_source_info(ctx)
+        span: Span = _get_source_info(ctx)
         if (int_literal_ctx := ctx.INT_LITERAL()) is not None:
             int_literal_str: str = int_literal_ctx.getText()
 
@@ -532,8 +540,7 @@ class ParseTreeConverter(FhYVisitor):
             return float_literal
 
         else:
-            line, col = span.line, span.column
-            text = f"Lines {line.start}:{col.start} - {line.stop}:{col.stop}"
+            text = _source_position(span)
             raise NotImplementedError(f"Unsupported Type Literal. {text}")
 
     # =====================
@@ -542,18 +549,17 @@ class ParseTreeConverter(FhYVisitor):
     def visitQualified_type(
         self, ctx: FhYParser.Qualified_typeContext
     ) -> ast.QualifiedType:
+        span: Span = _get_source_info(ctx)
+
         type_qualifier: Optional[ir.TypeQualifier] = None
         if (type_qualifier_ctx := ctx.IDENTIFIER()) is not None:
             type_qualifier = ir.TypeQualifier(type_qualifier_ctx.getText())
 
         else:
-            # TODO: Do we expect to support unqualified types?
-            #       Do we need a placeholder base qual to be replaced by analysis pass?
-            # TODO: Replace this exception with better error handling.
-            raise Exception("Invalid Type Qualifier")
+            text: str = _source_position(span)
+            raise FhYSyntaxError(f"No Type Qualifier Provided. {text}")
 
         base_type = self.visitType(ctx.type_())
-        span = _get_source_info(ctx)
 
         return ast.QualifiedType(
             base_type=base_type,
@@ -564,7 +570,7 @@ class ParseTreeConverter(FhYVisitor):
     def visitNumerical_type(
         self, ctx: FhYParser.Numerical_typeContext
     ) -> ir.NumericalType:
-        data_type = self.visitDtype(ctx.dtype())
+        data_type: ir.DataType = self.visitDtype(ctx.dtype())
         shape: Sequence[Expressions] = []
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
@@ -585,9 +591,10 @@ class ParseTreeConverter(FhYVisitor):
     def visitRange(
         self, ctx: FhYParser.RangeContext
     ) -> Tuple[ast.Expression, ast.Expression, Optional[ast.Expression]]:
-        low_ctx = ctx.expression(0)
+        low_ctx: FhYParser.ExpressionContext = ctx.expression(0)
         low = self.visitExpression(low_ctx)
-        high_ctx = ctx.expression(1)
+
+        high_ctx: FhYParser.ExpressionContext = ctx.expression(1)
         high = self.visitExpression(high_ctx)
 
         stride: Optional[ast.Expression] = None
@@ -606,11 +613,20 @@ class ParseTreeConverter(FhYVisitor):
 
 
 def from_parse_tree(parse_tree: FhYParser.ModuleContext) -> ast.Module:
-    """Constructs an AST from a Concrete Syntax Tree."""
+    """Constructs an AST from a Concrete Syntax Tree.
+
+    Args:
+        parse_tree:
+
+    Raises:
+        NotImplementedError: Attempted use of Unsupported Features of FhY Language.
+        FhYSyntaxError: Syntax error(s) found in FhY Source code.
+        FhYASTBuildError: AST failed to build from CST. Exact Reason Unknown.
+
+    """
     converter = ParseTreeConverter()
     _ast: ast.Module = converter.visitModule(parse_tree)
     if _ast is None:
-        # TODO: Raise Better, Custom Exception (e.g. FhYASTBuildError)
-        raise Exception("AST Not Built")
+        raise FhYASTBuildError("Failed to Build AST from Concrete Syntax Tree.")
 
     return _ast

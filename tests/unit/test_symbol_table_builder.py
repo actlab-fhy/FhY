@@ -2,10 +2,7 @@ import pytest
 
 from fhy import ir
 from fhy.lang.passes import build_symbol_table
-from fhy.lang.passes.symbol_table_builder import (
-    AlreadyDeclaredIdentifierException,
-    UndeclaredIdentifierException,
-)
+from fhy.utils import error
 
 
 def _get_symbol_table_string_keys(
@@ -97,7 +94,7 @@ def test_fails_with_undefined_shape_variable(construct_ast):
     source_file_content = "proc main(input int32[A, B] a) {temp int32[C] b;}"
     _ast = construct_ast(source_file_content)
 
-    with pytest.raises(UndeclaredIdentifierException):
+    with pytest.raises(error.FhYSemanticsError):
         build_symbol_table(_ast)
 
 
@@ -106,7 +103,7 @@ def test_fails_with_already_defined_variable(construct_ast):
     source_file_content = "proc main(input int32[A, B] a) {temp int32[A] a;}"
     _ast = construct_ast(source_file_content)
 
-    with pytest.raises(AlreadyDeclaredIdentifierException):
+    with pytest.raises(error.FhYSemanticsError):
         build_symbol_table(_ast)
 
 
@@ -115,7 +112,7 @@ def test_fails_with_already_defined_procedure(construct_ast):
     source_file_content = "proc main() {} proc main() {}"
     _ast = construct_ast(source_file_content)
 
-    with pytest.raises(AlreadyDeclaredIdentifierException):
+    with pytest.raises(error.FhYSemanticsError):
         build_symbol_table(_ast)
 
 
@@ -150,5 +147,5 @@ def test_fails_with_already_defined_import(construct_ast):
     source_file_content = "import constants.pi; import constants.pi;"
     _ast = construct_ast(source_file_content)
 
-    with pytest.raises(AlreadyDeclaredIdentifierException):
+    with pytest.raises(error.FhYSemanticsError):
         build_symbol_table(_ast)

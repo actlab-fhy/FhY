@@ -6,33 +6,20 @@ Functions:
 Classes:
     SymbolTableBuilder: The Workhorse behind building a symbol table from AST
 
-Exceptions:
-    UndeclaredIdentifierException: A symbol was used before being declared.
-    AlreadyDeclaredIdentifierException: A symbol was declared more than once.
-
 """
 
-from typing import Any, Dict, Set
+from typing import Any, Set
 
 from fhy import ir
 from fhy.lang import ast
 from fhy.utils import Stack
+from fhy.utils.error import FhYSemanticsError
 
 from .identifier_collector import collect_identifiers
 
 
-class UndeclaredIdentifierException(Exception):
-    pass
-
-
-class AlreadyDeclaredIdentifierException(Exception):
-    pass
-
-
 # TODO: when visitor class automatically visits children, remove the
 #       super().visit_xxx(node) call
-
-
 class SymbolTableBuilder(ast.Visitor):
     """Builds a symbol table for the given AST module node.
 
@@ -40,9 +27,10 @@ class SymbolTableBuilder(ast.Visitor):
     a variable is declared more than once within the same namespace.
 
     Raises:
-        UndeclaredIdentifierException: A variable is used before being Declared.
-        AlreadyDeclaredIdentifierException: A variable is declared more than once within
-            the same namespace.
+        FhYSemanticsError: A variable is used before being declared (undefined), or
+            the variable is defined again (redefined), within the current namespace.
+        RuntimeError: Unexpected Behavior, indicating improper use.
+        TypeError: Received wrong argument (node) type.
 
     """
 
@@ -75,17 +63,13 @@ class SymbolTableBuilder(ast.Visitor):
 
     def _assert_symbol_not_defined(self, symbol: ir.Identifier) -> None:
         if self._is_symbol_defined(symbol):
-            raise AlreadyDeclaredIdentifierException(
-                f"Identifier {symbol.name_hint} is already declared in the current "
-                "namespace"
-            )
+            msg = "Symbol Identifier previously declared (redefined) in current"
+            raise FhYSemanticsError(f"{msg} namespace: {symbol.name_hint}")
 
     def _assert_symbol_defined(self, symbol: ir.Identifier) -> None:
         if not self._is_symbol_defined(symbol):
-            raise UndeclaredIdentifierException(
-                f"Identifier {symbol.name_hint} is not declared in the current "
-                "namespace"
-            )
+            msg = "Undeclared Symbol Identifier used in current namespace"
+            raise FhYSemanticsError(f"{msg}: {symbol.name_hint}")
 
     def _is_symbol_defined(self, symbol: ir.Identifier) -> bool:
         for table in self._table_stack:
@@ -95,16 +79,14 @@ class SymbolTableBuilder(ast.Visitor):
 
     def _add_symbol(self, symbol: ir.Identifier, frame: ir.SymbolTableFrame) -> None:
         if len(self._table_stack) == 0:
-            raise ValueError(
-                "Expected a current table to be set before adding a symbol to it"
+            raise RuntimeError(
+                "Expected current table to be set before adding a symbol to it"
             )
         self._table_stack.peek()[symbol] = frame
 
     def __call__(self, node: ast.Module, *args: Any, **kwargs: Any) -> Any:
         if not isinstance(node, ast.Module):
-            raise ValueError(
-                f'"build_symbol_table" pass expected a "Module" node, got {type(node)}'
-            )
+            raise TypeError(f"Expected a `Module` node. Received: {type(node)}")
         return super().__call__(node, *args, **kwargs)
 
     def visit_Module(self, node: ast.Module) -> None:
@@ -114,7 +96,7 @@ class SymbolTableBuilder(ast.Visitor):
 
         if len(self._table_stack) != 0:
             raise RuntimeError(
-                "Expected the table stack to be empty after visiting the module"
+                "Expected the table stack to be empty after visiting module node."
             )
 
     def visit_Import(self, node: ast.Import) -> None:
@@ -192,7 +174,10 @@ class SymbolTableBuilder(ast.Visitor):
 
 
 def build_symbol_table(node: ast.Module) -> ir.SymbolTable:
-    """Build a Symbol Table from a Module AST Node.
+    """Build a symbol table from a module AST node.
+
+    Argument:
+        node (ast.Module): FhY Module AST Node
 
     Returns:
         (ir.SymbolTable) Symbol table cataloging all variables from the provided module,
@@ -203,7 +188,13 @@ def build_symbol_table(node: ast.Module) -> ir.SymbolTable:
         AlreadyDeclaredIdentifierException: A variable is declared more than once within
             the same namespace.
 
+        FhYSemanticsError: A variable is used before being declared (undefined), or
+            the variable is defined again (redefined), within the current namespace.
+        RuntimeError: Unexpected Behavior, indicating improper use.
+        TypeError: Received wrong argument (node) type.
+
     """
     builder = SymbolTableBuilder()
     builder(node)
+
     return builder.symbol_table

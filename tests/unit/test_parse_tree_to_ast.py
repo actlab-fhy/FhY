@@ -4,6 +4,7 @@ import pytest
 
 from fhy import ir
 from fhy.lang import ast
+from fhy.utils import error
 
 from ..utils import list_to_types
 
@@ -941,12 +942,12 @@ def test_absolute_import(construct_ast):
 
 
 def test_syntax_error_no_argument_name(construct_ast):
-    """Tests a Syntax Error is Raised when an function Argument is defined without
+    """Tests a FhYSyntaxError is Raised when an function Argument is defined without
     a Name.
 
     """
-    source_file_content = "op foo(input int32[m,n]) {}"
-    with pytest.raises(SyntaxError) as info:
+    source_file_content = "op foo(input int32[m,n]) -> output int32 {}"
+    with pytest.raises(error.FhYSyntaxError) as info:
         _ast = construct_ast(source_file_content)
     print(info.value)
 
@@ -961,12 +962,12 @@ def test_syntax_error_no_operation_name(construct_ast):
 
 
 def test_syntax_error_no_operation_return_type(construct_ast):
-    """Tests a Syntax Error is Raised when an Operation is defined without a return
+    """Tests a FhYSyntaxError is Raised when an Operation is defined without a return
     type.
 
     """
     source_file_content = "op func(input int32[m,n] A) {}"
-    with pytest.raises(SyntaxError) as info:
+    with pytest.raises(error.FhYSyntaxError) as info:
         _ast = construct_ast(source_file_content)
     print(info.value)
 
@@ -974,7 +975,13 @@ def test_syntax_error_no_operation_return_type(construct_ast):
 # TODO: Corner Case - Have this raise an Error.
 @pytest.mark.skip(reason="Bug. Expected Syntax Error, but Creates Empty Module")
 def test_invalid_function_keyword(construct_ast):
-    """This interesting bit creates an Empty Module... Instead of Raising an Error."""
+    """This interesting bit creates an Empty Module... Instead of Raising an Error.
+
+    This occurs because we hard code Function Keywords within the Grammar. In other
+    words, without these keywords, we can never parse a function. Because it doesn't
+    remotely match the syntax of anything else, it is simply bypassed by Antlr.
+
+    """
     source_file_content = "def foo(input int32[m,n] A) -> output int32[m,n] {}"
     _ast = construct_ast(source_file_content)
     print(_ast.__class__)
