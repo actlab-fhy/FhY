@@ -10,7 +10,6 @@ from fhy.lang import ast
 @pytest.mark.parametrize("name", ["test", "nombre", "badHombre", "Example"])
 def test_base_node_keyname(name):
     """Confirm that the Given Class Name is Carried through Inheritance."""
-
     # Dynamically Construct a Class with a given Name
     obj = type(name, (ast.ASTNode,), {})
     ret = obj.keyname()

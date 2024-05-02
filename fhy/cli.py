@@ -19,28 +19,18 @@ from fhy.lang.ast_builder import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
 from fhy.lang.printer import pprint_ast
 from fhy.lang.printer.to_json import dump
+from fhy.utils import error
 from fhy.utils.logger import get_logger
 
 
 class ThrowingErrorListener(ErrorListener):
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        raise SyntaxError(f"Syntax error at {line}:{column} - {msg}")
-
-
-class UsageError(Exception):
-    """User Induced Error"""
-
-    ...
-
-
-class CompilationError(Exception):
-    """FhY Unable to Compile"""
-
-    ...
+        message = f"Syntax error at {line}:{column} - {msg}"
+        raise error.FhYSyntaxError(message) from e
 
 
 class Status(IntEnum):
-    """Exit Codes describing the Status of CLI Request"""
+    """Exit Codes describing the Status of CLI Request."""
 
     OK = 0
     FAILED = 1
@@ -50,14 +40,14 @@ class Status(IntEnum):
 
 # TODO: We might want a filehandler to output log to a file on user flag.
 def make_logger(verbose: bool = False) -> logging.Logger:
-    """Constructs a Simple Logger"""
+    """Constructs a Simple Logger."""
     level: int = logging.DEBUG if verbose else logging.INFO
     log: logging.Logger = get_logger("FhY", level=level)
     return log
 
 
 def collect_files(directory: str, endswith: Optional[str] = None) -> List[str]:
-    """Recursively Collects Files from a Directory or a given file type (if provided)"""
+    """Recursively Collects Files from a Directory or a given file type."""
     files: List[str] = []
     for f in os.scandir(directory):
         if f.is_dir():
@@ -94,7 +84,7 @@ def confirm_files(filepath: str) -> List[str]:
 
 
 def arguments() -> argparse.ArgumentParser:
-    """Defines FhY cli arguments"""
+    """Defines FhY cli arguments."""
     parser = argparse.ArgumentParser("FhY")
     parser.add_argument(
         "files",
@@ -121,7 +111,7 @@ def arguments() -> argparse.ArgumentParser:
 
 
 def create_lexer(input_str: str) -> FhYLexer:
-    """Constructs the FhyLexer from Input String Source Code"""
+    """Constructs the FhyLexer from Input String Source Code."""
     input_stream = InputStream(input_str)
     lexer = FhYLexer(input_stream)
     lexer.removeErrorListeners()
@@ -130,7 +120,7 @@ def create_lexer(input_str: str) -> FhYLexer:
 
 
 def create_parser(input_str: str) -> FhYParser:
-    """Constructs the FhyParser from Input String Source Code"""
+    """Constructs the FhyParser from Input String Source Code."""
     lexer = create_lexer(input_str)
     token_stream = CommonTokenStream(lexer)
     parser = FhYParser(token_stream)
@@ -151,7 +141,7 @@ def construct_ast(input_str: str) -> ASTNode:
 
 
 def output_path(filepath: str, override_dir: Optional[str]) -> str:
-    """Construct an output path for a given file"""
+    """Construct an output path for a given file."""
     if override_dir is None:
         parent_relative = os.path.join(filepath, os.pardir)
         parent_dir = os.path.abspath(parent_relative)
@@ -170,7 +160,7 @@ def output_path(filepath: str, override_dir: Optional[str]) -> str:
 
 @contextmanager
 def open_file(filepath: str, mode: str):
-    """Context manager to Open a File, with Better Error Reporting and Handling"""
+    """Context manager to Open a File, with Better Error Reporting and Handling."""
     try:
         stream = open(filepath, mode)
     except Exception as e:
@@ -183,7 +173,7 @@ def open_file(filepath: str, mode: str):
 
 
 def main():
-    """Primary Entry Point for Compilation of FhY Files"""
+    """Primary Entry Point for Compilation of FhY Files."""
     arg_parser = arguments()
     args = arg_parser.parse_args()
 
@@ -204,7 +194,7 @@ def main():
         log.error(
             f"No Filepaths were collected from provided file arguments: {args.files}"
         )
-        raise UsageError("No Filepaths were collected, or defined to compile.")
+        raise error.UsageError("No Filepaths were collected, or defined to compile.")
 
     # NOTE: This should go into a `Root` or `Project` ASTNode
     constructed: List[Module] = []
@@ -221,7 +211,7 @@ def main():
         ast = construct_ast(text)
         if ast is None or not isinstance(ast, Module):
             log.error(f"Unable to Construct AST from: {file}")
-            raise CompilationError(f"Unable to Construct AST from: {file}")
+            raise error.FhYASTBuildError(f"Unable to Construct AST from: {file}")
         constructed.append(ast)
 
     # TODO: Rename this, since we are essentially returning our ASTNodes to FhY Text

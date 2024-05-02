@@ -6,7 +6,7 @@ file.
 
 """
 
-from typing import Any, Callable, List
+from typing import Callable
 
 import pytest
 from antlr4 import BailErrorStrategy, CommonTokenStream, InputStream, ParserRuleContext
@@ -24,25 +24,27 @@ class ThrowingErrorListener(ErrorListener):
 
 @pytest.fixture(scope="module")
 def lexer() -> Callable[[str], FhYLexer]:
-    def create_lexer(input_str: str):
+    def create_lexer(input_str: str) -> FhYLexer:
         input_stream = InputStream(input_str)
         lexer = FhYLexer(input_stream)
         lexer.removeErrorListeners()
         lexer.addErrorListener(ThrowingErrorListener())
+
         return lexer
 
     return create_lexer
 
 
 @pytest.fixture(scope="module")
-def parser(lexer):
-    def create_parser(input_str):
+def parser(lexer) -> Callable[[str], FhYParser]:
+    def create_parser(input_str) -> FhYParser:
         lexer_instance = lexer(input_str)
         token_stream = CommonTokenStream(lexer_instance)
         parser = FhYParser(token_stream)
         parser._errHandler = BailErrorStrategy()
         parser.removeErrorListeners()
         parser.addErrorListener(ThrowingErrorListener())
+
         return parser
 
     return create_parser

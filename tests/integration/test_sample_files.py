@@ -27,8 +27,7 @@ def grab_expected_output_file(filepath: str) -> str:
 
 
 def iter_lines(text: str):
-    """Simple Utility to iterate through lines of text, without the newline character(s)
-    present at the end of the line.
+    r"""Iterate through lines of text, without newline character(s) present at line end.
 
     Note:
         We are grouping together multiple new line characters here
@@ -46,6 +45,7 @@ def iter_lines(text: str):
 
 # NOTE: We might change how the FhY Entrypoint Outputs information
 def cleanup_pretty_print_output(output: str) -> str:
+    """Cleanup output of fhy --pretty option, to remove filename."""
     generator = iter_lines(output)
     for line in generator:
         if line.startswith("=") and line.endswith("="):

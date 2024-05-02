@@ -1,4 +1,6 @@
-from typing import Any, List, Optional, Type
+"""Test Conversion of FhY Source Code from CST to AST."""
+
+from typing import List, Optional, Type
 
 import pytest
 
@@ -13,11 +15,17 @@ from ..utils import list_to_types
 
 
 def wrong_node_babe(node_a, node_b) -> str:
+    """Wrong Node Babe.
+
+    What you see, is what you get. And what you got, is unexpected...
+
+    """
     name = node_a.__name__
     return f"Expected `{name}` AST node, got `{type(node_b)}`"
 
 
 def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) -> bool:
+    """Confirm Equality Between Two Primitive Expression Types."""
     primitive_expression_types = (
         ast.IntLiteral,
         ast.FloatLiteral,
@@ -363,10 +371,7 @@ def test_empty_procedure(construct_ast):
 
 
 def test_empty_procedure_with_qualified_argument(construct_ast):
-    """Test that an empty procedure with a single qualified
-    argument is converted correctly.
-
-    """
+    """Test that an empty procedure with a single qualified argument."""
     source_file_content = "proc foo(input int32 x){}"
     _ast = construct_ast(source_file_content)
 
@@ -387,6 +392,7 @@ def test_empty_procedure_with_qualified_argument(construct_ast):
 
 
 def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
+    """Test an Empty procedure containing Arguments with Shape."""
     source_file_content = "proc foo(input int32[m, n] x){}"
     _ast = construct_ast(source_file_content)
 
@@ -413,7 +419,7 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
 
 
 def test_empty_operation(construct_ast):
-    """test that an Empty Operation is Converted Correctly"""
+    """Test that an Empty Operation is Converted Correctly."""
     source_file_content = "op foo() -> output int32 {}"
     _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
@@ -423,7 +429,7 @@ def test_empty_operation(construct_ast):
 
 
 def test_empty_operation_return_type(construct_ast):
-    """Tests that an Empty Operation with a Return Type is Converted Correctly"""
+    """Test that an Empty Operation with a Return Type is Converted Correctly."""
     source_file_content = "op foo(input int32[n, m] x) -> output int32[n, m] {}"
     _ast = construct_ast(source_file_content)
 
@@ -481,6 +487,7 @@ def test_declaration_statement(construct_ast):
 
 
 def test_selection_statement(construct_ast):
+    """Test an If (selection) Statement."""
     source_file_content = "proc foo() {if (1) {i = 1;} else {j = 1;}}"
     _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
@@ -547,6 +554,7 @@ def test_selection_statement(construct_ast):
 
 
 def test_for_all_statement(construct_ast):
+    """Test an Iteration (For All) Statement (loop)."""
     source_file_content = "proc foo() {forall (i) {j = 1;}}"
     _ast = construct_ast(source_file_content)
 
@@ -595,7 +603,7 @@ def test_for_all_statement(construct_ast):
 
 
 def test_return_statement(construct_ast):
-    """Tests a Return Statement"""
+    """Test a Return Statement."""
     source_file_content = "op foo() -> temp int32 {temp int32 i = 5; return i;}"
     _ast = construct_ast(source_file_content)
 
@@ -611,7 +619,7 @@ def test_return_statement(construct_ast):
 
 
 def test_unary_expressions(construct_ast):
-    """Tests a Unary Expression (Negative)"""
+    """Tests a Unary Expression (Negative)."""
     source_file_content = "op foo() -> temp int32 {temp int32 i = -5;}"
     _ast = construct_ast(source_file_content)
 
@@ -645,7 +653,7 @@ def test_unary_expressions(construct_ast):
 
 
 def test_binary_expressions(construct_ast):
-    """Tests a Binary Expression (Multiplication)"""
+    """Tests a Binary Expression (Multiplication)."""
     source_file_content = "op foo() -> temp float32 {temp float32 i = 5 * 6;}"
     _ast = construct_ast(source_file_content)
 
@@ -688,7 +696,7 @@ def test_binary_expressions(construct_ast):
 
 
 def test_ternary_expressions(construct_ast):
-    """Tests a Ternary Conditional Expression"""
+    """Tests a Ternary Conditional Expression."""
     source_file_content = "op foo() -> output int32 {temp float32 i = 5 < 6 ? 7 : 8;}"
     _ast = construct_ast(source_file_content)
 
@@ -755,7 +763,7 @@ def test_ternary_expressions(construct_ast):
 
 
 def test_index_type(construct_ast):
-    """Test Construction of an Index Type"""
+    """Test Construction of an Index Type."""
     source_file_content = "proc bar() {temp index[1:m] i;}"
     _ast = construct_ast(source_file_content)
 
@@ -783,6 +791,7 @@ def test_index_type(construct_ast):
 
 
 def test_function_expression(construct_ast):
+    """Test Function Call Expression."""
     source_file_content = "proc bar() {temp int32 i = foo(A);}"
     _ast = construct_ast(source_file_content)
 
@@ -857,6 +866,7 @@ def test_tensor_access_expressions(construct_ast):
 
 
 def test_tuple_type(construct_ast):
+    """Test Tuple Type Declaration Statement."""
     source_file_content = (
         "op bar() -> output int32[m,n] {output (int32[m, n], int32) i;}"
     )
@@ -886,6 +896,7 @@ def test_tuple_type(construct_ast):
 
 
 def test_int_literal(construct_ast):
+    """Test IntLiteral Construction."""
     source_file_content = (
         "op bar() -> output int32 {1; 0b0101; 0B01; 0x1; 0XFF; 0o1; 0O7;}"
     )
@@ -910,6 +921,7 @@ def test_int_literal(construct_ast):
 
 
 def test_float_literal(construct_ast):
+    """Test use of different Formats of Float Literal."""
     source_file_content = "op bar() -> output float32 {1.0; .2; 1.; 1e2; 1.2e3;}"
     _ast = construct_ast(source_file_content)
 
@@ -932,6 +944,7 @@ def test_float_literal(construct_ast):
 
 
 def test_absolute_import(construct_ast):
+    """Test Absolute Import Component."""
     source_file_content = "import foo.bar;"
     _ast = construct_ast(source_file_content)
 
@@ -942,10 +955,7 @@ def test_absolute_import(construct_ast):
 
 
 def test_syntax_error_no_argument_name(construct_ast):
-    """Tests a FhYSyntaxError is Raised when an function Argument is defined without
-    a Name.
-
-    """
+    """Raise FhYSyntaxError when an function Argument is defined without a Name."""
     source_file_content = "op foo(input int32[m,n]) -> output int32 {}"
     with pytest.raises(error.FhYSyntaxError) as info:
         _ast = construct_ast(source_file_content)
@@ -953,7 +963,7 @@ def test_syntax_error_no_argument_name(construct_ast):
 
 
 def test_syntax_error_no_operation_name(construct_ast):
-    """Tests a Syntax Error is Raised when an Operation is defined without a Name"""
+    """Raise Syntax Error when an Operation is defined without a Name."""
     source_file_content = "op (input int32[m,n] A) -> output int32 {}"
     # NOTE: This raises the Antlr Syntax Error, not from our visitor class.
     with pytest.raises(SyntaxError) as info:
@@ -962,10 +972,7 @@ def test_syntax_error_no_operation_name(construct_ast):
 
 
 def test_syntax_error_no_operation_return_type(construct_ast):
-    """Tests a FhYSyntaxError is Raised when an Operation is defined without a return
-    type.
-
-    """
+    """Raise FhYSyntaxError when an Operation is defined without a return type."""
     source_file_content = "op func(input int32[m,n] A) {}"
     with pytest.raises(error.FhYSyntaxError) as info:
         _ast = construct_ast(source_file_content)
