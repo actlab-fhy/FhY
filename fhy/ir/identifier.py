@@ -23,12 +23,12 @@ class Identifier(object):
 
     @property
     def name_hint(self) -> str:
-        """Variable Name"""
+        """Variable Name."""
         return self._name_hint
 
     @property
     def id(self) -> int:
-        """UniqueID"""
+        """UniqueID."""
         return self._id
 
     def __eq__(self, other: Any) -> bool:

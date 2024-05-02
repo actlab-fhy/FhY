@@ -49,4 +49,14 @@ class FhYSyntaxError(SyntaxError):
 
 @register_fhy_error
 class FhYSemanticsError(Exception):
-    """Error in FhY Program Semantics"""
+    """Error in FhY Program Semantics."""
+
+
+@register_fhy_error
+class UnregisteredASTNode(KeyError):
+    """ASTNode information has not been registered with FhY."""
+
+
+@register_fhy_error
+class FieldAttributeError(Exception):
+    """Attempted to assign a value to an unsupported attribute of the object."""

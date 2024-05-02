@@ -4,23 +4,14 @@ Functions:
     register_ast_node: Wrapper utility to register a class node field annotations
     get_ast_node_type_info: Retrieve expected annotations of a registered node
 
-Exceptions:
-    UnregisteredASTNode
-
-
 """
 
 from dataclasses import dataclass
 from typing import Dict
 
+from fhy.utils.error import UnregisteredASTNode
+
 from .base import ASTNode
-
-
-class UnregisteredASTNode(Exception):
-    """Raised when the information about a specific ASTNode type
-    is not available (i.e. the ASTNode has not been registered)
-
-    """
 
 
 @dataclass
@@ -43,8 +34,8 @@ def get_ast_node_type_info(ast_node_class: type[ASTNode]) -> ASTNodeTypeInfo:
     try:
         return _ast_node_types[ast_node_class]
 
-    except KeyError:
-        raise UnregisteredASTNode(f"Unregistered ASTNode: {ast_node_class}")
+    except KeyError as e:
+        raise UnregisteredASTNode(f"Unregistered ASTNode: {ast_node_class}") from e
 
 
 def _get_ast_node_fields(ast_node_class: type[ASTNode]) -> Dict[str, type]:

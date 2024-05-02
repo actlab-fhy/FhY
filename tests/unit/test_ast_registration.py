@@ -10,6 +10,7 @@ import pytest
 from fhy.lang.ast import directory
 from fhy.lang.ast.base import ASTNode
 from fhy.lang.span import Span
+from fhy.utils.error import UnregisteredASTNode
 
 
 @pytest.fixture
@@ -34,7 +35,7 @@ def bad_subclass_node(generic_node):
 
 @pytest.fixture
 def setup_ast_node(request):
-    """Registers an AST Node and Removes Node from Registry on Teardown"""
+    """Register an AST Node and Remove Node from Registry on Teardown"""
     # Dynamic Fixture Argument (of another Fixture)
     node = request.getfixturevalue(request.param)
     yield directory.register_ast_node(node)
@@ -46,20 +47,15 @@ def setup_ast_node(request):
     ), "Fixture Teardown Incomplete. Node Still Registered"
 
 
-@pytest.mark.xfail(
-    reason="Retrieving an Unregistered ASTNode", raises=directory.UnregisteredASTNode
-)
 def test_unregistered_node_error():
-    """Tests that retrieving an unregistered class raises
-    an UnregisteredASTNode Exception.
-
-    """
-    directory.get_ast_node_type_info(int)
+    """Raise UnregisteredASTNode Exception when retrieving unregistered type."""
+    with pytest.raises(UnregisteredASTNode):
+        directory.get_ast_node_type_info(int)
 
 
 @pytest.mark.parametrize("setup_ast_node", ["generic_node"], indirect=True)
 def test_register_ast_node(setup_ast_node):
-    """Confirms we Correctly Register a New ASTNode Class"""
+    """Confirm we Correctly Register a New ASTNode Class"""
     node = setup_ast_node
 
     assert issubclass(
@@ -76,6 +72,7 @@ def test_register_ast_node(setup_ast_node):
 
 @pytest.mark.parametrize("setup_ast_node", ["bad_subclass_node"], indirect=True)
 def test_register_ast_node_with_bad_subclassing(setup_ast_node):
+    """Confirm `Bad danger Subclassing` is registered Correctly"""
     node = setup_ast_node
 
     assert issubclass(

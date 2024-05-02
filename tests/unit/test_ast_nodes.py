@@ -1,10 +1,22 @@
-"""This is a simplistic unit test, testing behavior of ASTNodes."""
+"""This is a simplistic unit test, testing the behavior of ASTNodes."""
 
 from typing import List, Type
 
 import pytest
 
 from fhy.lang import ast
+
+
+@pytest.mark.parametrize("name", ["test", "nombre", "badHombre", "Example"])
+def test_base_node_keyname(name):
+    """Confirm that the Given Class Name is Carried through Inheritance."""
+
+    # Dynamically Construct a Class with a given Name
+    obj = type(name, (ast.ASTNode,), {})
+    ret = obj.keyname()
+    assert (
+        ret == name
+    ), f"Names are Not Equivalent: Returned(`{ret}`) vs Given(`{name}`)"
 
 
 @pytest.mark.parametrize(

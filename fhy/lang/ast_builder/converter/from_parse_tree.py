@@ -616,7 +616,7 @@ def from_parse_tree(parse_tree: FhYParser.ModuleContext) -> ast.Module:
     """Constructs an AST from a Concrete Syntax Tree.
 
     Args:
-        parse_tree:
+        parse_tree (FhYParser.ModuleContext): FhY Concrete Syntax Tree, Module Context.
 
     Raises:
         NotImplementedError: Attempted use of Unsupported Features of FhY Language.

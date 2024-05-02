@@ -7,9 +7,6 @@ Classes:
 Functions:
     create_builder_frame: Primary Entry Point to dynamically construct Node Builders.
 
-Exceptions:
-    FieldAttributeError
-
 """
 
 from abc import ABC, abstractmethod
@@ -17,13 +14,10 @@ from dataclasses import MISSING, Field, dataclass, field
 from typing import Any, Dict, List, Optional, Set, Type, Union
 
 from fhy import ir
+from fhy.utils.error import FieldAttributeError
 
 from ..ast import ASTNode, Expression
 from ..ast.directory import ASTNodeTypeInfo, get_ast_node_type_info
-
-
-class FieldAttributeError(Exception):
-    """Raised when Attempt to Assign an Unsupported Attribute."""
 
 
 class ASTBuilderFrame(ABC):

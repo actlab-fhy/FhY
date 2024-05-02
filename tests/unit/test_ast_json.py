@@ -1,4 +1,12 @@
-"""Unit Test JSON Serialization Module, converting to and from AST Representation."""
+"""Unit Test JSON Serialization Module, converting to and from AST Representation.
+
+We use the intermediate data format, AlmostJson, to perform equality checks, because
+our ir.type nodes within the AST are inherently unequal (__eq__ dunder methods
+intentionally not implemented). We are also not concerned with the exact string order,
+the data is serialized (`dumped`) into as long as we are able to load that data, and is
+equivalent to our starting data formats.
+
+"""
 
 import json
 from typing import Callable, List, Tuple, TypeVar, Union
