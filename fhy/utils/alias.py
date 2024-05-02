@@ -1,4 +1,4 @@
-"""Define Type Aliases, or Generic Types describing core FhY Language Constructs"""
+"""Define Type Aliases, or Generic Types describing core FhY Language Constructs."""
 
 from typing import TypeVar, Union
 

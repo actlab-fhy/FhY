@@ -52,7 +52,7 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
     ],
 )
 def test_build_logger(get_log, name, level, stream):
-    """Confirm We construct a Logger"""
+    """Confirm We construct a Logger."""
     log = get_log(name, level, stream)
 
     assert log.name == name, "Incorrect Assigned Logger Name"

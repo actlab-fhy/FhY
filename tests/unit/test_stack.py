@@ -15,24 +15,21 @@ def text_stack() -> Stack:
 
 
 def test_stack_push(text_stack):
-    """Tests that we correctly add elements to the stack"""
+    """Test that we correctly add elements to the stack."""
     assert len(text_stack) == len(text_stack._stack) == 2, "Expected Length 2 in Stack."
     assert text_stack._stack[0] == "fhy", "Expected `fhy` string at index 0"
     assert text_stack._stack[1] == "test", "Expected `test` string at index 1"
 
 
 def test_stack_peek(text_stack):
-    """Test that the peek method reveals the correct element, and does not mutate
-    the stack.
-
-    """
+    """Test peek method reveals the correct element, and does not mutate the stack."""
     current: str = text_stack.peek()
     assert current == "test", "Expected `test` string to be revealed"
     assert len(text_stack) == len(text_stack._stack) == 2, "Expected Length 2 in Stack."
 
 
 def test_stack_peek_error():
-    """Attempts to peek an element from an Empty Stack should raise an Indexerror."""
+    """Raise an Indexerror when peek is called on an Empty Stack."""
     stack = Stack[str]()
 
     with pytest.raises(IndexError):
@@ -40,7 +37,7 @@ def test_stack_peek_error():
 
 
 def test_stack_pop(text_stack):
-    """Tests that we remove an element, and that the element removed is correct."""
+    """Test Element Removal."""
     first = text_stack.pop()
     assert first == "test", "Expected `test` string to be removed"
     assert len(text_stack) == len(text_stack._stack) == 1, "Expected Length 1 in Stack."
@@ -65,6 +62,7 @@ def test_stack_clear(text_stack):
 
 
 def test_stack_iteration(text_stack):
+    """Test Iteration over the stack via dunder method."""
     start: int = text_stack._iter_index
     assert start == 0, f"Starting Index should be 0: {start}"
 
@@ -79,7 +77,7 @@ def test_stack_iteration(text_stack):
 
 
 def test_stack_next(text_stack):
-    """Tests we can use next on a generator of the stack to retrieve elements."""
+    """Test we can use next on a generator of the stack to retrieve elements."""
     generator = (i for i in text_stack)
     assert text_stack._iter_index == 0, "Unexpected Index"
 

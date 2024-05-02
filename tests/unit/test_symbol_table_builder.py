@@ -1,3 +1,5 @@
+"""Unit Test Symbol Table Builder Module."""
+
 import pytest
 
 from fhy import ir
@@ -12,8 +14,9 @@ def _get_symbol_table_string_keys(
 
 
 def test_empty_program(construct_ast):
-    """Tests that an empty program builds a symbol table with one namespace, containing
-    no variables.
+    """Test an empty program.
+
+    builds a symbol table with one namespace, containing no variables.
 
     """
     source_file_content = ""
@@ -44,8 +47,9 @@ def test_empty_procedure(construct_ast):
 
 
 def test_procedure_with_arguments(construct_ast):
-    """Tests Empty Procedure Argument names are in the symbol table procedure
-    namespace.
+    """Test Empty Procedure with Arguments.
+
+    names are in the symbol table, but within procedure namespace.
 
     """
     source_file_content = "proc main(input int32[A, B] a, input int32[A, C] b) {}"
@@ -68,7 +72,7 @@ def test_procedure_with_arguments(construct_ast):
 
 
 def test_procedure_with_declaration_statement(construct_ast):
-    """Tests procedure body variables are in symbol table procedure namespace"""
+    """Test procedure body variables are in symbol table procedure namespace."""
     source_file_content = "proc main(input int32[A, B] a) {temp int32[A] b;}"
     _ast = construct_ast(source_file_content)
 
@@ -117,8 +121,9 @@ def test_fails_with_already_defined_procedure(construct_ast):
 
 
 def test_import_variable(construct_ast):
-    """Tests import of a variable, and it's usage within a procedure, is present in both
-    module level and procedure level namespaces.
+    """Test import and usage of a variable.
+
+    Variable should be present at both the module and procedure level (namespace).
 
     """
     source_file_content = (

@@ -626,7 +626,7 @@ def _test_from_json(obj, node):
 @pytest.mark.parametrize("node_name", fixture_names)
 @pytest.mark.parametrize("function", [_test_to_json, _test_from_json])
 def test_ast_node_to_json(node_name, function, request):
-    """Tests Construction and Loading of a Node to AlmostJson Object."""
+    """Test Construction and Loading of a Node to AlmostJson Object."""
     fixture = request.getfixturevalue(node_name)
     obj, node = fixture
     function(obj, node)
@@ -634,14 +634,14 @@ def test_ast_node_to_json(node_name, function, request):
 
 @pytest.mark.parametrize("function", [_test_to_json, _test_from_json])
 def test_shapeless_numerical_type(function):
-    """Tests Construction and Loading of Shapeless Numerical Type Node Json Object."""
+    """Test Construction and Loading of Shapeless Numerical Type Node Json Object."""
     obj, numerical = build_numerical_type(PrimitiveDataType.FLOAT32, [], [])
     function(obj, numerical)
 
 
 @pytest.mark.parametrize("function", [_test_to_json, _test_from_json])
 def test_identifier_node(function):
-    """Tests Construction and Loading from Identifier Node to Json Object."""
+    """Test Construction and Loading from Identifier Node to Json Object."""
     obj, node = construct_id("magic")
     function(obj, node)
 
@@ -649,7 +649,7 @@ def test_identifier_node(function):
 @pytest.mark.parametrize("value", [int(1), float(1), complex(1)])
 @pytest.mark.parametrize("function", [_test_to_json, _test_from_json])
 def test_literal_values(value, function, literals):
-    """Tests Literal Value Node to and From Json Object conversions"""
+    """Test Literal Value Node to and From Json Object conversions."""
     obj, node = literals(value)
     function(obj, node)
 
@@ -657,15 +657,16 @@ def test_literal_values(value, function, literals):
 def test_module_to_json_object(module) -> None:
     """Confirm we construct the Same Object from a given Module AST Node."""
     obj, node = module
+    result: AlmostJson = ASTtoJSON().visit_Module(node)
 
-    result: dict = ASTtoJSON().visit_Module(node)
-
-    assert result == obj, "Resulting Json Object was not Constructed as expected."
+    assert (
+        result.data() == obj
+    ), "Resulting Json Object was not Constructed as expected."
 
 
 @pytest.mark.skip(reason="We don't Particularly Care about the Order of Serialization.")
 def test_module_json_str(module):
-    """Tests Conversion of Module AST Node to Json Intermediate Object"""
+    """Test Conversion of Module AST Node to Json Intermediate Object."""
     obj, node = module
     indent = "  "
     # NOTE: This is harder to test, because the string order matters
@@ -678,7 +679,7 @@ def test_module_json_str(module):
 
 
 def test_json_load(module):
-    """Tests Loading of Module Json String to AlmostJson Class"""
+    """Test Loading of Module Json String to AlmostJson Class."""
     obj, node = module
     indent = "  "
     serialized: str = dump(node, indent)
@@ -693,6 +694,7 @@ def test_json_load(module):
 
 def test_load_json_to_ast(module):
     """Test Serialization of AST Node and reloading that text returns same Object.
+
     In other words: ASTNode --> JSONtext --> ASTNode
 
     """
@@ -721,3 +723,35 @@ def test_load_json_to_ast(module):
     ), "Expected 1 Argument"
 
     assert isinstance(result.components[1], Procedure), "Expected Procedure Component"
+
+
+# FROM SOURCE CODE (Limited)
+def test_empty_module(construct_ast):
+    """Now create an empty module from Source code, and test Json conversion.
+
+    Test that an Empty Module Serializes to Json object Correctly.
+
+    """
+    source = ""
+    ast = construct_ast(source)
+
+    expected = dict(
+        cls_name="Module",
+        attributes=dict(
+            components=[],
+            span=dict(
+                cls_name="Span",
+                attributes=dict(
+                    start_line=0,
+                    end_line=0,
+                    start_column=0,
+                    end_column=0,
+                    source=dict(cls_name="Source", attributes=dict(namespace="_null")),
+                ),
+            ),
+        ),
+    )
+
+    result: AlmostJson = ASTtoJSON().visit(ast)
+
+    assert result.data() == expected, "Unexpected Object."

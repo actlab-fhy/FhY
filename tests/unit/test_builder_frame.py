@@ -1,4 +1,4 @@
-""" """
+"""Builder Frame Module Unit Tests."""
 
 from typing import Callable, Generator, Optional, Type, TypeVar
 
@@ -22,7 +22,7 @@ T = TypeVar("T")
 
 @pytest.fixture
 def register_node() -> Generator[Callable[[Type[T]], Type[T]], None, None]:
-    """Registers an AST Node and Removes Node from Registry on Teardown"""
+    """Register an AST Node and Remove Node from Registry on Teardown."""
     node_cls: Optional[Type[T]] = None
 
     def _inner(node_type: Type[T]) -> Type[T]:
@@ -84,10 +84,7 @@ def test_builder_frame_update(register_node):
 
 
 def test_create_builder_frame(register_node):
-    """Tests the Primary Entry Point function, create_builder_frame, works as
-    expected.
-
-    """
+    """Tests the Primary Entry Point, create_builder_frame, works as expected."""
     node_type: Type[Module] = register_node(Module)
     result = create_builder_frame(node_type)
 
@@ -100,7 +97,7 @@ def test_create_builder_frame(register_node):
     [(ir.NumericalType, _NumericalTypeInfo), (ir.IndexType, _IndexTypeInfo)],
 )
 def test_create_type_builder_frame(register_node, node_cls, expected):
-    """Tests the TypeBuilderFrame works as expected from API entry point"""
+    """Tests the TypeBuilderFrame works as expected from API entry point."""
     node_type = register_node(node_cls)
     result = create_builder_frame(node_type)
     assert isinstance(result, TypeBuilderFrame), "Expected TypeBuilderFrame"

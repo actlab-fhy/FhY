@@ -51,12 +51,12 @@ class Stack(Generic[T]):
         self._iter_index = 0
 
     def clear(self) -> None:
-        """Removes all elements within the stack"""
+        """Remove all elements within the stack."""
         self._stack.clear()
         self._iter_index = 0
 
     def push(self, item: T) -> None:
-        """Adds an item to the stack"""
+        """Add an item to the stack."""
         self._stack.append(item)
 
     def pop(self) -> T:
@@ -68,11 +68,11 @@ class Stack(Generic[T]):
         """
         try:
             return self._stack.pop()
-        except IndexError:
-            raise IndexError("Cannot pop from an empty stack.")
+        except IndexError as e:
+            raise IndexError("Cannot pop from an empty stack.") from e
 
     def peek(self) -> T:
-        """Views the current (right-hand) element from the stack.
+        """View current (right-hand) element from the stack.
 
         Raises:
             IndexError: When function is called on an empty stack.
@@ -80,8 +80,8 @@ class Stack(Generic[T]):
         """
         try:
             return self._stack[-1]
-        except IndexError:
-            raise IndexError("Cannot peek at an empty stack.")
+        except IndexError as e:
+            raise IndexError("Cannot peek at an empty stack.") from e
 
     def __len__(self) -> int:
         return len(self._stack)
