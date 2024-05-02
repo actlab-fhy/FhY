@@ -38,6 +38,13 @@ _initialize_builtins()
 
 
 @register_fhy_error
+class UsageError(Exception):
+    """User Induced Error."""
+
+    ...
+
+
+@register_fhy_error
 class FhYASTBuildError(RuntimeError):
     """Failed to Build FhY AST nodes from Source."""
 

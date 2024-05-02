@@ -34,7 +34,7 @@ class ASTPrettyPrinter(BasePass):
 
     @property
     def _spacer(self):
-        """Current Indentation Spacer"""
+        """Current Indentation Spacer."""
         return self._indent_char * self._current_indent
 
     def _increment_indent(self) -> None:
