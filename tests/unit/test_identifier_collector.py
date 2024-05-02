@@ -4,8 +4,15 @@ from typing import Callable, Generator
 
 import pytest
 
-from fhy.ir import Identifier
-from fhy.lang.ast import Module
+from fhy.ir import Identifier, NumericalType, PrimitiveDataType, TypeQualifier
+from fhy.lang.ast import (
+    DeclarationStatement,
+    IntLiteral,
+    Module,
+    Operation,
+    Procedure,
+    QualifiedType,
+)
 from fhy.lang.passes.identifier_collector import (
     IdentifierCollector,
     collect_identifiers,
@@ -48,3 +55,44 @@ def test_collector_function(build_id, name, value):
 def test_empty_module():
     """Test an empty module returns empty set."""
     collect_identifiers(Module()) == set()
+
+
+def _qualified_type():
+    return QualifiedType(
+        base_type=NumericalType(data_type=PrimitiveDataType.INT32, shape=[]),
+        type_qualifier=TypeQualifier.INPUT,
+    )
+
+
+def test_declaration_statement(build_id):
+    """Test retrieval of ID from Declaration Statement."""
+    identity = build_id("rosanne", 23)
+
+    statement = DeclarationStatement(
+        variable_name=identity,
+        variable_type=_qualified_type(),
+        expression=IntLiteral(value=5),
+    )
+
+    result = collect_identifiers(statement)
+    assert result == {identity}, "Expected to retrieve one Identifier"
+
+
+def test_empty_procedure(build_id):
+    """Test retrieval of ID from Empty Procedure Component."""
+    identity = build_id("bar", 96)
+
+    proc = Procedure(name=identity, args=[], body=[])
+
+    result = collect_identifiers(proc)
+    assert result == {identity}, "Expected to retrieve one Identifier"
+
+
+def test_empty_operation(build_id):
+    """Test retrieval of ID from Empty Operation Component."""
+    identity = build_id("foo", 117)
+
+    op = Operation(name=identity, args=[], body=[], return_type=_qualified_type())
+
+    result = collect_identifiers(op)
+    assert result == {identity}, "Expected to retrieve one Identifier"

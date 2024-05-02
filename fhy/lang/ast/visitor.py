@@ -114,11 +114,13 @@ class Visitor(BasePass):
         self.visit(node.name)
 
     def visit_Operation(self, node: Operation) -> None:
+        self.visit_Identifier(node.name)
         self.visit_sequence(node.args)
         self.visit(node.return_type)
         self.visit_sequence(node.body)
 
     def visit_Procedure(self, node: Procedure) -> None:
+        self.visit_Identifier(node.name)
         self.visit_sequence(node.args)
         self.visit_sequence(node.body)
 
