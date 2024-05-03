@@ -57,3 +57,6 @@ jobs:
     - name: MyPy Static Type Check
       if: always()
       run: tox -e type
+
+    - name: Documentation Build
+      run: tox -e docs

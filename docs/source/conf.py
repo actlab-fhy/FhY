@@ -16,7 +16,7 @@ import os
 import sys
 
 # https://sphinx-rtd-tutorial.readthedocs.io/en/latest/sphinx-config.html#autodoc-configuration
-sys.path.insert(0, os.path.abspath(f"../../{project}/"))  # Required for autosummary + autodoc
+sys.path.insert(0, os.path.abspath(f"../../"))  # Required for autosummary + autodoc
 sys.path.append(os.path.abspath("./_ext"))  # Required for custom extensions
 
 extensions = [
@@ -32,7 +32,7 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-
+napoleon_google_docstring = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

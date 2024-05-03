@@ -44,7 +44,7 @@ For this reason, we will define our supported type qualifiers in our code.
 
 
 TODO (immediate):
-_________________
+-----------------
     1. Finish AST conversion strategy to support all AST nodes
     2. Setup GitHub Actions for automated testing on the remote repository
     3. Type & label checking
@@ -53,7 +53,7 @@ _________________
     6. Multiple file compilation strategy
 
 TODO (Back Logged):
-___________________
+-------------------
     1. Design and implementation of new type (and type qualifier) registration by users
     2. Design of IR
 
