@@ -1,6 +1,6 @@
 """Deprecated Module.
 
-A remnant of a decadent past with ambitious daliances in the joy and woeful misery of
+A remnant of a decadent past with ambitious dalliances in the joy and woeful misery of
 using a stack + listener pattern to construct the AST from a CST parse tree.
 
 NOTE: Module has been commented out, and will be removed.

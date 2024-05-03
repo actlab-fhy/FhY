@@ -43,16 +43,10 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
         ("bar", logging.CRITICAL, None),
         ("baz", logging.WARNING, logging.StreamHandler()),
         ("baz", logging.WARNING, logging.FileHandler("test.log")),
-        pytest.param(
-            "snap",
-            logging.WARNING,
-            "InvalidStream",
-            marks=pytest.mark.xfail(raises=TypeError),
-        ),
     ],
 )
 def test_build_logger(get_log, name, level, stream):
-    """Confirm We construct a Logger."""
+    """Confirm We construct a Logger as expected."""
     log = get_log(name, level, stream)
 
     assert log.name == name, "Incorrect Assigned Logger Name"
@@ -68,3 +62,9 @@ def test_build_logger(get_log, name, level, stream):
         assert isinstance(
             log.handlers[0], logging.StreamHandler
         ), "Expected StreamHandler Instance"
+
+
+def test_invalid_stream(get_log):
+    """Confirm we raise a TypeError when providing an invalid stream arg."""
+    with pytest.raises(TypeError):
+        log = get_log("snap", logging.WARNING, "InvalidStream")

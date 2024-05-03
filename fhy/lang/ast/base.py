@@ -33,14 +33,14 @@ class ASTNode(ABC):
 
     @classmethod
     def keyname(cls) -> str:
-        """Class Node Name"""
+        """Class Node Name."""
         if hasattr(cls, "__qualname__"):
             return cls.__qualname__
         return cls.__name__
 
     @abstractmethod
     def visit_attrs(self) -> List[str]:
-        """Returns a list of relevant node fields"""
+        """Return a list of relevant node fields."""
         return ["span"]
 
     def __eq__(self, value: object) -> bool:
