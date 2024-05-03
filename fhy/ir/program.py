@@ -1,10 +1,11 @@
-from typing import Any, Dict, Set
+"""Program Root Node."""
 
-from .identifier import Identifier
-from .table import SymbolTable, SymbolTableFrame, Table
+from .table import SymbolTable
 
 
 class Program(object):
+    """Program Object."""
+
     _symbol_table: SymbolTable
 
     def __init__(self) -> None:

@@ -954,6 +954,31 @@ def test_absolute_import(construct_ast):
     _assert_is_expected_import(import_component, "foo.bar")
 
 
+def test_line_comment(construct_ast):
+    """Test that comments are skipped, creating an empty Module."""
+    source = "//lorem ipsum dolor sit amet;"
+    print("Source:", source)
+    _ast = construct_ast(source)
+    assert isinstance(_ast, ast.Module), "Expected to construct a Module Node."
+    assert len(_ast.components) == 0, "Expected Module to be empty."
+
+
+def test_procedure_with_line_comment(construct_ast):
+    """Test procedure is found and constructed with line comments in the mix."""
+    source = "//lorem ipsum dolor sit amet\nproc foo(input int32[m,n] A) {}"
+    print("Source:", source)
+    _ast = construct_ast(source)
+    assert isinstance(_ast, ast.Module), "Expected to construct a Module Node."
+    assert len(_ast.components) == 1, "Expected Module to contain 1 component."
+    proc = _ast.components[0]
+    _assert_is_expected_procedure(proc, "foo", 1, 0)
+
+    # Procedure should be on second line
+    assert (
+        proc.span.line.start == 2
+    ), f"Expected Procedure to be on Second Line: {proc.span.line.start}"
+
+
 def test_syntax_error_no_argument_name(construct_ast):
     """Raise FhYSyntaxError when an function Argument is defined without a Name."""
     source_file_content = "op foo(input int32[m,n]) -> output int32 {}"
@@ -964,18 +989,18 @@ def test_syntax_error_no_argument_name(construct_ast):
 
 def test_syntax_error_no_operation_name(construct_ast):
     """Raise Syntax Error when an Operation is defined without a Name."""
-    source_file_content = "op (input int32[m,n] A) -> output int32 {}"
+    source = "op (input int32[m,n] A) -> output int32 {}"
     # NOTE: This raises the Antlr Syntax Error, not from our visitor class.
     with pytest.raises(SyntaxError) as info:
-        _ast = construct_ast(source_file_content)
+        _ast = construct_ast(source)
     print(info.value)
 
 
 def test_syntax_error_no_operation_return_type(construct_ast):
     """Raise FhYSyntaxError when an Operation is defined without a return type."""
-    source_file_content = "op func(input int32[m,n] A) {}"
+    source = "op func(input int32[m,n] A) {}"
     with pytest.raises(error.FhYSyntaxError) as info:
-        _ast = construct_ast(source_file_content)
+        _ast = construct_ast(source)
     print(info.value)
 
 
@@ -989,7 +1014,18 @@ def test_invalid_function_keyword(construct_ast):
     remotely match the syntax of anything else, it is simply bypassed by Antlr.
 
     """
-    source_file_content = "def foo(input int32[m,n] A) -> output int32[m,n] {}"
-    _ast = construct_ast(source_file_content)
+    source = "def foo(input int32[m,n] A) -> output int32[m,n] {}"
+    with pytest.raises(error.FhYSyntaxError) as info:
+        _ast = construct_ast(source)
+    print(_ast.__class__)
+    print(_ast.components)
+
+
+@pytest.mark.skip(reason="Bug. Expected Syntax Error, but Creates Empty Module")
+def test_gibberish(construct_ast):
+    """Nonsense gibberish (that is not a comment) should raise Errors."""
+    source = "lorem ipsum dolor sit amet;"
+    with pytest.raises(error.FhYSyntaxError) as info:
+        _ast = construct_ast(source)
     print(_ast.__class__)
     print(_ast.components)

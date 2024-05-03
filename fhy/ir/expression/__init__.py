@@ -1,2 +1,3 @@
-# TODO Jason: Add docstring
+"""IR Expressions."""
+
 from .base import Expression

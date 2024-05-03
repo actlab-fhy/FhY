@@ -24,6 +24,8 @@ from fhy.utils.logger import get_logger
 
 
 class ThrowingErrorListener(ErrorListener):
+    """Custom Antlr Error Listener."""
+
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         message = f"Syntax error at {line}:{column} - {msg}"
         raise error.FhYSyntaxError(message) from e
@@ -110,6 +112,7 @@ def arguments() -> argparse.ArgumentParser:
     return parser
 
 
+# TODO: Extract out Construction of CST to another module within fhy/lang...
 def create_lexer(input_str: str) -> FhYLexer:
     """Constructs the FhyLexer from Input String Source Code."""
     input_stream = InputStream(input_str)
