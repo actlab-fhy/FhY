@@ -9,11 +9,13 @@ You may view our previous blog post :doc:`here <post_2024-04-05>`.
 
 Meeting Minutes
 ===============
-We met on Wednesday, April 10th, 2024, and had the following discussions:
+
+We met on Wednesday, 10th April 2024, and had the following discussions:
 
 Current Progress:
 -----------------
-Today we reviewed our current progress on developement of *FhY*, as follows:
+
+Today we reviewed our current progress on development of *FhY*, as follows:
 
     1. Full Initial Implementation of the AST Nodes
         A. Core AST Structures
@@ -37,6 +39,7 @@ Design Decisions Made or Discussed During the Meeting:
 
 Where to Define Supported Type Qualifiers
 =========================================
+
 Currently, the *FhY* grammar does not define type qualifier keywords but instead will grab any ``IDENTIFIER`` token.
 Instead, we define supported type qualifiers (keywords) using an enumeration in our code.
 The rationale behind this choice is this: our code raises syntax errors, not the parser generator, ANTLR.
@@ -44,19 +47,21 @@ For this reason, we will define our supported type qualifiers in our code.
 
 
 TODO (immediate):
-_________________
+-----------------
+
     1. Finish AST conversion strategy to support all AST nodes
     2. Setup GitHub Actions for automated testing on the remote repository
-    3. Type & label checking
+    3. Type & label checking (AST Node Passes)
     4. Define and design IR tables
     5. Serialization of AST
     6. Multiple file compilation strategy
 
 TODO (Back Logged):
-___________________
+-------------------
+
     1. Design and implementation of new type (and type qualifier) registration by users
     2. Design of IR
 
-- **Release Date**: April 11th, 2024
-- **Last Updated**: April 11th, 2024
+- **Release Date**: Thursday 11th April 2024
+- **Last Updated**: Thursday 11th April 2024
 - **Post Author(s)**: Jason C Del Rio

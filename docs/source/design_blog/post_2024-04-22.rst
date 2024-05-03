@@ -58,7 +58,8 @@ Future Work:
        format, and another class to convert json format back into ASTNodes.
     2. ASTNode Passes: Write simple passes to our ASTNodes to perform Label and Type
        Checking, as preliminary analyses of the converted code.
-    3. Template Types: We need code testing coverage of :doc:`template types <post_2024-04-05>`
+    3. Template Types: We need code testing coverage of
+       :doc:`template types <post_2024-04-05>`
     4. Write a script (cli) for FhY, to perform compilation from the command line, by
        defining a package entry point.
 
@@ -87,14 +88,14 @@ Backlogged Work from Discussions:
 
     1. Serialization will come in many forms. For now, we had developed a pretty print
        class to deconstruct ASTNodes back into FhY Code, and are focusing on json format
-       next. But how do we move across different coding languages? At the end of the day,
-       different coding languages are just another version of a text output format.
+       next. But how do we move across different coding languages? At the end of the
+       day, different coding languages are just another version of a text output format.
        We will need walkers / visitors, to convert other code formats starting with
        python, then rust. Future expansion of coding support will be strategized after
        the previous two have been implemented, both internally and through external
        community engagement.
 
 
-- **Release Date**: April 25th, 2024
-- **Last Updated**: April 25th, 2024
+- **Release Date**: Thursday 25th April 2024
+- **Last Updated**: Thursday 2nd May 2024
 - **Post Author(s)**: Jason C Del Rio
