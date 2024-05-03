@@ -37,7 +37,7 @@ Today we reviewed our current progress on development of *FhY*, as follows:
        we had floating_point_literals in the grammar as a parser rule. Modifying
        the grammar, to make FLOAT_LITERAL a lexer token resolved the issue. However,
        it is not entirely clear why this is the case, but we leave such
-       investigation to ANTLR officianados or as a funny quirk for discussion.
+       investigation to ANTLR *officianados* or as a funny quirk for discussion.
     4. ASTNode Conversion: We wrote a simple class to convert an ASTNode back into
        the original FhY Language, with an option to include assigned Identifier IDs.
        We are currently calling this conversion, "pretty printing," because we can
@@ -61,6 +61,7 @@ Future Work:
     3. Template Types: We need code testing coverage of :doc:`template types <post_2024-04-05>`
     4. Write a script (cli) for FhY, to perform compilation from the command line, by
        defining a package entry point.
+
        A. Desired Usage: We want to be able to serialize the AST, piping the output to
           provide a diff between the expected output. This will help for debugging
           purposes, and build up our current tool chain.
