@@ -20,6 +20,7 @@ from fhy.lang.parser import FhYLexer, FhYParser
 from fhy.lang.printer import pprint_ast
 from fhy.lang.printer.to_json import dump
 from fhy.utils import error
+from fhy.utils.discovery import confirm_files
 from fhy.utils.logger import get_logger
 
 
@@ -46,43 +47,6 @@ def make_logger(verbose: bool = False) -> logging.Logger:
     level: int = logging.DEBUG if verbose else logging.INFO
     log: logging.Logger = get_logger("FhY", level=level)
     return log
-
-
-def collect_files(directory: str, endswith: Optional[str] = None) -> List[str]:
-    """Recursively Collects Files from a Directory or a given file type."""
-    files: List[str] = []
-    for f in os.scandir(directory):
-        if f.is_dir():
-            # NOTE: We may have Rules about Subfolders. e.g.
-            # root = os.path.join(f.path, "__root__.fhy")
-            # if os.path.exists(root): ...
-            files.extend(collect_files(f.path))
-            continue
-
-        elif f.is_file() and f.path != ".DS_Store":
-            if endswith is None or f.path.endswith(endswith):
-                files.append(f.path)
-
-        else:
-            raise ValueError("What ha happened was...")
-
-    return files
-
-
-def confirm_files(filepath: str) -> List[str]:
-    """Confirm Valid filepath, or directory path."""
-    path = os.path.abspath(filepath)
-    if not os.path.exists(path):
-        raise FileExistsError(f"File does not Exist: {path}")
-
-    elif os.path.isdir(path):
-        return collect_files(path)
-
-    elif os.path.isfile(path) and path.endswith(".fhy"):
-        return [path]
-
-    else:
-        raise FileNotFoundError(f"Invalid Filetype Provided: {path}")
 
 
 def arguments() -> argparse.ArgumentParser:
