@@ -13,7 +13,7 @@ from antlr4 import BailErrorStrategy, CommonTokenStream, InputStream, ParserRule
 from antlr4.error.ErrorListener import ErrorListener
 
 from fhy.lang.ast import ASTNode
-from fhy.lang.ast_builder import from_parse_tree
+from fhy.lang.ast_builder.converter.from_parse_tree import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
 
 

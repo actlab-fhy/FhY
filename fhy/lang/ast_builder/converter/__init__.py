@@ -1,3 +1,3 @@
-"""Tools to Construct an AST from a FhY Concrete Syntax Tree using visitors."""
+"""Converter package."""
 
-from .from_parse_tree import from_parse_tree
+from .from_fhy_source import from_fhy_source

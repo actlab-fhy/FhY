@@ -7,29 +7,13 @@ from contextlib import contextmanager
 from enum import IntEnum
 from typing import List, Optional
 
-from antlr4 import (  # type: ignore[import-untyped]
-    BailErrorStrategy,
-    CommonTokenStream,
-    InputStream,
-)
-from antlr4.error.ErrorListener import ErrorListener  # type: ignore[import-untyped]
-
-from fhy.lang.ast import ASTNode, Module
-from fhy.lang.ast_builder import from_parse_tree
-from fhy.lang.parser import FhYLexer, FhYParser
+from fhy.lang.ast import Module
+from fhy.lang.ast_builder import from_fhy_source
 from fhy.lang.printer import pprint_ast
 from fhy.lang.printer.to_json import dump
 from fhy.utils import error
 from fhy.utils.discovery import confirm_files
 from fhy.utils.logger import get_logger
-
-
-class ThrowingErrorListener(ErrorListener):
-    """Custom Antlr Error Listener."""
-
-    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        message = f"Syntax error at {line}:{column} - {msg}"
-        raise error.FhYSyntaxError(message) from e
 
 
 class Status(IntEnum):
@@ -74,37 +58,6 @@ def arguments() -> argparse.ArgumentParser:
     )
 
     return parser
-
-
-# TODO: Extract out Construction of CST to another module within fhy/lang...
-def create_lexer(input_str: str) -> FhYLexer:
-    """Constructs the FhyLexer from Input String Source Code."""
-    input_stream = InputStream(input_str)
-    lexer = FhYLexer(input_stream)
-    lexer.removeErrorListeners()
-    lexer.addErrorListener(ThrowingErrorListener())
-    return lexer
-
-
-def create_parser(input_str: str) -> FhYParser:
-    """Constructs the FhyParser from Input String Source Code."""
-    lexer = create_lexer(input_str)
-    token_stream = CommonTokenStream(lexer)
-    parser = FhYParser(token_stream)
-    parser._errHandler = BailErrorStrategy()
-    parser.removeErrorListeners()
-    parser.addErrorListener(ThrowingErrorListener())
-
-    return parser
-
-
-def construct_ast(input_str: str) -> ASTNode:
-    """Build an AST representation from input text."""
-    fhy_parser = create_parser(input_str)
-    tree = fhy_parser.module()
-    _ast = from_parse_tree(tree)
-
-    return _ast
 
 
 def output_path(filepath: str, override_dir: Optional[str]) -> str:
@@ -175,7 +128,7 @@ def main():
             if text is None:
                 raise FileExistsError(f"No Text was read from file: {file}")
 
-        ast = construct_ast(text)
+        ast = from_fhy_source(text)
         if ast is None or not isinstance(ast, Module):
             log.error(f"Unable to Construct AST from: {file}")
             raise error.FhYASTBuildError(f"Unable to Construct AST from: {file}")
