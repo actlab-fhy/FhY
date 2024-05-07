@@ -88,21 +88,14 @@ class ParseTreeConverter(FhYVisitor):
     def visitModule(self, ctx: FhYParser.ModuleContext) -> ast.Module:
         span = _get_source_info(ctx)
 
-        self._open_scope()
-        components: List[ast.Component] = []
-        for component_ctx in ctx.component():
-            component = self.visitComponent(component_ctx)
-            components.append(component)
-        self._close_scope()
+        statements: List[ast.Statement] = self.visitScope(ctx.scope())
 
-        return ast.Module(components=components, span=span)
+        return ast.Module(statements=statements, span=span)
 
     # =====================
-    # IMPORT VISITORS
+    # STATEMENT VISITORS
     # =====================
-    def visitImport_component(
-        self, ctx: FhYParser.Import_componentContext
-    ) -> ast.Import:
+    def visitImport_statement(self, ctx:FhYParser.Import_statementContext) -> ast.Import:
         identifier_expression_ctx: FhYParser.Identifier_expressionContext = (
             ctx.identifier_expression()
         )
@@ -113,9 +106,6 @@ class ParseTreeConverter(FhYVisitor):
         span = _get_source_info(ctx)
         return ast.Import(name=self._get_identifier(name_hint), span=span)
 
-    # =====================
-    # FUNCTION VISITORS
-    # =====================
     def visitFunction_declaration(
         self, ctx: FhYParser.Function_declarationContext
     ) -> Any:
@@ -246,20 +236,16 @@ class ParseTreeConverter(FhYVisitor):
     def visitFunction_body(
         self, ctx: FhYParser.Function_bodyContext
     ) -> List[ast.Statement]:
-        return self.visitStatement_series(ctx.statement_series())
+        return self.visitScope(ctx.scope())
 
-    # =====================
-    # STATEMENT VISITORS
-    # =====================
-    def visitStatement_series(
-        self, ctx: FhYParser.Statement_seriesContext
-    ) -> List[ast.Statement]:
+    def visitScope(self, ctx:FhYParser.ScopeContext) -> List[ast.Statement]:
+        self._open_scope()
         statements: List[ast.Statement] = []
         if ctx.statement() is not None:
             for statement_ctx in ctx.statement():
                 statement = self.visitStatement(statement_ctx)
                 statements.append(statement)
-
+        self._close_scope()
         return statements
 
     def visitDeclaration_statement(
@@ -310,16 +296,12 @@ class ParseTreeConverter(FhYVisitor):
         condition_ctx: FhYParser.ExpressionContext = ctx.expression()
         condition = self.visitExpression(condition_ctx)
 
-        self._open_scope()
-        true_body_ctx: FhYParser.Statement_seriesContext = ctx.statement_series(0)
-        true_body = self.visitStatement_series(true_body_ctx)
-        self._close_scope()
+        true_body_ctx: FhYParser.ScopeContext = ctx.scope(0)
+        true_body = self.visitScope(true_body_ctx)
 
         false_body = []
-        if (false_body_ctx := ctx.statement_series(1)) is not None:
-            self._open_scope()
-            false_body = self.visitStatement_series(false_body_ctx)
-            self._close_scope()
+        if (false_body_ctx := ctx.scope(1)) is not None:
+            false_body = self.visitScope(false_body_ctx)
 
         return ast.SelectionStatement(
             condition=condition, true_body=true_body, false_body=false_body, span=span
@@ -332,10 +314,8 @@ class ParseTreeConverter(FhYVisitor):
         index_ctx: FhYParser.ExpressionContext = ctx.expression()
         index = self.visitExpression(index_ctx)
 
-        self._open_scope()
-        body_ctx: FhYParser.Statement_seriesContext = ctx.statement_series()
-        body = self.visitStatement_series(body_ctx)
-        self._close_scope()
+        body_ctx: FhYParser.ScopeContext = ctx.scope()
+        body = self.visitScope(body_ctx)
 
         return ast.ForAllStatement(index=index, body=body, span=span)
 

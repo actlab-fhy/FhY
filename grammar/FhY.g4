@@ -5,27 +5,31 @@ grammar FhY;
  */
 
 module
-    : component*
+    : scope
     ;
 
-component
-    : import_component
+/*
+ * Statement Rules
+ */
+
+statement
+    : import_statement
     | function_declaration
     | function_definition
+    | declaration_statement
+    | expression_statement
+    | selection_statement
+    | iteration_statement
+    | return_statement
     ;
 
-/*
- * Import Rules
- */
+scope
+    : statement*
+    ;
 
-import_component
+import_statement
     : IMPORT identifier_expression SEMICOLON
     ;
-
-
-/*
- * Function Rules
- */
 
 function_declaration
     : function_header SEMICOLON
@@ -52,23 +56,7 @@ function_arg
     ;
 
 function_body
-    : statement_series
-    ;
-
-/*
- * Statement Rules
- */
-
-statement
-    : declaration_statement
-    | expression_statement
-    | selection_statement
-    | iteration_statement
-    | return_statement
-    ;
-
-statement_series
-    : statement*
+    : scope
     ;
 
 declaration_statement
@@ -80,11 +68,11 @@ expression_statement
     ;
 
 selection_statement
-    : IF OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement_series CLOSE_BRACE (ELSE OPEN_BRACE statement_series CLOSE_BRACE)?
+    : IF OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE scope CLOSE_BRACE (ELSE OPEN_BRACE scope CLOSE_BRACE)?
     ;
 
 iteration_statement
-    : FORALL OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE statement_series CLOSE_BRACE
+    : FORALL OPEN_PARENTHESES expression CLOSE_PARENTHESES OPEN_BRACE scope CLOSE_BRACE
     ;
 
 return_statement

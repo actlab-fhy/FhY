@@ -13,7 +13,7 @@ Nodes = TypeVar("Nodes", bound=ASTTypeNodes)
 Expressions = Union[_ir.Expression, _ast.Expression]
 ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
 
-CoreASTNodes = Union[_ast.Component, _ast.Statement, _ast.Function, _ast.Expression]
+CoreASTNodes = Union[_ast.Statement, _ast.Function, _ast.Expression]
 Core = TypeVar("Core", bound=CoreASTNodes)
 
 OtherTypes = Union[

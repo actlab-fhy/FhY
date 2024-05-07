@@ -566,7 +566,7 @@ def module(span, operation, procedure) -> Tuple[dict, Module]:
         cls_name="Module", attributes=dict(span=span_obj, components=[op_obj, proc_obj])
     )
 
-    module = Module(span=span_cls, components=[op_cls, proc_cls])
+    module = Module(span=span_cls, statements=[op_cls, proc_cls])
 
     return obj, module
 
@@ -711,18 +711,18 @@ def test_load_json_to_ast(module):
     # assert node == result, "Expected Identical Module Nodes."
 
     assert (
-        len(node.components) == len(result.components) == 2
+        len(node.components) == len(result.statements) == 2
     ), "Expected single Component"
-    assert isinstance(result.components[0], Operation), "Expected Operation Component"
+    assert isinstance(result.statements[0], Operation), "Expected Operation Component"
     assert (
-        node.components[0].name == result.components[0].name
+        node.components[0].name == result.statements[0].name
     ), "Expected Equivalent IDs"
 
     assert (
-        len(node.components[0].args) == len(result.components[0].args) == 1
+        len(node.components[0].args) == len(result.statements[0].args) == 1
     ), "Expected 1 Argument"
 
-    assert isinstance(result.components[1], Procedure), "Expected Procedure Component"
+    assert isinstance(result.statements[1], Procedure), "Expected Procedure Component"
 
 
 # FROM SOURCE CODE (Limited)

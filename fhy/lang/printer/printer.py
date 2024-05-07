@@ -49,7 +49,7 @@ class ASTPrettyPrinter(BasePass):
         return "\n".join(f"{self._spacer}{line}" for line in statements)
 
     def visit_Module(self, module: ast.Module) -> str:
-        return "\n".join(self.visit(component) for component in module.components)
+        return "\n".join(self.visit(component) for component in module.statements)
 
     def visit_Operation(self, operation: ast.Operation) -> str:
         self._increment_indent()

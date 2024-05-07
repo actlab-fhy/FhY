@@ -23,30 +23,28 @@ from .base import ASTNode
 
 @dataclass(frozen=True, kw_only=True)
 class Module(ASTNode):
-    """FhY Module ASTNode, containing references to available components.
+    """FhY Module ASTNode, containing references to available statements.
 
     Args:
-        components (List[Component]):
+        statements (List[Statement]):
 
     """
 
     name: Identifier = field(default=Identifier("module"))
-    components: List["Component"] = field(default_factory=list)
+    statements: List["Statement"] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["components"])
+        attrs.extend(["statements"])
         return attrs
 
 
-class Component(ASTNode, ABC):
-    """Abstract FhY Component ASTNode."""
-
-    ...
+class Statement(ASTNode, ABC):
+    """Abstract Statement ASTNode."""
 
 
 @dataclass(frozen=True, kw_only=True)
-class Function(Component, ABC):
+class Function(Statement, ABC):
     """Abstract FhY Function Component ASTNode."""
 
     name: Identifier
@@ -57,13 +55,5 @@ class Function(Component, ABC):
         return attrs
 
 
-class Statement(ASTNode, ABC):
-    """Abstract Statement ASTNode."""
-
-    ...
-
-
 class Expression(ASTNode, IRExpression, ABC):
     """Abstract Expression ASTNode + ir.Expression Node."""
-
-    ...

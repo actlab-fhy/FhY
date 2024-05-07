@@ -14,7 +14,6 @@ from fhy import ir
 from fhy.utils.alias import ASTObject
 
 from ..span import Source, Span
-from .component import Argument, Import, Operation, Procedure
 from .core import Module
 from .expression import (
     ArrayAccessExpression,
@@ -30,6 +29,7 @@ from .expression import (
 )
 from .qualified_type import QualifiedType
 from .statement import (
+    Argument, Import, Operation, Procedure,
     DeclarationStatement,
     ExpressionStatement,
     ForAllStatement,
@@ -108,7 +108,7 @@ class Visitor(BasePass):
 
     def visit_Module(self, node: Module) -> None:
         self.visit(node.name)
-        self.visit_sequence(node.components)
+        self.visit_sequence(node.statements)
 
     def visit_Import(self, node: Import) -> None:
         self.visit(node.name)

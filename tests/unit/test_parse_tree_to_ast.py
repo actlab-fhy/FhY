@@ -73,16 +73,16 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
         return False
 
 
-def _assert_is_expected_module(node: ast.ASTNode, expected_num_components: int) -> None:
+def _assert_is_expected_module(node: ast.ASTNode, expected_num_statements: int) -> None:
     assert isinstance(node, ast.Module), wrong_node_babe(ast.Module, node)
 
-    assert all(isinstance(component, ast.Component) for component in node.components), (
-        "Expected all components to be `Component` AST nodes, got "
-        + f"`{list_to_types(node.components)}`"
+    assert all(isinstance(statement, ast.Statement) for statement in node.statements), (
+        "Expected all statementss to be `Statement` AST nodes, got "
+        + f"`{list_to_types(node.statements)}`"
     )
     assert (
-        len(node.components) == expected_num_components
-    ), f"Expected module to have {expected_num_components} components"
+        len(node.statements) == expected_num_statements
+    ), f"Expected module to have {expected_num_statements} statements"
 
 
 def _assert_is_expected_import(node: ast.ASTNode, expected_import: str) -> None:
@@ -356,7 +356,7 @@ def test_empty_file(construct_ast):
     _ast = construct_ast(source_file_content)
 
     assert isinstance(_ast, ast.Module), wrong_node_babe(ast.Module, _ast)
-    assert len(_ast.components) == 0, "Expected empty module"
+    assert len(_ast.statements) == 0, "Expected empty module"
 
 
 def test_empty_procedure(construct_ast):
@@ -366,7 +366,7 @@ def test_empty_procedure(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "foo", 0, 0)
 
 
@@ -377,7 +377,7 @@ def test_empty_procedure_with_qualified_argument(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "foo", 1, 0)
 
     arg = procedure.args[0]
@@ -398,7 +398,7 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "foo", 1, 0)
 
     arg = procedure.args[0]
@@ -424,7 +424,7 @@ def test_empty_operation(construct_ast):
     _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 0, 0)
 
 
@@ -433,7 +433,7 @@ def test_empty_operation_return_type(construct_ast):
     source_file_content = "op foo(input int32[n, m] x) -> output int32[n, m] {}"
     _ast = construct_ast(source_file_content)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 1, 0)
 
     arg = operation.args[0]
@@ -472,7 +472,7 @@ def test_declaration_statement(construct_ast):
     source_file_content = "proc foo(){temp int32 i;}"
     _ast = construct_ast(source_file_content)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "foo", 0, 1)
 
     statement = procedure.body[0]
@@ -492,7 +492,7 @@ def test_selection_statement(construct_ast):
     _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "foo", 0, 1)
 
     statement = procedure.body[0]
@@ -560,7 +560,7 @@ def test_for_all_statement(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "foo", 0, 1)
 
     statement = procedure.body[0]
@@ -609,7 +609,7 @@ def test_return_statement(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 0, 2)
 
     statement = operation.body[1]
@@ -625,7 +625,7 @@ def test_unary_expressions(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 0, 1)
 
     statement = operation.body[0]
@@ -659,7 +659,7 @@ def test_binary_expressions(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 0, 1)
 
     statement = operation.body[0]
@@ -702,7 +702,7 @@ def test_ternary_expressions(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 0, 1)
 
     statement = operation.body[0]
@@ -769,7 +769,7 @@ def test_index_type(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "bar", 0, 1)
 
     statement = procedure.body[0]
@@ -797,7 +797,7 @@ def test_function_expression(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "bar", 0, 1)
 
     statement = procedure.body[0]
@@ -846,7 +846,7 @@ def test_tensor_access_expressions(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    procedure = _ast.components[0]
+    procedure = _ast.statements[0]
     _assert_is_expected_procedure(procedure, "bar", 0, 1)
 
     statement = procedure.body[0]
@@ -873,7 +873,7 @@ def test_tuple_type(construct_ast):
     _ast = construct_ast(source_file_content)
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "bar", 0, 1)
 
     statement = operation.body[0]
@@ -904,7 +904,7 @@ def test_int_literal(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "bar", 0, 7)
 
     for i, value in enumerate([1, 5, 1, 1, 255, 1, 7]):
@@ -927,7 +927,7 @@ def test_float_literal(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.components[0]
+    operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "bar", 0, 5)
 
     for i, value in enumerate([1.0, 0.2, 1.0, 100.0, 1200.0]):
@@ -950,7 +950,7 @@ def test_absolute_import(construct_ast):
 
     _assert_is_expected_module(_ast, 1)
 
-    import_component = _ast.components[0]
+    import_component = _ast.statements[0]
     _assert_is_expected_import(import_component, "foo.bar")
 
 
@@ -960,7 +960,7 @@ def test_line_comment(construct_ast):
     print("Source:", source)
     _ast = construct_ast(source)
     assert isinstance(_ast, ast.Module), "Expected to construct a Module Node."
-    assert len(_ast.components) == 0, "Expected Module to be empty."
+    assert len(_ast.statements) == 0, "Expected Module to be empty."
 
 
 def test_procedure_with_line_comment(construct_ast):
@@ -969,8 +969,8 @@ def test_procedure_with_line_comment(construct_ast):
     print("Source:", source)
     _ast = construct_ast(source)
     assert isinstance(_ast, ast.Module), "Expected to construct a Module Node."
-    assert len(_ast.components) == 1, "Expected Module to contain 1 component."
-    proc = _ast.components[0]
+    assert len(_ast.statements) == 1, "Expected Module to contain 1 component."
+    proc = _ast.statements[0]
     _assert_is_expected_procedure(proc, "foo", 1, 0)
 
     # Procedure should be on second line
@@ -1018,7 +1018,7 @@ def test_invalid_function_keyword(construct_ast):
     with pytest.raises(error.FhYSyntaxError) as info:
         _ast = construct_ast(source)
     print(_ast.__class__)
-    print(_ast.components)
+    print(_ast.statements)
 
 
 @pytest.mark.skip(reason="Bug. Expected Syntax Error, but Creates Empty Module")
@@ -1028,4 +1028,4 @@ def test_gibberish(construct_ast):
     with pytest.raises(error.FhYSyntaxError) as info:
         _ast = construct_ast(source)
     print(_ast.__class__)
-    print(_ast.components)
+    print(_ast.statements)

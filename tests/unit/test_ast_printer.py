@@ -24,7 +24,7 @@ def test_empty_operation():
     """Test Pretty Printing a Module AST with an Operation Body component."""
     operation_name = Identifier("foo")
     ast = Module(
-        components=[
+        statements=[
             Operation(
                 name=operation_name,
                 args=[],
