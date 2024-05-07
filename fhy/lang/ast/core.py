@@ -1,13 +1,12 @@
 """Defines Core Abstract ASTNodes of FhY Language Grammar Constructs.
 
 Core Nodes:
-    Root: Project Root Node
     Module: Module Node
 
 Core Abstract Nodes:
-    Component: Base Components
     Function: Base Function Node
     Statement: Base Statement Node
+    Expression: Base AST Expression Node
 
 """
 

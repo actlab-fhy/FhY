@@ -24,16 +24,9 @@ def test_base_node_keyname(name):
         (ast.ASTNode, "ASTNode"),
         # Core
         (ast.Module, "Module"),
-        (ast.Component, "Component"),
         (ast.Function, "Function"),
         (ast.Statement, "Statement"),
         (ast.Expression, "Expression"),
-        # Components
-        (ast.Import, "Import"),
-        (ast.Argument, "Argument"),
-        (ast.Procedure, "Procedure"),
-        (ast.Operation, "Operation"),
-        (ast.Native, "Native"),
         # Expression
         (ast.UnaryExpression, "UnaryExpression"),
         (ast.BinaryExpression, "BinaryExpression"),
@@ -48,6 +41,11 @@ def test_base_node_keyname(name):
         (ast.FloatLiteral, "FloatLiteral"),
         (ast.ComplexLiteral, "ComplexLiteral"),
         # Statement
+        (ast.Import, "Import"),
+        (ast.Argument, "Argument"),
+        (ast.Procedure, "Procedure"),
+        (ast.Operation, "Operation"),
+        (ast.Native, "Native"),
         (ast.DeclarationStatement, "DeclarationStatement"),
         (ast.ExpressionStatement, "ExpressionStatement"),
         (ast.ForAllStatement, "ForAllStatement"),
@@ -68,17 +66,10 @@ def test_keynames(node: Type[ast.ASTNode], expected: str):
     [
         (ast.ASTNode, True, ["span"]),
         # Core
-        (ast.Module, False, ["span", "components"]),
-        (ast.Component, True, ["span"]),
+        (ast.Module, False, ["span", "statements"]),
         (ast.Function, True, ["span", "name"]),
         (ast.Statement, True, ["span"]),
         (ast.Expression, True, ["span"]),
-        # Components
-        (ast.Import, False, ["span", "name"]),
-        (ast.Argument, False, ["span", "name", "qualified_type"]),
-        (ast.Procedure, False, ["span", "name", "args", "body"]),
-        (ast.Operation, False, ["span", "name", "args", "body", "return_type"]),
-        (ast.Native, False, ["span", "name", "args"]),
         # Expression
         (ast.UnaryExpression, False, ["span", "operation", "expression"]),
         (ast.BinaryExpression, False, ["span", "operation", "left", "right"]),
@@ -101,6 +92,11 @@ def test_keynames(node: Type[ast.ASTNode], expected: str):
         (ast.FloatLiteral, False, ["span", "value"]),
         (ast.ComplexLiteral, False, ["span", "value"]),
         # Statement
+        (ast.Import, False, ["span", "name"]),
+        (ast.Argument, False, ["span", "name", "qualified_type"]),
+        (ast.Procedure, False, ["span", "name", "args", "body"]),
+        (ast.Operation, False, ["span", "name", "args", "body", "return_type"]),
+        (ast.Native, False, ["span", "name", "args"]),
         (
             ast.DeclarationStatement,
             False,
