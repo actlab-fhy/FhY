@@ -101,7 +101,6 @@ class Native(Function):
         return attrs
 
 
-
 @dataclass(frozen=True, kw_only=True)
 class DeclarationStatement(Statement):
     """Declaration Statements Are Declaration or Assignment to a Variable Name.

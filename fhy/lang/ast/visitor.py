@@ -29,10 +29,13 @@ from .expression import (
 )
 from .qualified_type import QualifiedType
 from .statement import (
-    Argument, Import, Operation, Procedure,
+    Argument,
     DeclarationStatement,
     ExpressionStatement,
     ForAllStatement,
+    Import,
+    Operation,
+    Procedure,
     ReturnStatement,
     SelectionStatement,
 )

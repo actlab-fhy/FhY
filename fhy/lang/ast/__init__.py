@@ -30,10 +30,14 @@ from .expression import (
 )
 from .qualified_type import QualifiedType
 from .statement import (
-    Argument, Import, Native, Operation, Procedure,
+    Argument,
     DeclarationStatement,
     ExpressionStatement,
     ForAllStatement,
+    Import,
+    Native,
+    Operation,
+    Procedure,
     ReturnStatement,
     SelectionStatement,
 )

@@ -95,7 +95,9 @@ class ParseTreeConverter(FhYVisitor):
     # =====================
     # STATEMENT VISITORS
     # =====================
-    def visitImport_statement(self, ctx:FhYParser.Import_statementContext) -> ast.Import:
+    def visitImport_statement(
+        self, ctx: FhYParser.Import_statementContext
+    ) -> ast.Import:
         identifier_expression_ctx: FhYParser.Identifier_expressionContext = (
             ctx.identifier_expression()
         )
@@ -238,7 +240,7 @@ class ParseTreeConverter(FhYVisitor):
     ) -> List[ast.Statement]:
         return self.visitScope(ctx.scope())
 
-    def visitScope(self, ctx:FhYParser.ScopeContext) -> List[ast.Statement]:
+    def visitScope(self, ctx: FhYParser.ScopeContext) -> List[ast.Statement]:
         self._open_scope()
         statements: List[ast.Statement] = []
         if ctx.statement() is not None:
