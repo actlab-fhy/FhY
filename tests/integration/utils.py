@@ -17,6 +17,8 @@ def get_diff(a, b):
 
 def access_cli(filepath: str, *args) -> str:
     """Access FhY Entry Point using subprocess and return the decoded stdout"""
-    result = subprocess.run(["fhy", filepath, *args], stdout=subprocess.PIPE)
+    result = subprocess.run(
+        ["fhy", filepath, *args], stdout=subprocess.PIPE, check=False
+    )
     output = result.stdout.decode()
     return output

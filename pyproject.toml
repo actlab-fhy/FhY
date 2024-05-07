@@ -17,7 +17,7 @@ maintainers = [
 requires-python = ">=3.8"
 keywords = ["Compiler", "Cross-Compiler", "ML", "Accelerator"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+   "Development Status :: 1 - Planning",
    "Programming Language :: Python :: 3",
 ]
 dynamic = ["version", "readme", "dependencies"]
@@ -78,6 +78,8 @@ select = [
    "I",  # Isort
    "D",  # PyDocstyle
    "W",  # Warning
+   "PL",  # Pylint
+   # "C",  # Convention
 ]
 ignore = [
    "D102",  # undocumented-public-method (D102)
@@ -85,6 +87,8 @@ ignore = [
    "D107",  # undocumented-public-init (D107)
    "D203",  # one-blank-line-before-class (D203)
    "D213",  # multi-line-summary-second-line (D213)
+   "PLR0913",  # too-many-arguments (PLR0913)
+   "C408",  # unnecessary-collection-call (C408)
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -94,6 +98,11 @@ convention = "google"  # Accepts: "google" | "numpy" | "pep257"
 "__init__.py" = [
    "E402",  # Import Statement not at Top of File
    "F401",  # Unused Imports
+]
+"tests/*.py" = [
+   "PLR2004",  # magic-value-comparison (PLR2004)
+   "F841",  # unused-variable (F841)
+   "D",  # PyDocstyle
 ]
 
 [tool.ruff.format]

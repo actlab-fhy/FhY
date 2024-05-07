@@ -9,17 +9,66 @@ file.
 from typing import Callable
 
 import pytest
-from antlr4 import BailErrorStrategy, CommonTokenStream, InputStream, ParserRuleContext
+from antlr4 import CommonTokenStream, InputStream, ParserRuleContext
 from antlr4.error.ErrorListener import ErrorListener
+from antlr4.error.ErrorStrategy import ParseCancellationException
 
 from fhy.lang.ast import ASTNode
 from fhy.lang.ast_builder.converter.from_parse_tree import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
+from fhy.utils import error as fhy_error
+from fhy.utils.logger import get_logger
+
+log = get_logger(__name__)
 
 
 class ThrowingErrorListener(ErrorListener):
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        raise SyntaxError(f"Syntax error at {line}:{column} - {msg}") from e
+        log.info((recognizer, offendingSymbol, line, column, msg, e))
+
+        raise fhy_error.FhYSyntaxError(
+            f"Syntax error at {line}:{column} - {msg}"
+        ) from e
+
+    def reportAmbiguity(
+        self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
+    ):
+        log.info(
+            (
+                recognizer,
+                dfa,
+                startIndex,
+                stopIndex,
+                exact,
+                ambigAlts,
+                configs,
+            )
+        )
+        message = f"Ambiguity error at {startIndex}:{stopIndex}"
+        raise ParseCancellationException(f"reportAmbiguity: {message}")
+
+    def reportAttemptingFullContext(
+        self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
+    ):
+        log.info(
+            (
+                recognizer,
+                dfa,
+                startIndex,
+                stopIndex,
+                conflictingAlts,
+                configs,
+            )
+        )
+        message = f"FullContext error at {startIndex}:{stopIndex}"
+        raise ParseCancellationException(f"reportAttemptingFullContext: {message}")
+
+    def reportContextSensitivity(
+        self, recognizer, dfa, startIndex, stopIndex, prediction, configs
+    ):
+        log.info((recognizer, dfa, startIndex, stopIndex, prediction, configs))
+        message = f"ContextSensitivity error at {startIndex}:{stopIndex}"
+        raise ParseCancellationException(f"reportContextSensitivity: {message}")
 
 
 @pytest.fixture(scope="module")
@@ -41,7 +90,7 @@ def parser(lexer) -> Callable[[str], FhYParser]:
         lexer_instance = lexer(input_str)
         token_stream = CommonTokenStream(lexer_instance)
         parser = FhYParser(token_stream)
-        parser._errHandler = BailErrorStrategy()
+        # parser._errHandler = BailErrorStrategy()
         parser.removeErrorListeners()
         parser.addErrorListener(ThrowingErrorListener())
 
