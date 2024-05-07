@@ -72,13 +72,13 @@ class ASTtoJSON(visitor.BasePass):
     """Convert an AST Node into a json object."""
 
     def visit_Module(self, node: ast.Module) -> AlmostJson:
-        components: List[AlmostJson] = self.visit_sequence(node.statements)
+        statements: List[AlmostJson] = self.visit_sequence(node.statements)
 
         obj = AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(
                 span=self.visit_Span(node.span),
-                components=components,
+                statements=statements,
             ),
         )
 
@@ -453,9 +453,9 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span = self.visit_Span(values.get("span"))
-        components: List[ast.Component] = self.visit_sequence(values.get("components"))
+        statements: List[ast.Statement] = self.visit_sequence(values.get("statements"))
 
-        return ast.Module(span=span, statements=components)
+        return ast.Module(span=span, statements=statements)
 
     def visit_Operation(self, node: Optional[AlmostJson]) -> ast.Operation:
         if node is None:

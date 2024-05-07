@@ -563,7 +563,7 @@ def module(span, operation, procedure) -> Tuple[dict, Module]:
     proc_obj, proc_cls = procedure
 
     obj = dict(
-        cls_name="Module", attributes=dict(span=span_obj, components=[op_obj, proc_obj])
+        cls_name="Module", attributes=dict(span=span_obj, statements=[op_obj, proc_obj])
     )
 
     module = Module(span=span_cls, statements=[op_cls, proc_cls])
@@ -707,19 +707,19 @@ def test_load_json_to_ast(module):
     assert node.span == result.span, "Expected Identical Module Spans"
 
     # NOTE: This will not work because we cannot have type class equality
-    #       That is, our node.components != result.components
+    #       That is, our node.statements != result.components
     # assert node == result, "Expected Identical Module Nodes."
 
     assert (
-        len(node.components) == len(result.statements) == 2
+        len(node.statements) == len(result.statements) == 2
     ), "Expected single Component"
     assert isinstance(result.statements[0], Operation), "Expected Operation Component"
     assert (
-        node.components[0].name == result.statements[0].name
+        node.statements[0].name == result.statements[0].name
     ), "Expected Equivalent IDs"
 
     assert (
-        len(node.components[0].args) == len(result.statements[0].args) == 1
+        len(node.statements[0].args) == len(result.statements[0].args) == 1
     ), "Expected 1 Argument"
 
     assert isinstance(result.statements[1], Procedure), "Expected Procedure Component"
@@ -738,7 +738,7 @@ def test_empty_module(construct_ast):
     expected = dict(
         cls_name="Module",
         attributes=dict(
-            components=[],
+            statements=[],
             span=dict(
                 cls_name="Span",
                 attributes=dict(
