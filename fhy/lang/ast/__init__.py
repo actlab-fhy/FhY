@@ -41,4 +41,5 @@ from .statement import (
     ReturnStatement,
     SelectionStatement,
 )
-from .visitor import BasePass, Listener, Visitor
+
+# from .visitor import BasePass, Listener, Visitor  # NOTE: Avoid Cyclic Import

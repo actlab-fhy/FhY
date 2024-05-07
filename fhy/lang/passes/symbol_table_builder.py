@@ -12,6 +12,7 @@ from typing import Any, Set
 
 from fhy import ir
 from fhy.lang import ast
+from fhy.lang.ast.visitor import Visitor
 from fhy.utils import Stack
 from fhy.utils.error import FhYSemanticsError
 
@@ -20,7 +21,7 @@ from .identifier_collector import collect_identifiers
 
 # TODO: when visitor class automatically visits children, remove the
 #       super().visit_xxx(node) call
-class SymbolTableBuilder(ast.Visitor):
+class SymbolTableBuilder(Visitor):
     """Builds a symbol table for the given AST module node.
 
     The class will throw an exception if a variable is used before being declared or if

@@ -11,11 +11,11 @@ Classes:
 from typing import Set
 
 from fhy import ir
-from fhy.lang import ast
+from fhy.lang.ast.visitor import Visitor
 from fhy.utils.alias import ASTObject
 
 
-class IdentifierCollector(ast.Visitor):
+class IdentifierCollector(Visitor):
     """Collect all identifiers in the AST for any given node."""
 
     _identifiers: Set[ir.Identifier]
