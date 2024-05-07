@@ -360,11 +360,9 @@ def _assert_is_expected_return_statement(
 # ====
 def test_empty_file(construct_ast):
     """Test that an empty file is converted correctly."""
-    source_file_content = ""
-    _ast = construct_ast(source_file_content)
-
-    assert isinstance(_ast, ast.Module), wrong_node_babe(ast.Module, _ast)
-    assert len(_ast.statements) == 0, "Expected empty module"
+    source: str = ""
+    _ast = construct_ast(source)
+    _assert_is_expected_module(_ast, 0)
 
 
 # =========
@@ -372,9 +370,8 @@ def test_empty_file(construct_ast):
 # =========
 def test_empty_procedure(construct_ast):
     """Test that an empty procedure is converted correctly."""
-    source_file_content = "proc foo(){}"
-    _ast = construct_ast(source_file_content)
-
+    source: str = "proc foo(){}"
+    _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
     procedure = _ast.statements[0]
@@ -383,9 +380,8 @@ def test_empty_procedure(construct_ast):
 
 def test_empty_procedure_with_qualified_argument(construct_ast):
     """Test that an empty procedure with a single qualified argument."""
-    source_file_content = "proc foo(input int32 x){}"
-    _ast = construct_ast(source_file_content)
-
+    source: str = "proc foo(input int32 x){}"
+    _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
     procedure = _ast.statements[0]
@@ -404,9 +400,8 @@ def test_empty_procedure_with_qualified_argument(construct_ast):
 
 def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
     """Test an Empty procedure containing Arguments with Shape."""
-    source_file_content = "proc foo(input int32[m, n] x){}"
-    _ast = construct_ast(source_file_content)
-
+    source: str = "proc foo(input int32[m, n] x){}"
+    _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
     procedure = _ast.statements[0]
@@ -423,16 +418,16 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
     _assert_is_expected_shape(
         arg_type_shape,
         [
-            ast.IdentifierExpression(span=None, identifier=ir.Identifier("m")),
-            ast.IdentifierExpression(span=None, identifier=ir.Identifier("n")),
+            ast.IdentifierExpression(identifier=ir.Identifier("m")),
+            ast.IdentifierExpression(identifier=ir.Identifier("n")),
         ],
     )
 
 
 def test_empty_operation(construct_ast):
     """Test that an Empty Operation is Converted Correctly."""
-    source_file_content = "op foo() -> output int32 {}"
-    _ast = construct_ast(source_file_content)
+    source: str = "op foo() -> output int32 {}"
+    _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
     operation = _ast.statements[0]
@@ -441,8 +436,9 @@ def test_empty_operation(construct_ast):
 
 def test_empty_operation_return_type(construct_ast):
     """Test that an Empty Operation with a Return Type is Converted Correctly."""
-    source_file_content = "op foo(input int32[n, m] x) -> output int32[n, m] {}"
-    _ast = construct_ast(source_file_content)
+    source: str = "op foo(input int32[n, m] x) -> output int32[n, m] {}"
+    _ast = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
 
     operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 1, 0)
@@ -459,8 +455,8 @@ def test_empty_operation_return_type(construct_ast):
         arg_base_type,
         ir.PrimitiveDataType.INT32,
         [
-            ast.IdentifierExpression(span=None, identifier=ir.Identifier("n")),
-            ast.IdentifierExpression(span=None, identifier=ir.Identifier("m")),
+            ast.IdentifierExpression(identifier=ir.Identifier("n")),
+            ast.IdentifierExpression(identifier=ir.Identifier("m")),
         ],
     )
 
@@ -472,8 +468,8 @@ def test_empty_operation_return_type(construct_ast):
     _assert_is_expected_shape(
         return_type_shape,
         [
-            ast.IdentifierExpression(span=None, identifier=ir.Identifier("n")),
-            ast.IdentifierExpression(span=None, identifier=ir.Identifier("m")),
+            ast.IdentifierExpression(identifier=ir.Identifier("n")),
+            ast.IdentifierExpression(identifier=ir.Identifier("m")),
         ],
     )
 
@@ -483,8 +479,8 @@ def test_empty_operation_return_type(construct_ast):
 # ==========
 def test_absolute_import(construct_ast):
     """Test Absolute Import Statement."""
-    source_file_content = "import foo.bar;"
-    _ast = construct_ast(source_file_content)
+    source: str = "import foo.bar;"
+    _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
     statement = _ast.statements[0]
@@ -530,6 +526,7 @@ def test_for_all_statement(construct_ast):
     source: str = "forall (i) {}"
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
+
     statement = _ast.statements[0]
     assert isinstance(statement, ast.ForAllStatement), wrong_node_babe(
         ast.ForAllStatement, statement
@@ -551,9 +548,10 @@ def test_return_statement(construct_ast):
     source: str = "return i;"  # Semantically Incorrect.
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
+
     statement = _ast.statements[0]
     _assert_is_expected_return_statement(
-        statement, ast.IdentifierExpression(span=None, identifier=ir.Identifier("i"))
+        statement, ast.IdentifierExpression(identifier=ir.Identifier("i"))
     )
 
 
@@ -580,9 +578,7 @@ def test_unary_expressions(construct_ast):
         expression.operation == negative
     ), f"Expected `{negative}` operation. Received: `{expression.operation}`"
 
-    is_primitive_expression_equal(
-        expression.expression, ast.IntLiteral(span=None, value=5)
-    )
+    is_primitive_expression_equal(expression.expression, ast.IntLiteral(value=5))
 
 
 def test_binary_expressions(construct_ast):
@@ -602,8 +598,8 @@ def test_binary_expressions(construct_ast):
         expression.operation == mult
     ), f"Expected `{mult}` operation. Received: `{expression.operation}`"
 
-    is_primitive_expression_equal(expression.left, ast.IntLiteral(span=None, value=5))
-    is_primitive_expression_equal(expression.right, ast.IntLiteral(span=None, value=6))
+    is_primitive_expression_equal(expression.left, ast.IntLiteral(value=5))
+    is_primitive_expression_equal(expression.right, ast.IntLiteral(value=6))
 
 
 def test_ternary_expressions(construct_ast):
@@ -625,8 +621,8 @@ def test_ternary_expressions(construct_ast):
     assert isinstance(expression.condition, ast.BinaryExpression), wrong_node_babe(
         ast.BinaryExpression, expression.condition
     )
-    is_primitive_expression_equal(expression.true, ast.IntLiteral(span=None, value=7))
-    is_primitive_expression_equal(expression.false, ast.IntLiteral(span=None, value=8))
+    is_primitive_expression_equal(expression.true, ast.IntLiteral(value=7))
+    is_primitive_expression_equal(expression.false, ast.IntLiteral(value=8))
 
 
 @pytest.mark.skip(
@@ -667,15 +663,10 @@ def test_tensor_access_expression(construct_ast):
     _assert_is_expected_expression_statement(
         statement,
         ast.ArrayAccessExpression(
-            span=None,
-            array_expression=ast.IdentifierExpression(
-                span=None, identifier=ir.Identifier("A")
-            ),
-            indices=[
-                ast.IdentifierExpression(span=None, identifier=ir.Identifier("i"))
-            ],
+            array_expression=ast.IdentifierExpression(identifier=ir.Identifier("A")),
+            indices=[ast.IdentifierExpression(identifier=ir.Identifier("i"))],
         ),
-        ast.IntLiteral(span=None, value=1),
+        ast.IntLiteral(value=1),
     )
 
 
@@ -697,14 +688,14 @@ def test_index_type(construct_ast):
     )
     _assert_is_expected_index_type(
         statement.variable_type.base_type,
-        ast.IntLiteral(span=None, value=1),
-        ast.IdentifierExpression(span=None, identifier=ir.Identifier("m")),
+        ast.IntLiteral(value=1),
+        ast.IdentifierExpression(identifier=ir.Identifier("m")),
         None,
     )
 
 
 @pytest.mark.skip(
-    reason="Ambiguous FhY Grammar. Tuples and Function Calls look Identical."
+    reason="Ambiguous FhY Grammar. Tuples Types and Function Calls look Identical."
 )
 def test_tuple_type(construct_ast):
     """Test construction of Tuple Type."""
@@ -718,38 +709,28 @@ def test_tuple_type(construct_ast):
     )
     is_primitive_expression_equal(statement.variable_name, ir.Identifier("i"))
     _assert_is_expected_qualified_type(
-        statement.variable_type, ir.TypeQualifier.TEMP, ir.TupleType
+        statement.variable_type, ir.TypeQualifier.OUTPUT, ir.TupleType
     )
 
+    _tuple: ir.TupleType = statement.variable_type.base_type
+    assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
+    t1, t2 = _tuple._types
 
-# def test_tuple_type(construct_ast):
-#     """Test Tuple Type Declaration Statement."""
-#     source_file_content = (
-#         "op bar() -> output int32[m,n] {output (int32[m, n], int32) i;}"
-#     )
-#     _ast = construct_ast(source_file_content)
-#     _assert_is_expected_module(_ast, 1)
-
-#     operation = _ast.statements[0]
-#     _assert_is_expected_operation(operation, "bar", 0, 1)
-
-#     statement = operation.body[0]
-#     assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
-#         ast.DeclarationStatement, statement
-#     )
-#     assert statement.variable_name.name_hint == "i", "Expected Variable Name `i`"
-
-#     assert isinstance(statement.variable_type, ast.QualifiedType), wrong_node_babe(
-#         ast.QualifiedType, statement.variable_type
-#     )
-
-#     _tuple = statement.variable_type.base_type
-#     assert isinstance(_tuple, ir.TupleType), wrong_node_babe(ir.TupleType, _tuple)
-
-#     assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
-#     t1, t2 = _tuple._types
-#     assert isinstance(t1, ir.NumericalType), wrong_node_babe(ir.NumericalType, t1)
-#     assert isinstance(t2, ir.NumericalType), wrong_node_babe(ir.NumericalType, t2)
+    # assert isinstance(t1, ir.NumericalType), wrong_node_babe(ir.NumericalType, t1)
+    # assert isinstance(t2, ir.NumericalType), wrong_node_babe(ir.NumericalType, t2)
+    is_primitive_expression_equal(
+        t1,
+        ir.NumericalType(
+            ir.DataType(ir.PrimitiveDataType.INT32),
+            [
+                ir.Identifier("m"),
+                ir.Identifier("n"),
+            ],
+        ),
+    )
+    is_primitive_expression_equal(
+        t2, ir.NumericalType(ir.DataType(ir.PrimitiveDataType.INT32), [])
+    )
 
 
 @pytest.mark.parametrize(
@@ -764,7 +745,7 @@ def test_tuple_type(construct_ast):
         ("0O7;", 1),
     ],
 )
-def test_int_literal(construct_ast, source, value):
+def test_int_literal(construct_ast, source: str, value: int):
     """Test IntLiteral Construction of different Format Representations."""
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
@@ -780,7 +761,7 @@ def test_int_literal(construct_ast, source, value):
     "source, value",
     [("1.0;", 1.0), (".2;", 0.2), (" 1.;", 1.0), (" 1e2;", 100.0), ("1.2e3;", 1200.0)],
 )
-def test_float_literal(construct_ast, source, value):
+def test_float_literal(construct_ast, source: str, value: float):
     """Test FloatLiteral Construction of different Format Representations."""
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
@@ -797,14 +778,14 @@ def test_float_literal(construct_ast, source, value):
 # =============
 def test_line_comment(construct_ast):
     """Test that comments are skipped, creating an empty Module."""
-    source = "// this is a comment!"
+    source: str = "// this is a comment!"
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 0)
 
 
 def test_empty_procedure_with_line_comment(construct_ast):
     """Test procedure is found and constructed with line comments in the mix."""
-    source = "// this is a comment!\nproc foo(input int32[m,n] A) {}"
+    source: str = "// this is a comment!\nproc foo(input int32[m,n] A) {}"
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -825,14 +806,14 @@ def test_empty_procedure_with_line_comment(construct_ast):
 # ===============
 def test_syntax_error_no_argument_name(construct_ast):
     """Raise FhYSyntaxError when an function Argument is defined without a Name."""
-    source_file_content = "op foo(input int32[m,n]) -> output int32 {}"
+    source: str = "op foo(input int32[m,n]) -> output int32 {}"
     with pytest.raises(error.FhYSyntaxError):
-        _ast = construct_ast(source_file_content)
+        _ast = construct_ast(source)
 
 
 def test_syntax_error_no_operation_name(construct_ast):
     """Raise Syntax Error when an Operation is defined without a Name."""
-    source = "op (input int32[m,n] A) -> output int32 {}"
+    source: str = "op (input int32[m,n] A) -> output int32 {}"
     # NOTE: This raises the Antlr Syntax Error, not from our visitor class.
     #       This means we do not gain coverage in parse tree converter for this case.
     with pytest.raises(error.FhYSyntaxError):
@@ -841,20 +822,20 @@ def test_syntax_error_no_operation_name(construct_ast):
 
 def test_syntax_error_no_operation_return_type(construct_ast):
     """Raise FhYSyntaxError when an Operation is defined without a return type."""
-    source = "op func(input int32[m,n] A) {}"
+    source: str = "op func(input int32[m,n] A) {}"
     with pytest.raises(error.FhYSyntaxError):
         _ast = construct_ast(source)
 
 
 def test_invalid_function_keyword(construct_ast):
     """Raise FhySyntaxError when Function is Declared with Invalid Keyword."""
-    source = "def foo(input int32[m,n] A) -> output int32[m,n] {}"
+    source: str = "def foo(input int32[m,n] A) -> output int32[m,n] {}"
     with pytest.raises(error.FhYSyntaxError):
         _ast = construct_ast(source)
 
 
 def test_gibberish(construct_ast):
     """Gibberish (unrecognized text according to fhy grammar) Raises FhySyntaxError."""
-    source = "lorem ipsum dolor sit amet;"
+    source: str = "lorem ipsum dolor sit amet;"
     with pytest.raises(error.FhYSyntaxError):
         _ast = construct_ast(source)
