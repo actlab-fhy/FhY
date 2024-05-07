@@ -46,7 +46,7 @@ def test_builder_frame_attributes(register_node):
     builder = ASTNodeBuilderFrame(node_type)
 
     # Attributes of Node should Exist in Builder
-    for j in ("span", "components"):
+    for j in ("span", "statements"):
         assert hasattr(builder, j), f"Expected Attribute `{j}`"
 
     assert not hasattr(
@@ -70,7 +70,7 @@ def test_builder_frame_initial_attribute_values(register_node):
     node_type: Type[Module] = register_node(Module)
     builder = ASTNodeBuilderFrame(node_type)
 
-    assert isinstance(builder.components, list), "Expected components to be a list."
+    assert isinstance(builder.statements, list), "Expected statements to be a list."
     assert isinstance(builder.span, Span), "Expected span to be a Span"
 
 
@@ -79,8 +79,8 @@ def test_builder_frame_update(register_node):
     node_type: Type[Module] = register_node(Module)
     builder = ASTNodeBuilderFrame(node_type)
 
-    builder.update(components=["test"])
-    assert builder.components == ["test"], "Expected components to be updated"
+    builder.update(statements=["test"])
+    assert builder.statements == ["test"], "Expected statements to be updated"
 
 
 def test_create_builder_frame(register_node):
