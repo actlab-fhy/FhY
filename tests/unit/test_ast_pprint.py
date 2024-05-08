@@ -8,14 +8,14 @@ from fhy.ir import (
     TypeQualifier,
 )
 from fhy.lang.ast import Module, Operation, QualifiedType
-from fhy.lang.printer import pprint_ast
+from fhy.lang.pprint import pformat_ast
 
 
 def test_empty_program():
     """Test Pretty Printing an Empty Program Module AST."""
     ast = Module()
 
-    output: str = pprint_ast(ast)
+    output: str = pformat_ast(ast)
 
     assert output == ""
 
@@ -37,6 +37,6 @@ def test_empty_operation():
         ]
     )
 
-    output: str = pprint_ast(ast, is_identifier_id_printed=True)
+    output: str = pformat_ast(ast, is_identifier_id_printed=True)
 
     assert output == f"op (foo::{operation_name._id})() -> output int32 " + "{\n\n}"

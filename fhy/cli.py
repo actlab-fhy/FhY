@@ -9,8 +9,8 @@ from typing import List, Optional
 
 from fhy.lang.ast import Module
 from fhy.lang.ast_builder import from_fhy_source
-from fhy.lang.printer import pprint_ast
-from fhy.lang.printer.to_json import dump
+from fhy.lang.pprint import pformat_ast
+from fhy.lang.serialization.to_json import dump
 from fhy.utils import error
 from fhy.utils.discovery import confirm_files
 from fhy.utils.logger import get_logger
@@ -142,7 +142,7 @@ def main():
             header = f"// {fname}\n"
             header += "=" * len(header)
             print(header)
-            print(pprint_ast(node), end="\n\n")
+            print(pformat_ast(node), end="\n\n")
 
     if args.json:
         print([dump(node, None) for node in constructed])

@@ -625,12 +625,9 @@ def test_ternary_expressions(construct_ast):
     is_primitive_expression_equal(expression.false, ast.IntLiteral(value=8))
 
 
-@pytest.mark.skip(
-    reason="Ambiguous FhY Grammar. Function Calls and Tuples look Identical."
-)
 def test_function_expression(construct_ast):
     """Test Function Call Expression."""
-    source: str = "temp int32 i = foo(A);"  # Semantically Invalid
+    source: str = "temp int32 i = foo(A);"
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -694,12 +691,9 @@ def test_index_type(construct_ast):
     )
 
 
-@pytest.mark.skip(
-    reason="Ambiguous FhY Grammar. Tuples Types and Function Calls look Identical."
-)
 def test_tuple_type(construct_ast):
     """Test construction of Tuple Type."""
-    source: str = "output (int32[m, n], int32) i;"  # Semantically Invalid
+    source: str = "output tuple[int32[m, n], int32] i;"  # Semantically Invalid
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -707,10 +701,11 @@ def test_tuple_type(construct_ast):
     assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
         ast.DeclarationStatement, statement
     )
-    is_primitive_expression_equal(statement.variable_name, ir.Identifier("i"))
+    assert statement.variable_name.name_hint == "i", "Expected Variable Name `i`"
     _assert_is_expected_qualified_type(
         statement.variable_type, ir.TypeQualifier.OUTPUT, ir.TupleType
     )
+    # TODO: Jason -> this test's assertions need to be expanded
 
     _tuple: ir.TupleType = statement.variable_type.base_type
     assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."

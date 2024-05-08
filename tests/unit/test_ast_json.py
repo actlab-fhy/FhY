@@ -48,7 +48,7 @@ from fhy.lang.ast import (
     UnaryExpression,
     UnaryOperation,
 )
-from fhy.lang.printer.to_json import (
+from fhy.lang.serialization.to_json import (
     AlmostJson,
     ASTtoJSON,
     JSONtoAST,
