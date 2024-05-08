@@ -13,7 +13,7 @@ from fhy.lang import ast
 from fhy.lang.ast.visitor import BasePass
 
 
-class ASTPrettyPrinter(BasePass):
+class ASTPrettyFormatter(BasePass):
     """Deconstructs an AST node back into FhY Language text using a visitor pattern.
 
     Args:
@@ -49,7 +49,10 @@ class ASTPrettyPrinter(BasePass):
         return "\n".join(f"{self._spacer}{line}" for line in statements)
 
     def visit_Module(self, module: ast.Module) -> str:
-        return "\n".join(self.visit(component) for component in module.statements)
+        return "\n".join(self.visit(statement) for statement in module.statements)
+
+    def visit_Import(self, node: ast.Import) -> str:
+        return "import " + self.visit(node.name) + ";"
 
     def visit_Operation(self, operation: ast.Operation) -> str:
         self._increment_indent()
@@ -214,7 +217,7 @@ class ASTPrettyPrinter(BasePass):
         return f"{type(node).__name__} NOT IMPLEMENTED"
 
 
-def pprint_ast(
+def pformat_ast(
     ast: ast.ASTNode, indent_char: str = "  ", is_identifier_id_printed: bool = False
 ) -> str:
     """Returns FhY text from a given an ASTNode.
@@ -225,5 +228,5 @@ def pprint_ast(
         is_identifier_id_printed (bool): Includes assigned ID in output text if true
 
     """
-    pprinter = ASTPrettyPrinter(indent_char, is_identifier_id_printed)
-    return pprinter(ast)
+    pformatter = ASTPrettyFormatter(indent_char, is_identifier_id_printed)
+    return pformatter(ast)
