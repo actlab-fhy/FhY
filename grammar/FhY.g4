@@ -94,7 +94,7 @@ type
     ;
 
 tuple_type
-    : OPEN_PARENTHESES ((type COMMA) | (type (COMMA type)+))? CLOSE_PARENTHESES
+    : TUPLE OPEN_BRACKET ((type COMMA) | (type (COMMA type)+))? CLOSE_BRACKET
     ;
 
 numerical_type
@@ -106,7 +106,7 @@ dtype
     ;
 
 index_type
-    : IDENTIFIER OPEN_BRACKET range CLOSE_BRACKET
+    : INDEX OPEN_BRACKET range CLOSE_BRACKET
     ;
 
 range
@@ -179,6 +179,14 @@ FROM
 
 AS
     : 'as'
+    ;
+
+TUPLE
+    : 'tuple'
+    ;
+
+INDEX
+    : 'index'
     ;
 
 FUNCTION_KEYWORD
