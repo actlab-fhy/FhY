@@ -23,6 +23,8 @@ log = get_logger(__name__)
 
 
 class ThrowingErrorListener(ErrorListener):
+    """An Overly Verbose, Descriptive Antlr Error Listener for Reasons."""
+
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         log.info((recognizer, offendingSymbol, line, column, msg, e))
 
@@ -33,34 +35,19 @@ class ThrowingErrorListener(ErrorListener):
     def reportAmbiguity(
         self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
     ):
-        log.info(
-            (
-                recognizer,
-                dfa,
-                startIndex,
-                stopIndex,
-                exact,
-                ambigAlts,
-                configs,
-            )
-        )
+        msg = (recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs)
+        log.info(msg)
         message = f"Ambiguity error at {startIndex}:{stopIndex}"
+
         raise ParseCancellationException(f"reportAmbiguity: {message}")
 
     def reportAttemptingFullContext(
         self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
     ):
-        log.info(
-            (
-                recognizer,
-                dfa,
-                startIndex,
-                stopIndex,
-                conflictingAlts,
-                configs,
-            )
-        )
+        msg = (recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs)
+        log.info(msg)
         message = f"FullContext error at {startIndex}:{stopIndex}"
+
         raise ParseCancellationException(f"reportAttemptingFullContext: {message}")
 
     def reportContextSensitivity(
@@ -68,6 +55,7 @@ class ThrowingErrorListener(ErrorListener):
     ):
         log.info((recognizer, dfa, startIndex, stopIndex, prediction, configs))
         message = f"ContextSensitivity error at {startIndex}:{stopIndex}"
+
         raise ParseCancellationException(f"reportContextSensitivity: {message}")
 
 

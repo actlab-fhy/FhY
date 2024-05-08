@@ -103,6 +103,7 @@ convention = "google"  # Accepts: "google" | "numpy" | "pep257"
    "PLR2004",  # magic-value-comparison (PLR2004)
    "F841",  # unused-variable (F841)
    "D",  # PyDocstyle
+   "PLR0911",  # too-many-return-statements (PLR0911)
 ]
 
 [tool.ruff.format]
