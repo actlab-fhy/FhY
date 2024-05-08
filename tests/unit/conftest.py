@@ -6,7 +6,7 @@ file.
 
 """
 
-from typing import Callable
+from typing import Callable, Set, Tuple
 
 import pytest
 from antlr4 import CommonTokenStream, InputStream, ParserRuleContext
@@ -20,6 +20,10 @@ from fhy.utils import error as fhy_error
 from fhy.utils.logger import get_logger
 
 log = get_logger(__name__)
+
+
+def get_dir(obj):
+    return [i for i in dir(obj) if not i.startswith("__")]
 
 
 class ThrowingErrorListener(ErrorListener):
@@ -46,9 +50,18 @@ class ThrowingErrorListener(ErrorListener):
     ):
         msg = (recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs)
         log.info(msg)
-        message = f"FullContext error at {startIndex}:{stopIndex}"
 
-        raise ParseCancellationException(f"reportAttemptingFullContext: {message}")
+        decision = self.get_decision(recognizer, dfa)
+        conflict = self.get_conflict(recognizer, configs)
+        text = self.get_text(recognizer, startIndex, stopIndex)
+        context = recognizer._ctx
+        message = (
+            "reportAttemptingFullContext: context={}, d={}: ambigAlts={}, input='{}'"
+        )
+
+        raise ParseCancellationException(
+            message.format(context.getText(), decision, conflict, text)
+        )
 
     def reportContextSensitivity(
         self, recognizer, dfa, startIndex, stopIndex, prediction, configs
@@ -57,6 +70,27 @@ class ThrowingErrorListener(ErrorListener):
         message = f"ContextSensitivity error at {startIndex}:{stopIndex}"
 
         raise ParseCancellationException(f"reportContextSensitivity: {message}")
+
+    def get_text(self, recognizer, start: int, stop: int) -> str:
+        stream = recognizer.getTokenStream()
+        text = stream.getText(start, stop)
+
+        return text
+
+    def get_decision(self, recognizer, dfa) -> Tuple[int, int]:
+        decision: int = dfa.decision
+        rule_index: int = dfa.atnStartState.ruleIndex
+        #  Python doesn't have this method to map Index values to Names
+        # rule_names: List[str] = recognizer.getRuleNames()
+
+        return decision, rule_index
+
+    def get_conflict(self, reportedAlts, configs) -> Set[int]:
+        if reportedAlts is None:
+            return reportedAlts
+
+        # Use a set to return unique values
+        return {i.alt for i in configs}
 
 
 @pytest.fixture(scope="module")

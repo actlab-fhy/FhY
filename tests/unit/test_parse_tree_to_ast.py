@@ -625,9 +625,50 @@ def test_ternary_expressions(construct_ast):
     is_primitive_expression_equal(expression.false, ast.IntLiteral(value=8))
 
 
-def test_function_expression(construct_ast):
+@pytest.mark.parametrize(
+    ["source", "nargs"],
+    [
+        pytest.param(
+            "temp int32 i = foo();",
+            0,
+            marks=pytest.mark.xfail(reason="FullContextError"),
+        ),  # Only Function Call
+        pytest.param(
+            "temp int32 i = foo(A);",
+            1,
+            marks=pytest.mark.xfail(reason="FullContextError"),
+        ),  # Only Function Call
+        pytest.param(
+            "temp int32 i = foo[]();",
+            0,
+            marks=pytest.mark.xfail(reason="FullContextError"),
+        ),  # Only Index
+        pytest.param(
+            "temp int32 i = foo[](A);",
+            1,
+            marks=pytest.mark.xfail(reason="FullContextError"),
+        ),  # Only Index
+        (
+            "temp int32 i = foo<>();",
+            0,
+        ),  # Only Template Types
+        (
+            "temp int32 i = foo<>(A);",
+            1,
+        ),  # Only Template Types
+        (
+            "temp int32 i = foo<>[]();",
+            0,
+        ),  # Both Template Types and Index
+        (
+            "temp int32 i = foo<>[](A);",
+            1,
+        ),  # Both Template Types and Index
+    ],
+)
+def test_function_expression(construct_ast, source: str, nargs: int):
     """Test Function Call Expression."""
-    source: str = "temp int32 i = foo(A);"
+    # source: str = "temp int32 i = foo<>[]();"
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -640,14 +681,22 @@ def test_function_expression(construct_ast):
     assert isinstance(expression, ast.FunctionExpression), wrong_node_babe(
         ast.FunctionExpression, expression
     )
-    is_primitive_expression_equal(expression.function, ast.IdentifierExpression("foo"))
+    is_primitive_expression_equal(
+        expression.function, ast.IdentifierExpression(identifier=ir.Identifier("foo"))
+    )
 
     template = expression.template_types
     assert len(template) == 0, f"Expected no template types, got {len(template)}"
     index = expression.indices
     assert len(index) == 0, f"Expected no indices, got {len(index)}"
-    assert len(expression.args) == 1, f"Expected 1 argument, got {len(expression.args)}"
-    is_primitive_expression_equal(expression.args[0], ast.IdentifierExpression("A"))
+
+    assert (
+        len(expression.args) == nargs
+    ), f"Expected {nargs} arguments, got {len(expression.args)}"
+
+    if nargs:
+        expect = ast.IdentifierExpression(identifier=ir.Identifier("A"))
+        is_primitive_expression_equal(expression.args[0], expect)
 
 
 def test_tensor_access_expression(construct_ast):
@@ -710,22 +759,15 @@ def test_tuple_type(construct_ast):
     _tuple: ir.TupleType = statement.variable_type.base_type
     assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
     t1, t2 = _tuple._types
-
-    # assert isinstance(t1, ir.NumericalType), wrong_node_babe(ir.NumericalType, t1)
-    # assert isinstance(t2, ir.NumericalType), wrong_node_babe(ir.NumericalType, t2)
-    is_primitive_expression_equal(
+    _assert_is_expected_numerical_type(
         t1,
-        ir.NumericalType(
-            ir.DataType(ir.PrimitiveDataType.INT32),
-            [
-                ir.Identifier("m"),
-                ir.Identifier("n"),
-            ],
-        ),
+        ir.PrimitiveDataType.INT32,
+        [
+            ast.IdentifierExpression(identifier=ir.Identifier("m")),
+            ast.IdentifierExpression(identifier=ir.Identifier("n")),
+        ],
     )
-    is_primitive_expression_equal(
-        t2, ir.NumericalType(ir.DataType(ir.PrimitiveDataType.INT32), [])
-    )
+    _assert_is_expected_numerical_type(t2, ir.PrimitiveDataType.INT32, [])
 
 
 @pytest.mark.parametrize(
