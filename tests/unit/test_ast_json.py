@@ -707,13 +707,13 @@ def test_load_json_to_ast(module):
     assert node.span == result.span, "Expected Identical Module Spans"
 
     # NOTE: This will not work because we cannot have type class equality
-    #       That is, our node.statements != result.components
+    #       That is, our node.statements != result.statements
     # assert node == result, "Expected Identical Module Nodes."
 
     assert (
         len(node.statements) == len(result.statements) == 2
-    ), "Expected single Component"
-    assert isinstance(result.statements[0], Operation), "Expected Operation Component"
+    ), "Expected Two Statements"
+    assert isinstance(result.statements[0], Operation), "Expected Operation Statement"
     assert (
         node.statements[0].name == result.statements[0].name
     ), "Expected Equivalent IDs"
@@ -722,7 +722,7 @@ def test_load_json_to_ast(module):
         len(node.statements[0].args) == len(result.statements[0].args) == 1
     ), "Expected 1 Argument"
 
-    assert isinstance(result.statements[1], Procedure), "Expected Procedure Component"
+    assert isinstance(result.statements[1], Procedure), "Expected Procedure Statement"
 
 
 # FROM SOURCE CODE (Limited)
