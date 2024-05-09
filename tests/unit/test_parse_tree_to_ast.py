@@ -917,8 +917,14 @@ def test_invalid_function_keyword(construct_ast):
         _ast = construct_ast(source)
 
 
-def test_gibberish(construct_ast):
+@pytest.mark.parametrize(
+    ["source"],
+    [
+        ("lorem ipsum dolor sit amet;",),  # With Semicolon
+        ("lorem ipsum dolor sit amet",),  # No Semicolon
+    ],
+)
+def test_gibberish(construct_ast, source: str):
     """Gibberish (unrecognized text according to fhy grammar) Raises FhySyntaxError."""
-    source: str = "lorem ipsum dolor sit amet;"
     with pytest.raises(error.FhYSyntaxError):
         _ast = construct_ast(source)
