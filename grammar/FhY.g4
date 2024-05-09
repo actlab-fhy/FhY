@@ -64,7 +64,7 @@ declaration_statement
     ;
 
 expression_statement
-    : (primitive_expression)? (EQUALS_SIGN)? expression SEMICOLON
+    : (primitive_expression EQUALS_SIGN)? expression SEMICOLON
     ;
 
 selection_statement

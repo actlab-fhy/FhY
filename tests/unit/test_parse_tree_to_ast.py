@@ -488,8 +488,8 @@ def test_absolute_import(construct_ast):
     _assert_is_expected_import(statement, "foo.bar")
 
 
-def test_declaration_statement(construct_ast):
-    """Tests a single Declaration Statement."""
+def test_declaration_statement_without_assignment(construct_ast):
+    """Tests a single Declaration Statement without assigning a value to variable."""
     source: str = "temp int32 i;"
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
@@ -502,6 +502,43 @@ def test_declaration_statement(construct_ast):
         qualified, ir.TypeQualifier.TEMP, ir.NumericalType
     )
     _assert_is_expected_shape(qualified.base_type.shape, [])
+
+
+def test_expression_statement_without_assignment(construct_ast):
+    """Test Construction of simple Expression Statements."""
+    source = "5 + 5;"
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
+        ast.ExpressionStatement, statement
+    )
+
+    assert statement.left is None, f"Expected No Left Hand Expression: {statement.left}"
+    assert isinstance(statement.right, ast.BinaryExpression), wrong_node_babe(
+        ast.BinaryExpression, statement.right
+    )
+
+
+def test_expression_statement_with_assignment(construct_ast):
+    """Test Construction of simple Expression Statements with variable Assignment."""
+    source = "A = 5 + 5;"
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
+        ast.ExpressionStatement, statement
+    )
+
+    is_primitive_expression_equal(
+        statement.left, ast.IdentifierExpression(identifier=ir.Identifier("A"))
+    )
+
+    assert isinstance(statement.right, ast.BinaryExpression), wrong_node_babe(
+        ast.BinaryExpression, statement.right
+    )
 
 
 def test_selection_statement(construct_ast):
@@ -677,6 +714,35 @@ def test_function_expression(construct_ast, source: str, nargs: int, name: str):
     if nargs:
         expect = ast.IdentifierExpression(identifier=ir.Identifier("A"))
         is_primitive_expression_equal(expression.args[0], expect)
+
+
+@pytest.mark.parametrize(
+    ["source"],
+    [
+        ("foo();",),  # only Function Call
+        ("foo<>();",),  # with Template Types
+        ("foo[]();",),  # with Index
+        ("foo<>[]();",),  # both Template Types and Index
+        ("module.method();",),
+        ("module.method[]();",),
+        ("module.method<>();",),
+        ("module.method<>[]();",),
+    ],
+)
+def test_function_expression_as_expression_statement(construct_ast, source: str):
+    """Test Function Call Expression within as an Expression Statement."""
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
+        ast.ExpressionStatement, statement
+    )
+
+    assert statement.left is None, f"Unexpected Left Expression: {statement.left}"
+    assert isinstance(statement.right, ast.FunctionExpression), wrong_node_babe(
+        ast.FunctionExpression, statement.right
+    )
 
 
 def test_tensor_access_expression(construct_ast):
