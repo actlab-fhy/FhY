@@ -18,11 +18,20 @@ from .expression import Expression
 from .qualified_type import QualifiedType
 
 
+# TODO: Support Import Alias (e.g. import x as y)
+#       alias (Optional[str]): reference name (in present namespace)
+#       Define how we handle identifier with different name.
 @dataclass(frozen=True, kw_only=True)
 class Import(Statement):
-    """Import ASTNode."""
+    """Import ASTNode.
+
+    Args:
+        name (ir.Identifier): name of imported object
+
+    """
 
     name: ir.Identifier
+    # alias: Optional[str] = field(default=None)
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
@@ -124,7 +133,13 @@ class DeclarationStatement(Statement):
 
 @dataclass(frozen=True, kw_only=True)
 class ExpressionStatement(Statement):
-    """Expression Statement."""
+    """Expression Statement.
+
+    Args:
+        left (Optional[Expression]): primitive expression
+        right (Expression): qualified type of variable
+
+    """
 
     left: Optional[Expression] = field(default=None)
     right: Expression

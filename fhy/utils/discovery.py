@@ -81,7 +81,7 @@ def standard_path(value: Union[str, pathlib.Path]) -> pathlib.Path:
 
 
 # TODO: We want to be able to define rules on expected files, or files to ignore, etc...
-# TODO: Do we have an expectation of subdirectories (i.e. like python must have an
+# TODO: Do we have an expectation of subdirectories (e.g. python must have an
 #       __init__.py file to be considered included as part of the package.)
 class Root(Mapping):
     """Project Root Node, mapping filepaths in a directory tree structure.
