@@ -378,9 +378,10 @@ def test_empty_procedure(construct_ast):
     _assert_is_expected_procedure(procedure, "foo", 0, 0)
 
 
-def test_empty_procedure_with_qualified_argument(construct_ast):
-    """Test that an empty procedure with a single qualified argument."""
-    source: str = "proc foo(input int32 x){}"
+@pytest.mark.parametrize(["name"], [("x",), ("arg",), ("arg1",), ("arg_1",)])
+def test_empty_procedure_with_qualified_argument(construct_ast, name: str):
+    """Test an empty procedure with a single qualified argument and argument names."""
+    source: str = "proc foo(input int32 %s){}" % name
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -388,7 +389,7 @@ def test_empty_procedure_with_qualified_argument(construct_ast):
     _assert_is_expected_procedure(procedure, "foo", 1, 0)
 
     arg = procedure.args[0]
-    _assert_is_expected_argument(arg, "x")
+    _assert_is_expected_argument(arg, name)
 
     arg_qualified_type = arg.qualified_type
     _assert_is_expected_qualified_type(
@@ -626,21 +627,62 @@ def test_ternary_expressions(construct_ast):
 
 
 @pytest.mark.parametrize(
-    ["source", "nargs"],
+    ["source", "nargs", "name"],
     [
-        ("temp int32 i = foo();", 0),  # only Function Call
-        ("temp int32 i = foo(A);", 1),  # only Function Call
-        ("temp int32 i = foo[]();", 0),  # with Index
-        ("temp int32 i = foo[](A);", 1),  # with Index
-        ("temp int32 i = foo<>();", 0),  # with Template Types
-        ("temp int32 i = foo<>(A);", 1),  # with Template Types
-        ("temp int32 i = foo<>[]();", 0),  # both Template Types and Index
-        ("temp int32 i = foo<>[](A);", 1),  # both Template Types and Index
+        ("temp int32 i = foo();", 0, "foo"),  # only Function Call
+        ("temp int32 i = foo(A);", 1, "foo"),  # only Function Call
+        ("temp int32 i = module.method();", 0, "module.method"),
+        ("temp int32 i = module.method(A);", 1, "module.method"),
+        ("temp int32 i = foo[]();", 0, "foo"),  # with Index
+        ("temp int32 i = foo[](A);", 1, "foo"),  # with Index
+        ("temp int32 i = module.method[]();", 0, "module.method"),
+        ("temp int32 i = module.method[](A);", 1, "module.method"),
+        ("temp int32 i = foo<>();", 0, "foo"),  # with Template Types
+        ("temp int32 i = foo<>(A);", 1, "foo"),  # with Template Types
+        ("temp int32 i = module.method<>();", 0, "module.method"),
+        ("temp int32 i = module.method<>(A);", 1, "module.method"),
+        ("temp int32 i = foo<>[]();", 0, "foo"),  # both Template Types and Index
+        ("temp int32 i = foo<>[](A);", 1, "foo"),  # both Template Types and Index
+        ("temp int32 i = module.method<>[]();", 0, "module.method"),
+        ("temp int32 i = module.method<>[](A);", 1, "module.method"),
     ],
 )
-def test_function_expression(construct_ast, source: str, nargs: int):
-    """Test Function Call Expression."""
-    # source: str = "temp int32 i = foo<>[]();"
+def test_function_expression(construct_ast, source: str, nargs: int, name: str):
+    """Test Function Call Expression within a Declaration Statement."""
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
+        ast.DeclarationStatement, statement
+    )
+
+    expression = statement.expression
+    assert isinstance(expression, ast.FunctionExpression), wrong_node_babe(
+        ast.FunctionExpression, expression
+    )
+    is_primitive_expression_equal(
+        expression.function, ast.IdentifierExpression(identifier=ir.Identifier(name))
+    )
+
+    template = expression.template_types
+    assert len(template) == 0, f"Expected no template types, got {len(template)}"
+    index = expression.indices
+    assert len(index) == 0, f"Expected no indices, got {len(index)}"
+
+    assert (
+        len(expression.args) == nargs
+    ), f"Expected {nargs} arguments, got {len(expression.args)}"
+
+    if nargs:
+        expect = ast.IdentifierExpression(identifier=ir.Identifier("A"))
+        is_primitive_expression_equal(expression.args[0], expect)
+
+
+# @pytest.xfail(reason="Expected Function Expression not an Identifier Expression.")
+def test_function_expression_2(construct_ast):
+    """Test Slightly More Complicated Function call from module."""
+    source = "temp int32 i = module.method(A);"
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -662,13 +704,27 @@ def test_function_expression(construct_ast, source: str, nargs: int):
     index = expression.indices
     assert len(index) == 0, f"Expected no indices, got {len(index)}"
 
-    assert (
-        len(expression.args) == nargs
-    ), f"Expected {nargs} arguments, got {len(expression.args)}"
+    args = expression.args
+    assert len(args) == 2, f"Expected 2 arguments, got {len(args)}"
 
-    if nargs:
-        expect = ast.IdentifierExpression(identifier=ir.Identifier("A"))
-        is_primitive_expression_equal(expression.args[0], expect)
+    for char in ("A", "B"):
+        expect = ast.IdentifierExpression(identifier=ir.Identifier(char))
+        is_primitive_expression_equal(args[0], expect)
+
+    # _ast: ast.Module = construct_ast(source)
+    # _assert_is_expected_module(_ast, 1)
+
+    # statement = _ast.statements[0]
+    # assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
+    #     ast.ExpressionStatement, statement
+    # )
+    # assert statement.right is None, f"Unexpected Right Expression: {statement.right}"
+
+    # expression = statement.left
+    # is_primitive_expression_equal(
+    #     expression,
+    #     ast.IdentifierExpression(identifier=ir.Identifier("module.method")),
+    # )
 
 
 def test_tensor_access_expression(construct_ast):
