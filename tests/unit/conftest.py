@@ -6,12 +6,13 @@ file.
 
 """
 
-from typing import Callable, Set, Tuple
+from typing import Callable, List, Set
 
 import pytest
-from antlr4 import CommonTokenStream, InputStream, ParserRuleContext
+from antlr4 import DFA, CommonTokenStream, InputStream, ParserRuleContext
+from antlr4.atn.ATNConfigSet import ATNConfigSet
+from antlr4.atn.ATNState import DecisionState
 from antlr4.error.ErrorListener import ErrorListener
-from antlr4.error.ErrorStrategy import ParseCancellationException
 
 from fhy.lang.ast import ASTNode
 from fhy.lang.ast_builder.converter.from_parse_tree import from_parse_tree
@@ -19,7 +20,7 @@ from fhy.lang.parser import FhYLexer, FhYParser
 from fhy.utils import error as fhy_error
 from fhy.utils.logger import get_logger
 
-log = get_logger(__name__)
+log = get_logger(__name__, 10)
 
 
 def get_dir(obj):
@@ -29,67 +30,125 @@ def get_dir(obj):
 class ThrowingErrorListener(ErrorListener):
     """An Overly Verbose, Descriptive Antlr Error Listener for Reasons."""
 
-    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        log.info((recognizer, offendingSymbol, line, column, msg, e))
+    def syntaxError(
+        self,
+        recognizer: FhYParser,
+        offendingSymbol: str,
+        line: int,
+        column: int,
+        msg: str,
+        e: Exception,
+    ):
+        text = self.get_text(recognizer, None, None)
+        message = f"Line {line}:{column} input=`{offendingSymbol}` - `{text}` - {msg}"
+        log.error(message)
 
-        raise fhy_error.FhYSyntaxError(
-            f"Syntax error at {line}:{column} - {msg}"
-        ) from e
+        raise fhy_error.FhYSyntaxError(message) from e
 
     def reportAmbiguity(
-        self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
+        self,
+        recognizer: FhYParser,
+        dfa: DFA,
+        startIndex: int,
+        stopIndex: int,
+        exact: bool,
+        ambigAlts: Set[int],
+        configs: ATNConfigSet,
     ):
-        msg = (recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs)
-        log.info(msg)
-        message = f"Ambiguity error at {startIndex}:{stopIndex}"
-
-        raise ParseCancellationException(f"reportAmbiguity: {message}")
+        report = self._report(
+            recognizer,
+            dfa,
+            startIndex,
+            stopIndex,
+            configs,
+        )
+        report += f" exact={exact}"
+        log.debug(report)
 
     def reportAttemptingFullContext(
-        self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
+        self,
+        recognizer: FhYParser,
+        dfa: DFA,
+        startIndex: int,
+        stopIndex: int,
+        conflictingAlts: Set[int],
+        configs: ATNConfigSet,
     ):
-        msg = (recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs)
-        log.info(msg)
+        report = self._report(
+            recognizer,
+            dfa,
+            startIndex,
+            stopIndex,
+            configs,
+        )
+        log.debug(report)
 
+    def reportContextSensitivity(
+        self,
+        recognizer: FhYParser,
+        dfa: DFA,
+        startIndex: int,
+        stopIndex: int,
+        prediction: int,
+        configs: ATNConfigSet,
+    ):
+        msg = self._report(
+            recognizer,
+            dfa,
+            startIndex,
+            stopIndex,
+            configs,
+        )
+        msg += f" predict={prediction}"
+        log.debug(msg)
+
+    def _report(
+        self,
+        recognizer: FhYParser,
+        dfa: DFA,
+        startIndex: int,
+        stopIndex: int,
+        configs: ATNConfigSet,
+    ) -> str:
         decision = self.get_decision(recognizer, dfa)
         conflict = self.get_conflict(recognizer, configs)
         text = self.get_text(recognizer, startIndex, stopIndex)
-        context = recognizer._ctx
+        if (ctx := recognizer._ctx) is None:
+            context = ""
+        else:
+            context = ctx.getText()
+
         message = (
-            "reportAttemptingFullContext: context={}, d={}: ambigAlts={}, input='{}'"
+            f"context={context}, d={decision}: ambigAlts={conflict}, input='{text}'"
         )
 
-        raise ParseCancellationException(
-            message.format(context.getText(), decision, conflict, text)
-        )
+        return message
 
-    def reportContextSensitivity(
-        self, recognizer, dfa, startIndex, stopIndex, prediction, configs
-    ):
-        log.info((recognizer, dfa, startIndex, stopIndex, prediction, configs))
-        message = f"ContextSensitivity error at {startIndex}:{stopIndex}"
-
-        raise ParseCancellationException(f"reportContextSensitivity: {message}")
-
-    def get_text(self, recognizer, start: int, stop: int) -> str:
+    def get_text(self, recognizer: FhYParser, start: int, stop: int) -> str:
         stream = recognizer.getTokenStream()
         text = stream.getText(start, stop)
 
         return text
 
-    def get_decision(self, recognizer, dfa) -> Tuple[int, int]:
+    def get_decision(self, recognizer: FhYParser, dfa: DFA) -> str:
         decision: int = dfa.decision
-        rule_index: int = dfa.atnStartState.ruleIndex
-        #  Python doesn't have this method to map Index values to Names
-        # rule_names: List[str] = recognizer.getRuleNames()
+        dfa.atnStartState: DecisionState
+        index: int = dfa.atnStartState.ruleIndex
 
-        return decision, rule_index
+        rules: List[str] = recognizer.ruleNames
+        if index < 0 or index >= len(rules):
+            return str(decision)
 
-    def get_conflict(self, reportedAlts, configs) -> Set[int]:
+        name = rules[index]
+        if not name:
+            return str(decision)
+
+        return name
+
+    def get_conflict(self, reportedAlts: Set[int], configs: ATNConfigSet) -> Set[int]:
         if reportedAlts is None:
             return reportedAlts
 
-        # Use a set to return unique values
         return {i.alt for i in configs}
 
 

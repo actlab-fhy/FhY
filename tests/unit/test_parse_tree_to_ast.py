@@ -628,42 +628,14 @@ def test_ternary_expressions(construct_ast):
 @pytest.mark.parametrize(
     ["source", "nargs"],
     [
-        pytest.param(
-            "temp int32 i = foo();",
-            0,
-            marks=pytest.mark.xfail(reason="FullContextError"),
-        ),  # Only Function Call
-        pytest.param(
-            "temp int32 i = foo(A);",
-            1,
-            marks=pytest.mark.xfail(reason="FullContextError"),
-        ),  # Only Function Call
-        pytest.param(
-            "temp int32 i = foo[]();",
-            0,
-            marks=pytest.mark.xfail(reason="FullContextError"),
-        ),  # Only Index
-        pytest.param(
-            "temp int32 i = foo[](A);",
-            1,
-            marks=pytest.mark.xfail(reason="FullContextError"),
-        ),  # Only Index
-        (
-            "temp int32 i = foo<>();",
-            0,
-        ),  # Only Template Types
-        (
-            "temp int32 i = foo<>(A);",
-            1,
-        ),  # Only Template Types
-        (
-            "temp int32 i = foo<>[]();",
-            0,
-        ),  # Both Template Types and Index
-        (
-            "temp int32 i = foo<>[](A);",
-            1,
-        ),  # Both Template Types and Index
+        ("temp int32 i = foo();", 0),  # only Function Call
+        ("temp int32 i = foo(A);", 1),  # only Function Call
+        ("temp int32 i = foo[]();", 0),  # with Index
+        ("temp int32 i = foo[](A);", 1),  # with Index
+        ("temp int32 i = foo<>();", 0),  # with Template Types
+        ("temp int32 i = foo<>(A);", 1),  # with Template Types
+        ("temp int32 i = foo<>[]();", 0),  # both Template Types and Index
+        ("temp int32 i = foo<>[](A);", 1),  # both Template Types and Index
     ],
 )
 def test_function_expression(construct_ast, source: str, nargs: int):
