@@ -679,54 +679,6 @@ def test_function_expression(construct_ast, source: str, nargs: int, name: str):
         is_primitive_expression_equal(expression.args[0], expect)
 
 
-# @pytest.xfail(reason="Expected Function Expression not an Identifier Expression.")
-def test_function_expression_2(construct_ast):
-    """Test Slightly More Complicated Function call from module."""
-    source = "temp int32 i = module.method(A);"
-    _ast: ast.Module = construct_ast(source)
-    _assert_is_expected_module(_ast, 1)
-
-    statement = _ast.statements[0]
-    assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
-        ast.DeclarationStatement, statement
-    )
-
-    expression = statement.expression
-    assert isinstance(expression, ast.FunctionExpression), wrong_node_babe(
-        ast.FunctionExpression, expression
-    )
-    is_primitive_expression_equal(
-        expression.function, ast.IdentifierExpression(identifier=ir.Identifier("foo"))
-    )
-
-    template = expression.template_types
-    assert len(template) == 0, f"Expected no template types, got {len(template)}"
-    index = expression.indices
-    assert len(index) == 0, f"Expected no indices, got {len(index)}"
-
-    args = expression.args
-    assert len(args) == 2, f"Expected 2 arguments, got {len(args)}"
-
-    for char in ("A", "B"):
-        expect = ast.IdentifierExpression(identifier=ir.Identifier(char))
-        is_primitive_expression_equal(args[0], expect)
-
-    # _ast: ast.Module = construct_ast(source)
-    # _assert_is_expected_module(_ast, 1)
-
-    # statement = _ast.statements[0]
-    # assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
-    #     ast.ExpressionStatement, statement
-    # )
-    # assert statement.right is None, f"Unexpected Right Expression: {statement.right}"
-
-    # expression = statement.left
-    # is_primitive_expression_equal(
-    #     expression,
-    #     ast.IdentifierExpression(identifier=ir.Identifier("module.method")),
-    # )
-
-
 def test_tensor_access_expression(construct_ast):
     """Test construction of a Tensor Access Expression."""
     source: str = "A[i] = 1;"  # Semantically Invalid
