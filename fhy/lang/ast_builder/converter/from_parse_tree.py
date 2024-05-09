@@ -104,8 +104,9 @@ class ParseTreeConverter(FhYVisitor):
         name_hint_components: list[str] = []
         for module_name in identifier_expression_ctx.IDENTIFIER():
             name_hint_components.append(module_name.getText())
-        name_hint = ".".join(name_hint_components)
-        span = _get_source_info(ctx)
+        name_hint: str = ".".join(name_hint_components)
+        span: Span = _get_source_info(ctx)
+
         return ast.Import(name=self._get_identifier(name_hint), span=span)
 
     def visitFunction_declaration(
@@ -128,10 +129,9 @@ class ParseTreeConverter(FhYVisitor):
             ctx.function_header()
         )
 
-        body_ctx = ctx.function_body()
-        body = self.visitFunction_body(body_ctx)
-
-        span = _get_source_info(ctx)
+        body_ctx: FhYParser.Function_bodyContext = ctx.function_body()
+        body: List[ast.Statement] = self.visitFunction_body(body_ctx)
+        span: Span = _get_source_info(ctx)
 
         self._close_scope()
 
@@ -174,11 +174,11 @@ class ParseTreeConverter(FhYVisitor):
         List[ast.Argument],
         Optional[ast.QualifiedType],
     ]:
-        span = _get_source_info(ctx)
+        span: Span = _get_source_info(ctx)
 
         # NOTE: Predefined Function Keywords required for parsing Function.
         if (kw_ctx := ctx.FUNCTION_KEYWORD()) is None:
-            text = _source_position(span)
+            text: str = _source_position(span)
             raise FhYSyntaxError(f"Function Keyword Missing. {text}")
         keyword: str = kw_ctx.getText()
 
@@ -284,7 +284,7 @@ class ParseTreeConverter(FhYVisitor):
             left_expression = self.visitPrimitive_expression(primitive_expression_ctx)
 
         right_expression_ctx: FhYParser.ExpressionContext = ctx.expression()
-        right_expression = self.visitExpression(right_expression_ctx)
+        right_expression: ast.Expression = self.visitExpression(right_expression_ctx)
         span: Span = _get_source_info(ctx)
 
         return ast.ExpressionStatement(
@@ -296,12 +296,12 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.SelectionStatement:
         span: Span = _get_source_info(ctx)
         condition_ctx: FhYParser.ExpressionContext = ctx.expression()
-        condition = self.visitExpression(condition_ctx)
+        condition: ast.Expression = self.visitExpression(condition_ctx)
 
         true_body_ctx: FhYParser.ScopeContext = ctx.scope(0)
-        true_body = self.visitScope(true_body_ctx)
+        true_body: List[ast.Statement] = self.visitScope(true_body_ctx)
 
-        false_body = []
+        false_body: List[ast.Statement] = []
         if (false_body_ctx := ctx.scope(1)) is not None:
             false_body = self.visitScope(false_body_ctx)
 
@@ -314,10 +314,10 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.ForAllStatement:
         span: Span = _get_source_info(ctx)
         index_ctx: FhYParser.ExpressionContext = ctx.expression()
-        index = self.visitExpression(index_ctx)
+        index: ast.Expression = self.visitExpression(index_ctx)
 
         body_ctx: FhYParser.ScopeContext = ctx.scope()
-        body = self.visitScope(body_ctx)
+        body: List[ast.Statement] = self.visitScope(body_ctx)
 
         return ast.ForAllStatement(index=index, body=body, span=span)
 
@@ -326,7 +326,7 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.ReturnStatement:
         span: Span = _get_source_info(ctx)
         expression_ctx: FhYParser.ExpressionContext = ctx.expression()
-        expression = self.visitExpression(expression_ctx)
+        expression: ast.Expression = self.visitExpression(expression_ctx)
 
         return ast.ReturnStatement(expression=expression, span=span)
 
@@ -340,6 +340,7 @@ class ParseTreeConverter(FhYVisitor):
         if ctx.expression() is not None:
             for expression_ctx in ctx.expression():
                 expressions.append(self.visitExpression(expression_ctx))
+
         return expressions
 
     def visitExpression(self, ctx: FhYParser.ExpressionContext) -> ast.Expression:
@@ -348,7 +349,7 @@ class ParseTreeConverter(FhYVisitor):
             return self.visitExpression(ctx.expression(0))
 
         elif ctx.unary_expression is not None:
-            operand = self.visitExpression(ctx.expression(0))
+            operand: ast.Expression = self.visitExpression(ctx.expression(0))
             operator_ctx = ctx.SUBTRACTION() or ctx.BITWISE_NOT() or ctx.LOGICAL_NOT()
 
             return ast.UnaryExpression(
@@ -370,8 +371,8 @@ class ParseTreeConverter(FhYVisitor):
                 ctx.logical_or_expression,
             ]
         ):
-            left = self.visitExpression(ctx.expression(0))
-            right = self.visitExpression(ctx.expression(1))
+            left: ast.Expression = self.visitExpression(ctx.expression(0))
+            right: ast.Expression = self.visitExpression(ctx.expression(1))
 
             operator = (
                 ctx.MULTIPLICATION()
@@ -400,9 +401,9 @@ class ParseTreeConverter(FhYVisitor):
             )
 
         elif ctx.ternary_expression is not None:
-            condition = self.visitExpression(ctx.expression(0))
-            true_expression = self.visitExpression(ctx.expression(1))
-            false_expression = self.visitExpression(ctx.expression(2))
+            condition: ast.Expression = self.visitExpression(ctx.expression(0))
+            true_expression: ast.Expression = self.visitExpression(ctx.expression(1))
+            false_expression: ast.Expression = self.visitExpression(ctx.expression(2))
 
             return ast.TernaryExpression(
                 span=span,
@@ -412,7 +413,7 @@ class ParseTreeConverter(FhYVisitor):
             )
 
         elif (primitive_expression_ctx := ctx.primitive_expression()) is not None:
-            primitive_expression = self.visitPrimitive_expression(
+            primitive_expression: ast.Expression = self.visitPrimitive_expression(
                 primitive_expression_ctx
             )
 
@@ -474,9 +475,13 @@ class ParseTreeConverter(FhYVisitor):
             )
 
         elif ctx.array_access_expression is not None:
-            array_expression_ctx = ctx.primitive_expression()
-            array_expression = self.visitPrimitive_expression(array_expression_ctx)
-            indices_ctx = ctx.expression_list(0)
+            array_expression_ctx: FhYParser.Primitive_expressionContext = (
+                ctx.primitive_expression()
+            )
+            array_expression: ast.Expression = self.visitPrimitive_expression(
+                array_expression_ctx
+            )
+            indices_ctx: FhYParser.Expression_listContext = ctx.expression_list(0)
             indices = self.visitExpression_list(indices_ctx)
 
             return ast.ArrayAccessExpression(
@@ -505,7 +510,7 @@ class ParseTreeConverter(FhYVisitor):
             int_literal_str: str = int_literal_ctx.getText()
 
             if int_literal_str.startswith(("0x", "0X")):
-                base = 16
+                base: int = 16
             elif int_literal_str.startswith(("0b", "0B")):
                 base = 2
             elif int_literal_str.startswith(("0o", "0O")):
@@ -574,10 +579,10 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.RangeContext
     ) -> Tuple[ast.Expression, ast.Expression, Optional[ast.Expression]]:
         low_ctx: FhYParser.ExpressionContext = ctx.expression(0)
-        low = self.visitExpression(low_ctx)
+        low: ast.Expression = self.visitExpression(low_ctx)
 
         high_ctx: FhYParser.ExpressionContext = ctx.expression(1)
-        high = self.visitExpression(high_ctx)
+        high: ast.Expression = self.visitExpression(high_ctx)
 
         stride: Optional[ast.Expression] = None
         if (stride_ctx := ctx.expression(2)) is not None:
