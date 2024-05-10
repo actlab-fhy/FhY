@@ -450,5 +450,5 @@ NEWLINE
     ;
 
 LINECOMMENT
-    : '//' ~ [\r\n]* -> skip
+    : '#' ~ [\r\n]* -> skip
     ;

@@ -861,14 +861,14 @@ def test_float_literal(construct_ast, source: str, value: float):
 # =============
 def test_line_comment(construct_ast):
     """Test that comments are skipped, creating an empty Module."""
-    source: str = "// this is a comment!"
+    source: str = "# this is a comment!"
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 0)
 
 
 def test_empty_procedure_with_line_comment(construct_ast):
     """Test procedure is found and constructed with line comments in the mix."""
-    source: str = "// this is a comment!\nproc foo(input int32[m,n] A) {}"
+    source: str = "# this is a comment!\nproc foo(input int32[m,n] A) {}"
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
