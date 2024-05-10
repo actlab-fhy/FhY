@@ -596,9 +596,10 @@ def test_return_statement(construct_ast):
 # ===========
 # EXPRESSIONS
 # ===========
-def test_unary_expressions(construct_ast):
-    """Test a Unary Expression (Negative)."""
-    source: str = "temp int32 i = -5;"
+@pytest.mark.parametrize(["operator"], [(j,) for j in ast.UnaryOperation])
+def test_unary_expression(construct_ast, operator: ast.UnaryOperation):
+    """Test Construction of Unary Expression with correct Operator."""
+    source: str = "temp int32 i = %s5;" % operator.value
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -611,17 +612,17 @@ def test_unary_expressions(construct_ast):
     assert isinstance(expression, ast.UnaryExpression), wrong_node_babe(
         ast.UnaryExpression, expression
     )
-    negative = ast.UnaryOperation.NEGATIVE
     assert (
-        expression.operation == negative
-    ), f"Expected `{negative}` operation. Received: `{expression.operation}`"
+        expression.operation == operator
+    ), f"Expected `{operator}` operation. Received: `{expression.operation}`"
 
     is_primitive_expression_equal(expression.expression, ast.IntLiteral(value=5))
 
 
-def test_binary_expressions(construct_ast):
-    """Tests a Binary Expression (Multiplication)."""
-    source: str = "temp float32 i = 5 * 6;"  # Semantically Incorrect (float)
+@pytest.mark.parametrize(["operator"], [(i,) for i in ast.BinaryOperation])
+def test_binary_expressions(construct_ast, operator: ast.BinaryOperation):
+    """Tests Construction of all Available Binary Expression Operators."""
+    source: str = f"temp float32 i = 5 {operator.value} 6;"  # Semantically Incorrect
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -631,10 +632,9 @@ def test_binary_expressions(construct_ast):
     )
 
     expression = statement.expression
-    mult = ast.BinaryOperation.MULTIPLICATION
     assert (
-        expression.operation == mult
-    ), f"Expected `{mult}` operation. Received: `{expression.operation}`"
+        expression.operation == operator
+    ), f"Expected `{operator}` operation. Received: `{expression.operation}`"
 
     is_primitive_expression_equal(expression.left, ast.IntLiteral(value=5))
     is_primitive_expression_equal(expression.right, ast.IntLiteral(value=6))

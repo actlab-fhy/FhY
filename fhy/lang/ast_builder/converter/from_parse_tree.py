@@ -369,6 +369,7 @@ class ParseTreeConverter(FhYVisitor):
                 ctx.or_expression,
                 ctx.logical_and_expression,
                 ctx.logical_or_expression,
+                ctx.exclusive_or_expression,
             ]
         ):
             left: ast.Expression = self.visitExpression(ctx.expression(0))
@@ -391,6 +392,7 @@ class ParseTreeConverter(FhYVisitor):
                 or ctx.OR()
                 or ctx.LOGICAL_AND()
                 or ctx.LOGICAL_OR()
+                or ctx.EXCLUSIVE_OR()
             )
 
             return ast.BinaryExpression(
