@@ -111,9 +111,7 @@ class BinaryOperation(StrEnum):
     LOGICAL_OR = "||"
     MODULO = "%"
     POWER = "**"
-
-    # TODO: A FloorDiv Operator looks like a Comment, and is skipped.
-    # FLOORDIV = "//"
+    FLOORDIV = "//"
 
 
 @dataclass(frozen=True, kw_only=True)
