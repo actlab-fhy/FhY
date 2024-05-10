@@ -360,6 +360,7 @@ class ParseTreeConverter(FhYVisitor):
 
         elif any(
             [
+                ctx.power_expression,
                 ctx.multiplicative_expression,
                 ctx.additive_expression,
                 ctx.shift_expression,
@@ -376,8 +377,11 @@ class ParseTreeConverter(FhYVisitor):
             right: ast.Expression = self.visitExpression(ctx.expression(1))
 
             operator = (
-                ctx.MULTIPLICATION()
+                ctx.POWER()
+                or ctx.MULTIPLICATION()
                 or ctx.DIVISION()
+                or ctx.FLOORDIV()
+                or ctx.MODULO()
                 or ctx.ADDITION()
                 or ctx.SUBTRACTION()
                 or ctx.LEFT_SHIFT()

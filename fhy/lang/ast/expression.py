@@ -109,10 +109,11 @@ class BinaryOperation(StrEnum):
     BITWISE_OR = "|"
     LOGICAL_AND = "&&"
     LOGICAL_OR = "||"
-    # TODO: Add the Following Operators to Grammar (Be careful with Precedence)
+    MODULO = "%"
+    POWER = "**"
+
+    # TODO: A FloorDiv Operator looks like a Comment, and is skipped.
     # FLOORDIV = "//"
-    # MODULO = "%"
-    # POWER = "**"
 
 
 @dataclass(frozen=True, kw_only=True)

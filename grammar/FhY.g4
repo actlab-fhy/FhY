@@ -120,7 +120,8 @@ range
 expression
     : nested_expression=OPEN_PARENTHESES expression CLOSE_PARENTHESES
     | unary_expression=(SUBTRACTION | BITWISE_NOT | LOGICAL_NOT) expression
-    | multiplicative_expression=expression (MULTIPLICATION | DIVISION) expression
+    | power_expression=expression POWER expression
+    | multiplicative_expression=expression (MULTIPLICATION | DIVISION | FLOORDIV | MODULO) expression
     | additive_expression=expression (ADDITION | SUBTRACTION) expression
     | shift_expression=expression (LEFT_SHIFT | RIGHT_SHIFT)expression
     | relational_expression=expression (LESS_THAN | LESS_THAN_OR_EQUAL | GREATER_THAN | GREATER_THAN_OR_EQUAL) expression
@@ -291,12 +292,24 @@ BITWISE_NOT
     : '~'
     ;
 
+POWER
+    : '**'
+    ;
+
 MULTIPLICATION
     : '*'
     ;
 
 DIVISION
     : '/'
+    ;
+
+FLOORDIV
+    : '//'
+    ;
+
+MODULO
+    : '%'
     ;
 
 ADDITION
