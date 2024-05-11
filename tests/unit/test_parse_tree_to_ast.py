@@ -425,9 +425,17 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
     )
 
 
-def test_empty_operation(construct_ast):
+@pytest.mark.parametrize(
+    ["source"],
+    [
+        ("op foo() -> output int32 {}",),  # Operation Only
+        ("op foo<>() -> output int32 {}",),  # with Template Type
+        ("op foo[]() -> output int32 {}",),  # with Index
+        ("op foo<>[]() -> output int32 {}",),  # Bot Template and Index
+    ],
+)
+def test_empty_operation(construct_ast, source: str):
     """Test that an Empty Operation is Converted Correctly."""
-    source: str = "op foo() -> output int32 {}"
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
