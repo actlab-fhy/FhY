@@ -61,9 +61,15 @@ class ASTPrettyFormatter(BasePass):
         )
         self._decrement_indent()
         name = self.visit(operation.name)
+        templates = ", ".join(self.visit(arg) for arg in operation.templates)
         args = ", ".join(self.visit(arg) for arg in operation.args)
         ret = self.visit(operation.return_type)
-        return f"op {name}({args}) -> {ret} " + "{\n" + pprinted_statements + "\n}"
+        return (
+            f"op {name}<{templates}>({args}) -> {ret} "
+            + "{\n"
+            + pprinted_statements
+            + "\n}"
+        )
 
     def visit_Procedure(self, procedure: ast.Procedure) -> str:
         self._increment_indent()
