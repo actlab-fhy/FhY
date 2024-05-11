@@ -152,7 +152,12 @@ class ParseTreeConverter(FhYVisitor):
                 )
 
             return ast.Operation(
-                span=span, name=name, args=args, body=body, return_type=return_type
+                span=span,
+                name=name,
+                templates=template,
+                args=args,
+                body=body,
+                return_type=return_type,
             )
 
         else:
@@ -169,8 +174,8 @@ class ParseTreeConverter(FhYVisitor):
     ) -> Tuple[
         str,
         ir.Identifier,
-        None,
-        None,
+        List[ir.Identifier],
+        List[ast.Argument],
         List[ast.Argument],
         Optional[ast.QualifiedType],
     ]:
@@ -196,20 +201,21 @@ class ParseTreeConverter(FhYVisitor):
         args: List[ast.Argument] = self.visitFunction_args(args_ctx)
 
         # TODO: Implement Support for Function template and indices
-        # template: List[ir.Identifier] = []
-        # if (template_ctx := ctx.function_template_types) is not None:
-        #     template.extend(self.visitIdentifier_list(template_ctx))
+        template: List[ir.Identifier] = []
+        if ctx.function_template_types is not None:
+            template_ctx: FhYParser.Identifier_listContext = ctx.identifier_list()
+            template.extend(self.visitIdentifier_list(template_ctx))
 
-        # indices = List[ast.Argument] = []
-        # if (index_ctx := ctx.function_indices) is not None:
-        #     indices.extend(self.visitFunction_args(index_ctx))
+        indices: List[ast.Argument] = []
+        if (index_ctx := ctx.function_indices) is not None:
+            indices.extend(self.visitFunction_args(index_ctx))
 
         return_type: Optional[ast.QualifiedType] = None
         if (return_type_ctx := ctx.qualified_type()) is not None:
             return_type = self.visitQualified_type(return_type_ctx)
 
-        # return keyword, name, template, indices, args, return_type
-        return keyword, name, None, None, args, return_type
+        return keyword, name, template, indices, args, return_type
+        # return keyword, name, None, None, args, return_type
 
     def visitFunction_args(
         self, ctx: FhYParser.Function_argsContext
@@ -219,6 +225,7 @@ class ParseTreeConverter(FhYVisitor):
             for arg_ctx in ctx.function_arg():
                 arg: ast.Argument = self.visitFunction_arg(arg_ctx)
                 args.append(arg)
+
         return args
 
     def visitFunction_arg(self, ctx: FhYParser.Function_argContext) -> ast.Argument:
@@ -248,6 +255,7 @@ class ParseTreeConverter(FhYVisitor):
                 statement = self.visitStatement(statement_ctx)
                 statements.append(statement)
         self._close_scope()
+
         return statements
 
     def visitDeclaration_statement(
@@ -511,6 +519,15 @@ class ParseTreeConverter(FhYVisitor):
         return ast.IdentifierExpression(
             identifier=self._get_identifier(ctx.getText()), span=_get_source_info(ctx)
         )
+
+    def visitIdentifier_list(
+        self, ctx: FhYParser.Identifier_listContext
+    ) -> List[ir.Identifier]:
+        ids: List[ir.Identifier] = []
+        for name in ctx.IDENTIFIER():
+            ids.append(self._get_identifier(name.getText()))
+
+        return ids
 
     def visitLiteral(self, ctx: FhYParser.LiteralContext) -> ast.Literal:
         span: Span = _get_source_info(ctx)

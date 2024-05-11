@@ -475,6 +475,28 @@ def test_empty_operation_return_type(construct_ast):
     )
 
 
+@pytest.mark.parametrize(
+    ["templates"],
+    [(["T"],), (["T", "K"],), (["V", "Ex", "F"],)],
+)
+def test_operation_template_types(construct_ast, templates: List[str]):
+    """Test that an Empty Operation with a Return Type is Converted Correctly."""
+    source: str = "op foo<%s>(input int32[n, m] x) -> output int32[n, m] {}"
+    print(source % ", ".join(templates))
+    _ast = construct_ast(source % ", ".join(templates))
+    _assert_is_expected_module(_ast, 1)
+
+    operation: ast.Operation = _ast.statements[0]
+    _assert_is_expected_operation(operation, "foo", 1, 0)
+
+    assert len(operation.templates) == len(
+        templates
+    ), "Expected Same Number of Template Types."
+    for j, k in zip(operation.templates, templates):
+        assert isinstance(j, ir.Identifier), wrong_node_babe(ir.Identifier, j)
+        assert j.name_hint == k, f"Expected Same Identifier Name: {j.name_hint}"
+
+
 # ==========
 # STATEMENTS
 # ==========
@@ -664,6 +686,7 @@ def test_ternary_expressions(construct_ast):
 
 
 # TODO: Debug and Support Tuple Access Expressions.
+# NOTE: Identifier Expressions are Taking Precedence over Tuple Access Primitives.
 # def test_tuple_access_expression(construct_ast):
 #     """Test a Tuple Access Expression."""
 #     source: str = "A.1;"

@@ -82,19 +82,21 @@ class Operation(Function):
     """FhY Operation Function ASTNode.
 
     Args:
+        templates (List[ir.Identifier]): list of Template Type Identifiers
         args (List[Argument]): list of Arguments
         body (List[Statement]): list of Statements, defining the body of the operation
         ret_type (QualifiedType): Type information of the Returned Value
 
     """
 
+    templates: List[ir.Identifier] = field(default_factory=list)
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
     return_type: QualifiedType
 
     def visit_attrs(self) -> List[str]:
         attrs = super().visit_attrs()
-        attrs.extend(["args", "body", "return_type"])
+        attrs.extend(["templates", "args", "body", "return_type"])
         return attrs
 
 

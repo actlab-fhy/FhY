@@ -95,7 +95,11 @@ def test_keynames(node: Type[ast.ASTNode], expected: str):
         (ast.Import, False, ["span", "name"]),
         (ast.Argument, False, ["span", "name", "qualified_type"]),
         (ast.Procedure, False, ["span", "name", "args", "body"]),
-        (ast.Operation, False, ["span", "name", "args", "body", "return_type"]),
+        (
+            ast.Operation,
+            False,
+            ["span", "name", "templates", "args", "body", "return_type"],
+        ),
         (ast.Native, False, ["span", "name", "args"]),
         (
             ast.DeclarationStatement,
