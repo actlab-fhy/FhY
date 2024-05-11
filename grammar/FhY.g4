@@ -140,12 +140,11 @@ expression_list
     ;
 
 primitive_expression
-    // : tuple_access_expression=IDENTIFIER DOT INT_LITERAL
+    // : tuple_access_expression=IDENTIFIER DOT DIGIT_SEQUENCE
     : function_expression=primitive_expression (LESS_THAN expression_list GREATER_THAN)? (OPEN_BRACKET expression_list CLOSE_BRACKET)? OPEN_PARENTHESES expression_list CLOSE_PARENTHESES
     | array_access_expression=primitive_expression OPEN_BRACKET expression_list CLOSE_BRACKET
     | atom
     ;
-
 
 atom
     : tuple=OPEN_PARENTHESES ((expression COMMA) | (expression (COMMA expression)+))? CLOSE_PARENTHESES

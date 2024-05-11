@@ -435,15 +435,17 @@ class ParseTreeConverter(FhYVisitor):
         span: Span = _get_source_info(ctx)
         # TODO: Add support of Tuple Access Expressions
         # if ctx.tuple_access_expression is not None:
-        #     primitive_expression_ctx = ctx.primitive_expression()
-        #     primitive_expression = self.visitPrimitive_expression(
+        #     primitive_expression_ctx: FhYParser.Primitive_expressionContext = (
+        #         ctx.primitive_expression()
+        #     )
+        #     primitive_expression: ast.Expression = self.visitPrimitive_expression(
         #         primitive_expression_ctx
         #     )
 
         #     return ast.TupleAccessExpression(
         #         span=span,
         #         tuple_expression=primitive_expression,
-        #         element_index=int(ctx.INT_LITERAL().getText()),
+        #         element_index=int(ctx.DIGIT_SEQUENCE().getText()),
         #     )
 
         if ctx.function_expression is not None:

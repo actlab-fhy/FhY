@@ -40,7 +40,12 @@ class ThrowingErrorListener(ErrorListener):
         e: Exception,
     ):
         text = self.get_text(recognizer, None, None)
-        message = f"Line {line}:{column} input=`{offendingSymbol}` - `{text}` - {msg}"
+        context = type(recognizer._ctx).__name__
+        message = f"context={context}(Line {line}:{column}) input=`{offendingSymbol}` "
+        # result = ParseTreeConverter().visit(recognizer._ctx)
+        # message += f"text=`{text}` - msg={msg} - ast={result}"
+        message += f"text=`{text}` - msg={msg}"
+
         log.error(message)
 
         raise fhy_error.FhYSyntaxError(message) from e

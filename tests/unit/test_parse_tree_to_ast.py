@@ -663,6 +663,14 @@ def test_ternary_expressions(construct_ast):
     is_primitive_expression_equal(expression.false, ast.IntLiteral(value=8))
 
 
+# TODO: Debug and Support Tuple Access Expressions.
+# def test_tuple_access_expression(construct_ast):
+#     """Test a Tuple Access Expression."""
+#     source: str = "A.1;"
+#     _ast: ast.Module = construct_ast(source)
+#     _assert_is_expected_module(_ast, 1)
+
+
 @pytest.mark.parametrize(
     ["source", "nargs", "name"],
     [
