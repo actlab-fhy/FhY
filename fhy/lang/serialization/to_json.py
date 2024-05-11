@@ -85,6 +85,7 @@ class ASTtoJSON(visitor.BasePass):
         return obj
 
     def visit_Operation(self, node: ast.Operation) -> AlmostJson:
+        templates: List[AlmostJson] = self.visit_sequence(node.templates)
         args: List[AlmostJson] = self.visit_sequence(node.args)
         ret_type: AlmostJson = self.visit(node.return_type)
         body: List[AlmostJson] = self.visit_sequence(node.body)
@@ -93,6 +94,7 @@ class ASTtoJSON(visitor.BasePass):
             cls_name=visitor.get_cls_name(node),
             attributes=dict(
                 span=self.visit_Span(node.span),
+                templates=templates,
                 name=name,
                 args=args,
                 return_type=ret_type,
@@ -463,6 +465,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span = self.visit_Span(values.get("span"))
+        templates: List[ir.Identifier] = self.visit_sequence(values.get("templates"))
         args: List[ast.Argument] = self.visit_sequence(values.get("args"))
         body: List[ast.Statement] = self.visit_sequence(values.get("body"))
         name: ir.Identifier = self.visit_Identifier(values.get("name"))
@@ -471,7 +474,12 @@ class JSONtoAST(visitor.BasePass):
         )
 
         return ast.Operation(
-            span=span, name=name, args=args, body=body, return_type=ret_type
+            span=span,
+            name=name,
+            templates=templates,
+            args=args,
+            body=body,
+            return_type=ret_type,
         )
 
     def visit_Procedure(self, node: Optional[AlmostJson]) -> ast.Procedure:

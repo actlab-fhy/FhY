@@ -516,6 +516,7 @@ def operation(span, arg1, qualified, express_state) -> Tuple[dict, Operation]:
         attributes=dict(
             span=span_obj,
             name=name_id_obj,
+            templates=[],
             args=[arg1_obj],
             body=[e_state_obj],
             return_type=qtype_obj,
