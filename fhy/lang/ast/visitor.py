@@ -322,10 +322,11 @@ class Transformer(BasePass):
     """ASTObject Transformer Pass Pattern."""
 
     def visit_Module(self, node: Module) -> Module:
+        span: Span = self.visit_Span(node.span)
         new_name = self.visit_Identifier(node.name)
         new_statements = self.visit_Statements(node.statements)
 
-        return Module(name=new_name, statements=new_statements)
+        return Module(span=span, name=new_name, statements=new_statements)
 
     def visit_Statements(self, nodes: List[Statement]) -> List[Statement]:
         return [self.visit_Statement(node) for node in nodes]
@@ -352,41 +353,50 @@ class Transformer(BasePass):
 
     def visit_Import(self, node: Import) -> Import:
         new_name = self.visit_Identifier(node.name)
+        span: Span = self.visit_Span(node.span)
 
-        return Import(name=new_name)
+        return Import(span=span, name=new_name)
 
     def visit_Operation(self, node: Operation) -> Operation:
+        span: Span = self.visit_Span(node.span)
         new_name = self.visit_Identifier(node.name)
         new_args = self.visit_Arguments(node.args)
         new_return_type = self.visit_QualifiedType(node.return_type)
         new_body: List[Statement] = self.visit_Statements(node.body)
 
         return Operation(
-            name=new_name, args=new_args, return_type=new_return_type, body=new_body
+            span=span,
+            name=new_name,
+            args=new_args,
+            return_type=new_return_type,
+            body=new_body,
         )
 
     def visit_Procedure(self, node: Procedure) -> Procedure:
+        span: Span = self.visit_Span(node.span)
         new_name = self.visit_Identifier(node.name)
         new_args = self.visit_Arguments(node.args)
         new_body = self.visit_Statements(node.body)
 
-        return Procedure(name=new_name, args=new_args, body=new_body)
+        return Procedure(span=span, name=new_name, args=new_args, body=new_body)
 
     def visit_Arguments(self, nodes: List[Argument]) -> List[Argument]:
         return [self.visit_Argument(node) for node in nodes]
 
-    def visit_Argument(self, node: Argument) -> None:
+    def visit_Argument(self, node: Argument) -> Argument:
+        span: Span = self.visit_Span(node.span)
         new_qualified_type = self.visit_QualifiedType(node.qualified_type)
         if node.name is not None:
             new_name = self.visit_Identifier(node.name)
         else:
             new_name = None
 
-        return Argument(qualified_type=new_qualified_type, name=new_name)
+        return Argument(span=span, qualified_type=new_qualified_type, name=new_name)
 
     def visit_DeclarationStatement(
         self, node: DeclarationStatement
     ) -> DeclarationStatement:
+        span: Span = self.visit_Span(node.span)
         new_variable_name = self.visit_Identifier(node.variable_name)
         new_variable_type = self.visit_QualifiedType(node.variable_type)
         if node.expression is not None:
@@ -395,6 +405,7 @@ class Transformer(BasePass):
             new_expression = None
 
         return DeclarationStatement(
+            span=span,
             variable_name=new_variable_name,
             variable_type=new_variable_type,
             expression=new_expression,
@@ -403,35 +414,42 @@ class Transformer(BasePass):
     def visit_ExpressionStatement(
         self, node: ExpressionStatement
     ) -> ExpressionStatement:
+        span: Span = self.visit_Span(node.span)
         if node.left is not None:
             new_left = self.visit_Expression(node.left)
         else:
             new_left = None
         new_right = self.visit(node.right)
 
-        return ExpressionStatement(left=new_left, right=new_right)
+        return ExpressionStatement(span=span, left=new_left, right=new_right)
 
     def visit_SelectionStatement(self, node: SelectionStatement) -> SelectionStatement:
+        span: Span = self.visit_Span(node.span)
         new_condition = self.visit_Expression(node.condition)
         new_true_body = self.visit_Statements(node.true_body)
         new_false_body = self.visit_Statements(node.false_body)
 
         return SelectionStatement(
-            condition=new_condition, true_body=new_true_body, false_body=new_false_body
+            span=span,
+            condition=new_condition,
+            true_body=new_true_body,
+            false_body=new_false_body,
         )
 
     def visit_ForAllStatement(self, node: ForAllStatement) -> ForAllStatement:
+        span: Span = self.visit_Span(node.span)
         new_index = self.visit_Expression(node.index)
         new_body = self.visit_Statements(node.body)
 
-        return ForAllStatement(index=new_index, body=new_body)
+        return ForAllStatement(span=span, index=new_index, body=new_body)
 
     def visit_ReturnStatement(self, node: ReturnStatement) -> ReturnStatement:
+        span: Span = self.visit_Span(node.span)
         new_expression = self.visit(node.expression)
 
-        return ReturnStatement(expression=new_expression)
+        return ReturnStatement(span=span, expression=new_expression)
 
-    def visit_Expressions(self, nodes: List[Expression]) -> List[Expression]:
+    def visit_Expressions(self, nodes: Sequence[Expression]) -> Sequence[Expression]:
         return [self.visit_Expression(node) for node in nodes]
 
     def visit_Expression(self, node: Expression) -> Expression:
@@ -459,70 +477,84 @@ class Transformer(BasePass):
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
     def visit_UnaryExpression(self, node: UnaryExpression) -> UnaryExpression:
+        span: Span = self.visit_Span(node.span)
         new_expression = self.visit_Expression(node.expression)
 
-        return UnaryExpression(operation=node.operation, expression=new_expression)
+        return UnaryExpression(
+            span=span, operation=node.operation, expression=new_expression
+        )
 
     def visit_BinaryExpression(self, node: BinaryExpression) -> BinaryExpression:
+        span: Span = self.visit_Span(node.span)
         new_left = self.visit_Expression(node.left)
         new_right = self.visit_Expression(node.right)
 
         return BinaryExpression(
-            operation=node.operation, left=new_left, right=new_right
+            span=span, operation=node.operation, left=new_left, right=new_right
         )
 
     def visit_TernaryExpression(self, node: TernaryExpression) -> TernaryExpression:
+        span: Span = self.visit_Span(node.span)
         new_condition = self.visit_Expression(node.condition)
         new_true = self.visit_Expression(node.true)
         new_false = self.visit_Expression(node.false)
 
         return TernaryExpression(
-            condition=new_condition, true=new_true, false=new_false
+            span=span, condition=new_condition, true=new_true, false=new_false
         )
 
     def visit_FunctionExpression(self, node: FunctionExpression) -> FunctionExpression:
+        span: Span = self.visit_Span(node.span)
         new_function = self.visit_Expression(node.function)
         new_template_types = self.visit_Types(node.template_types)
         new_indices = self.visit_Expressions(node.indices)
         new_args = self.visit_Expressions(node.args)
 
         return FunctionExpression(
+            span=span,
             function=new_function,
             template_types=new_template_types,
-            indices=new_indices,
-            args=new_args,
+            indices=list(new_indices),
+            args=list(new_args),
         )
 
     def visit_ArrayAccessExpression(
         self, node: ArrayAccessExpression
     ) -> ArrayAccessExpression:
+        span: Span = self.visit_Span(node.span)
         new_array_expresssion = self.visit_Expression(node.array_expression)
-        new_indices = self.visit_Expressions(node.indices)
+        new_indices = list(self.visit_Expressions(node.indices))
 
         return ArrayAccessExpression(
-            array_expression=new_array_expresssion, indices=new_indices
+            span=span, array_expression=new_array_expresssion, indices=new_indices
         )
 
     def visit_TupleExpression(self, node: TupleExpression) -> TupleExpression:
+        span: Span = self.visit_Span(node.span)
         new_expressions = self.visit_Expressions(node.expressions)
 
-        return TupleExpression(expressions=new_expressions)
+        return TupleExpression(span=span, expressions=list(new_expressions))
 
     def visit_TupleAccessExpression(
         self, node: TupleAccessExpression
     ) -> TupleAccessExpression:
+        span: Span = self.visit_Span(node.span)
         new_tuple_expression = self.visit(node.tuple_expression)
         new_element_index = self.visit_IntLiteral(node.element_index)
 
         return TupleAccessExpression(
-            tuple_expression=new_tuple_expression, element_index=new_element_index
+            span=span,
+            tuple_expression=new_tuple_expression,
+            element_index=new_element_index,
         )
 
     def visit_IdentifierExpression(
         self, node: IdentifierExpression
     ) -> IdentifierExpression:
+        span: Span = self.visit_Span(node.span)
         new_identifier = self.visit_Identifier(node.identifier)
-        return IdentifierExpression(identifier=new_identifier)
+
+        return IdentifierExpression(span=span, identifier=new_identifier)
 
     def visit_IntLiteral(self, node: IntLiteral) -> IntLiteral:
         return copy(node)
@@ -531,10 +563,13 @@ class Transformer(BasePass):
         return copy(node)
 
     def visit_QualifiedType(self, node: QualifiedType) -> QualifiedType:
+        span: Span = self.visit_Span(node.span)
         new_base_type = self.visit_Type(node.base_type)
         new_type_qualifier = self.visit_TypeQualifier(node.type_qualifier)
 
-        return QualifiedType(base_type=new_base_type, type_qualifier=new_type_qualifier)
+        return QualifiedType(
+            span=span, base_type=new_base_type, type_qualifier=new_type_qualifier
+        )
 
     def visit_Types(self, nodes: List[ir.Type]) -> List[ir.Type]:
         return [self.visit_Type(node) for node in nodes]
@@ -549,19 +584,22 @@ class Transformer(BasePass):
 
     def visit_NumericalType(self, numerical_type: ir.NumericalType) -> ir.NumericalType:
         new_data_type = self.visit_DataType(numerical_type.data_type)
-        new_shape = self.visit_Expressions(numerical_type.shape)
+        new_shape = [self.visit(j) for j in numerical_type.shape]
 
         return ir.NumericalType(data_type=new_data_type, shape=new_shape)
 
-    def visit_IndexType(self, index_type: ir.IndexType) -> None:
-        new_lower_bound = self.visit_Expression(index_type.lower_bound)
-        new_upper_bound = self.visit_Expression(index_type.upper_bound)
+    def visit_IndexType(self, index_type: ir.IndexType) -> ir.IndexType:
+        new_lower_bound = self.visit(index_type.lower_bound)
+        new_upper_bound = self.visit(index_type.upper_bound)
         if index_type.stride is not None:
-            new_stride = self.visit_Expression(index_type.stride)
+            new_stride = self.visit(index_type.stride)
         else:
             new_stride = None
+
         return ir.IndexType(
-            lower_bound=new_lower_bound, upper_bound=new_upper_bound, stride=new_stride
+            lower_bound=new_lower_bound,
+            upper_bound=new_upper_bound,
+            stride=new_stride,
         )
 
     def visit_DataType(self, data_type: ir.DataType) -> ir.DataType:

@@ -4,6 +4,8 @@ from collections import deque
 from pathlib import Path
 from typing import List, Set, Tuple
 
+import networkx as nx
+
 from fhy import ir
 from fhy.lang import collect_imported_identifiers
 
@@ -19,6 +21,7 @@ def _get_imported_symbol_module_components_and_name(
     import_components = imported_symbol.split(".")
     import_module_components = import_components[:-1]
     imported_name = import_components[-1]
+
     return import_module_components, imported_name
 
 
@@ -98,6 +101,7 @@ class ASTProgramBuilder(object):
                     for child in current_tree.children
                     if child.name == source_file_name
                 )
+
         return tree
 
     def _get_source_file_path_from_imported_symbol(
@@ -109,13 +113,17 @@ class ASTProgramBuilder(object):
             imported_symbol
         )
         import_path = Path("/".join(import_module_list)).with_suffix(".fhy")
+
         return root_path_directory / import_path
 
     def _get_module_name_from_source_file_path(self, source_file_path: Path) -> str:
         root_directory_path = self._workspace.root.parent
+
         return str(
             source_file_path.relative_to(root_directory_path).with_suffix("")
         ).replace("/", ".")
+
+    def _confirm_import_exists(self): ...
 
     def _resolve_imports(
         self, source_file_asts: Set[SourceFileAST], module_tree: ModuleTree
@@ -132,13 +140,31 @@ class ASTProgramBuilder(object):
         #      module where the identifier was imported with the original identifier (I
         #      wrote a pass that replaces identifiers; use that)
         #   4. return the set of source file asts with the imports resolved
-        raise NotImplementedError()
+
+        graph = nx.Graph()
+
+        for source in source_file_asts:
+            import_ids: Set[ir.Identifier] = collect_imported_identifiers(source.ast)
+            for iid in import_ids:
+                ...
+
+            source.path
+
+        # Cycle Detection
+        try:
+            result = list(nx.find_cycle(graph, orientation="ignore"))
+        except nx.NetworkXNoCycle:
+            result = None
+        if result is not None:
+            # Cycle has been detected
+            raise ImportError(f"Circular Import Detected: {result}")
 
     def _build_program(self, source_file_asts: Set[SourceFileAST]) -> ir.Program:
         # TODO: Chris will change this later
         program = ir.Program()
         for source_file_ast in source_file_asts:
             program._components[source_file_ast.ast.name] = source_file_ast.ast
+
         return program
 
 

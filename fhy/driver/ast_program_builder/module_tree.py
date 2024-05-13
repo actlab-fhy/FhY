@@ -22,17 +22,16 @@ class ModuleTree(object):
     @property
     def name(self) -> str:
         """Full Project Filepath Import Name."""
-        current_node = self
+        current_node: Optional[ModuleTree] = self
         name_components = []
-        while current_node:
+        while current_node is not None:
             name_components.append(current_node.file_name)
             current_node = current_node.parent
+
         return ".".join(reversed(name_components))
 
     def __hash__(self) -> int:
         return hash(self.name)
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, ModuleTree):
-            return False
-        return self.name == other.name
+        return isinstance(other, ModuleTree) and self.name == other.name
