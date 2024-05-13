@@ -546,12 +546,15 @@ def procedure(span, arg1, declaration) -> Tuple[dict, Procedure]:
         attributes=dict(
             span=span_obj,
             name=name_id_obj,
+            templates=[],
             args=[arg1_obj],
             body=[declare_obj],
         ),
     )
 
-    proc = Procedure(span=span_cls, name=name_id, args=[arg1_cls], body=[declare_cls])
+    proc = Procedure(
+        span=span_cls, name=name_id, templates=[], args=[arg1_cls], body=[declare_cls]
+    )
 
     return obj, proc
 

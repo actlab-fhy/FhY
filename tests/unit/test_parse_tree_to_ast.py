@@ -368,9 +368,18 @@ def test_empty_file(construct_ast):
 # =========
 # FUNCTIONS
 # =========
-def test_empty_procedure(construct_ast):
+@pytest.mark.parametrize(
+    ["source"],
+    [
+        ("proc foo(){}",),  # Procedure Only
+        ("proc foo<>() {}",),  # with Template Type
+        ("proc foo[]() {}",),  # with Index
+        ("proc foo<>[]() {}",),  # Both Template and Index
+    ],
+)
+def test_empty_procedure(construct_ast, source: str):
     """Test that an empty procedure is converted correctly."""
-    source: str = "proc foo(){}"
+    # source: str = "proc foo(){}"
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -431,7 +440,7 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
         ("op foo() -> output int32 {}",),  # Operation Only
         ("op foo<>() -> output int32 {}",),  # with Template Type
         ("op foo[]() -> output int32 {}",),  # with Index
-        ("op foo<>[]() -> output int32 {}",),  # Bot Template and Index
+        ("op foo<>[]() -> output int32 {}",),  # Both Template and Index
     ],
 )
 def test_empty_operation(construct_ast, source: str):
@@ -695,11 +704,12 @@ def test_ternary_expressions(construct_ast):
 
 # TODO: Debug and Support Tuple Access Expressions.
 # NOTE: Identifier Expressions are Taking Precedence over Tuple Access Primitives.
-# def test_tuple_access_expression(construct_ast):
-#     """Test a Tuple Access Expression."""
-#     source: str = "A.1;"
-#     _ast: ast.Module = construct_ast(source)
-#     _assert_is_expected_module(_ast, 1)
+@pytest.mark.skip(reason="Unsupported. Problematic")
+def test_tuple_access_expression(construct_ast):
+    """Test a Tuple Access Expression."""
+    source: str = "x = A.1;"
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
 
 
 @pytest.mark.parametrize(

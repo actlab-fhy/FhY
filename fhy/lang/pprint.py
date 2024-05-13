@@ -77,12 +77,11 @@ class ASTPrettyFormatter(BasePass):
             [self.visit(statement) for statement in procedure.body]
         )
         self._decrement_indent()
+        name = self.visit(procedure.name)
+        templates = ", ".join(self.visit(arg) for arg in procedure.templates)
         args = ", ".join(self.visit(arg) for arg in procedure.args)
         return (
-            f"proc {self.visit(procedure.name)}({args}) "
-            + "{\n"
-            + pprinted_statements
-            + "\n}"
+            f"proc {name}<{templates}>({args}) " + "{\n" + pprinted_statements + "\n}"
         )
 
     def visit_Argument(self, argument: ast.Argument) -> str:

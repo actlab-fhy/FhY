@@ -141,7 +141,9 @@ class ParseTreeConverter(FhYVisitor):
                 text: str = _source_position(pos)
                 raise FhYSyntaxError(f"Procedures do not have return types. {text}")
 
-            return ast.Procedure(name=name, args=args, body=body, span=span)
+            return ast.Procedure(
+                name=name, templates=template, args=args, body=body, span=span
+            )
 
         elif keyword == "op":
             if return_type is None:
@@ -442,23 +444,25 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.Expression:
         span: Span = _get_source_info(ctx)
         # TODO: Add support of Tuple Access Expressions
-        # if ctx.tuple_access_expression is not None:
-        #     primitive_expression_ctx: FhYParser.Primitive_expressionContext = (
-        #         ctx.primitive_expression()
-        #     )
-        #     primitive_expression: ast.Expression = self.visitPrimitive_expression(
-        #         primitive_expression_ctx
-        #     )
+        if ctx.tuple_access_expression is not None:
+            primitive_expression_ctx: FhYParser.Primitive_expressionContext = (
+                ctx.primitive_expression()
+            )
+            primitive_expression: ast.Expression = self.visitPrimitive_expression(
+                primitive_expression_ctx
+            )
 
-        #     return ast.TupleAccessExpression(
-        #         span=span,
-        #         tuple_expression=primitive_expression,
-        #         element_index=int(ctx.DIGIT_SEQUENCE().getText()),
-        #     )
+            return ast.TupleAccessExpression(
+                span=span,
+                tuple_expression=primitive_expression,
+                element_index=int(ctx.INT_LITERAL().getText()),
+            )
 
         if ctx.function_expression is not None:
-            function_expression_ctx = ctx.primitive_expression()
-            function_expression = self.visitPrimitive_expression(
+            function_expression_ctx: FhYParser.Primitive_expressionContext = (
+                ctx.primitive_expression()
+            )
+            function_expression: ast.Expression = self.visitPrimitive_expression(
                 function_expression_ctx
             )
 

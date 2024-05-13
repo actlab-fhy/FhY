@@ -63,17 +63,19 @@ class Procedure(Function):
     """FhY Procedure function ASTNode.
 
     Args:
+        templates (List[ir.Identifier]): list of Template Type Identifiers
         args (List[Argument]): list of Arguments
         body (List[Statement]): list of Statements, defining the body of the procedure
 
     """
 
+    templates: List[ir.Identifier] = field(default_factory=list)
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
 
     def visit_attrs(self) -> List[str]:
         attrs: List[str] = super().visit_attrs()
-        attrs.extend(["args", "body"])
+        attrs.extend(["templates", "args", "body"])
         return attrs
 
 

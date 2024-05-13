@@ -9,7 +9,7 @@ op forward<>(input float32[n] x, param float32[m, n] W, param float32[m] b) -> o
   FC_out[i] = (sum<>[j]((W[i, j] * x[j])) + b[i]);
   return sigmoid<>[](FC_out);
 }
-proc main(input float32[examples, n] X, param float32[m, n] W, param float32[m] b, output float32[examples, m] Y) {
+proc main<>(input float32[examples, n] X, param float32[m, n] W, param float32[m] b, output float32[examples, m] Y) {
   temp index[1:examples:1] e;
   temp index[1:n:1] i;
   temp index[1:m:1] j;
