@@ -6,6 +6,7 @@ import os
 from contextlib import contextmanager
 from enum import IntEnum
 from typing import List, Optional
+from pathlib import Path
 
 from fhy.lang.ast import Module
 from fhy.lang.ast_builder import from_fhy_source
@@ -14,6 +15,7 @@ from fhy.lang.serialization.to_json import dump
 from fhy.utils import error
 from fhy.utils.discovery import confirm_files
 from fhy.utils.logger import get_logger
+from fhy.driver import compile_fhy, CompilationOptions, Workspace
 
 
 class Status(IntEnum):
@@ -78,20 +80,6 @@ def output_path(filepath: str, override_dir: Optional[str]) -> str:
     return new_path
 
 
-@contextmanager
-def open_file(filepath: str, mode: str):
-    """Context manager to Open a File, with Better Error Reporting and Handling."""
-    try:
-        stream = open(filepath, mode)
-    except Exception as e:
-        yield None, e
-    else:
-        try:
-            yield stream.read(), None
-        finally:
-            stream.close()
-
-
 def main():
     """Primary Entry Point for Compilation of FhY Files."""
     arg_parser = arguments()
@@ -116,36 +104,40 @@ def main():
         )
         raise error.UsageError("No Filepaths were collected, or defined to compile.")
 
+    options = CompilationOptions(
+        verbose=args.verbose,
+    )
+
+    workspace = Workspace(root=Path(filepaths[0]))
+
+    # TODO: have compilation function return status
+    compile_fhy(workspace, options)
+
     # NOTE: This should go into a `Root` or `Project` ASTNode
-    constructed: List[Module] = []
-    for file in filepaths:
-        log.debug(f"Started Compiling: {file}")
+    # constructed: List[Module] = []
+    # for file in filepaths:
+    #     log.debug(f"Started Compiling: {file}")
 
-        # Out of an abundance of caution, Fail Fast during reading.
-        with open_file(file, "r") as (text, err):
-            if err is not None:
-                raise FileExistsError(f"Unable to Read provided file: {file}") from err
-            if text is None:
-                raise FileExistsError(f"No Text was read from file: {file}")
+    #     # Out of an abundance of caution, Fail Fast during reading.
 
-        ast = from_fhy_source(text)
-        if ast is None or not isinstance(ast, Module):
-            log.error(f"Unable to Construct AST from: {file}")
-            raise error.FhYASTBuildError(f"Unable to Construct AST from: {file}")
-        constructed.append(ast)
 
-    # TODO: Rename this, since we are essentially returning our ASTNodes to FhY Text
-    #       Pretty Printing should be a text representation of our nodes (and not json)
-    if args.pretty:
-        print("\n\n")
-        for fname, node in zip(filepaths, constructed):
-            header = f"// {fname}\n"
-            header += "=" * len(header)
-            print(header)
-            print(pformat_ast(node), end="\n\n")
+    #     if ast is None or not isinstance(ast, Module):
+    #         log.error(f"Unable to Construct AST from: {file}")
+    #         raise error.FhYASTBuildError(f"Unable to Construct AST from: {file}")
+    #     constructed.append(ast)
 
-    if args.json:
-        print([dump(node, None) for node in constructed])
+    # # TODO: Rename this, since we are essentially returning our ASTNodes to FhY Text
+    # #       Pretty Printing should be a text representation of our nodes (and not json)
+    # if args.pretty:
+    #     print("\n\n")
+    #     for fname, node in zip(filepaths, constructed):
+    #         header = f"// {fname}\n"
+    #         header += "=" * len(header)
+    #         print(header)
+    #         print(pformat_ast(node), end="\n\n")
+
+    # if args.json:
+    #     print([dump(node, None) for node in constructed])
 
     return Status.OK
 

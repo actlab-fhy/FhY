@@ -31,6 +31,12 @@ class Identifier(object):
         """UniqueID."""
         return self._id
 
+    def __copy__(self) -> "Identifier":
+        identifier = Identifier.__new__(Identifier)
+        identifier._id = self._id
+        identifier._name_hint = self._name_hint
+        return identifier
+
     def __eq__(self, other: Any) -> bool:
         return isinstance(other, Identifier) and self._id == other._id
 
