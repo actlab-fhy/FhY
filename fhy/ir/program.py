@@ -1,10 +1,7 @@
 """Program Root Node."""
 
-from typing import Dict, Union
-
 # from fhy.lang.ast.core import Module as ASTModule
 from .table import SymbolTable
-from .identifier import Identifier
 
 
 class Program(object):

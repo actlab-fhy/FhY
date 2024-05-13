@@ -3,19 +3,14 @@
 import argparse
 import logging
 import os
-from contextlib import contextmanager
 from enum import IntEnum
-from typing import List, Optional
 from pathlib import Path
+from typing import List, Optional
 
-from fhy.lang.ast import Module
-from fhy.lang.ast_builder import from_fhy_source
-from fhy.lang.pprint import pformat_ast
-from fhy.lang.serialization.to_json import dump
+from fhy.driver import CompilationOptions, Workspace, compile_fhy
 from fhy.utils import error
 from fhy.utils.discovery import confirm_files
 from fhy.utils.logger import get_logger
-from fhy.driver import compile_fhy, CompilationOptions, Workspace
 
 
 class Status(IntEnum):
@@ -120,14 +115,13 @@ def main():
 
     #     # Out of an abundance of caution, Fail Fast during reading.
 
-
     #     if ast is None or not isinstance(ast, Module):
     #         log.error(f"Unable to Construct AST from: {file}")
     #         raise error.FhYASTBuildError(f"Unable to Construct AST from: {file}")
     #     constructed.append(ast)
 
     # # TODO: Rename this, since we are essentially returning our ASTNodes to FhY Text
-    # #       Pretty Printing should be a text representation of our nodes (and not json)
+    # #       Pretty Printing should be a text repr of our nodes (and not json)
     # if args.pretty:
     #     print("\n\n")
     #     for fname, node in zip(filepaths, constructed):

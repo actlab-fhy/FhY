@@ -1,3 +1,5 @@
+"""Fhy Driver Submodule."""
+
 from .compilation_options import CompilationOptions
-from .workspace import Workspace
 from .main import compile_fhy
+from .workspace import Workspace

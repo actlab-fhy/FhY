@@ -1,3 +1,5 @@
+"""AST Visitor Pass to collect Import Identifiers."""
+
 from typing import Set
 
 from fhy import ir
@@ -6,6 +8,8 @@ from fhy.utils.alias import ASTObject
 
 
 class ImportedIdentifierCollector(ast.Visitor):
+    """Visitor pass to Collect Import identifiers from AST Nodes."""
+
     _identifiers: Set[ir.Identifier]
 
     def __init__(self) -> None:
@@ -22,6 +26,16 @@ class ImportedIdentifierCollector(ast.Visitor):
 
 
 def collect_imported_identifiers(node: ASTObject) -> Set[ir.Identifier]:
+    """Collect all identifiers from Import Statements from a given node.
+
+    Args:
+        node (ASTObject): AST Node object.
+
+    Returns:
+        Set[ir.Identifier]: Set of discovered Import Identifiers from Node graph.
+
+    """
     collector = ImportedIdentifierCollector()
     collector(node)
+
     return collector.identifiers

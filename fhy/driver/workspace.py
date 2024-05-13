@@ -1,7 +1,11 @@
+"""Workspace."""
+
 from pathlib import Path
 
 
 class Workspace(object):
+    """Workspace."""
+
     _root: Path
 
     def __init__(self, root: Path):

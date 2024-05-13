@@ -1,15 +1,27 @@
+"""Project Module Tree Path."""
+
 from dataclasses import dataclass, field
 from typing import Optional, Set
 
 
 @dataclass
 class ModuleTree(object):
+    """Module Tree Path.
+
+    Args:
+        file_name (str): filepath basename
+        parent (Optional[ModuleTree]): Parent Directory Module Tree
+        children (Set[ModuleTree]): Child Module Trees (relevant if file is a directory)
+
+    """
+
     file_name: str
     parent: Optional["ModuleTree"] = field(default=None)
     children: Set["ModuleTree"] = field(default_factory=set)
 
     @property
     def name(self) -> str:
+        """Full Project Filepath Import Name."""
         current_node = self
         name_components = []
         while current_node:
