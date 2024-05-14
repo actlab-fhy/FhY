@@ -9,7 +9,7 @@ from fhy.lang import ast, collect_imported_identifiers, from_fhy_source
 from fhy.lang.pprint import pformat_ast
 
 from .ast_program_builder import build_ast_program
-from .ast_program_builder.utils import get_import_modules_and_name
+from .utils import get_imported_symbol_module_components_and_name
 from .compilation_options import CompilationOptions
 from .file_reader import read_file
 from .workspace import Workspace
@@ -17,7 +17,7 @@ from .workspace import Workspace
 
 def _resolve_file_path_from_import_name(import_name: str, root_path: Path) -> Path:
     root_path_directory = root_path.parent
-    import_module_list, _ = get_import_modules_and_name(import_name)
+    import_module_list, _ = get_imported_symbol_module_components_and_name(import_name)
     import_path = Path(*import_module_list).with_suffix(".fhy")
 
     return root_path_directory.joinpath(import_path)

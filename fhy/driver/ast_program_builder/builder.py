@@ -12,22 +12,13 @@ from fhy.lang import collect_imported_identifiers, replace_identifiers
 from fhy.utils import error
 
 from ..compilation_options import CompilationOptions
+from ..utils import get_imported_symbol_module_components_and_name
 from ..workspace import Workspace
 from .module_tree import ModuleTree
 from .source_file_ast import SourceFileAST, build_source_file_ast
 
 log: logging.Logger = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
-
-
-def _get_imported_symbol_module_components_and_name(
-    imported_symbol: str,
-) -> Tuple[List[str], str]:
-    import_components = imported_symbol.split(".")
-    import_module_components = import_components[:-1]
-    imported_name = import_components[-1]
-
-    return import_module_components, imported_name
 
 
 class ASTProgramBuilder(object):
@@ -114,7 +105,7 @@ class ASTProgramBuilder(object):
         imported_symbol: str,
     ) -> Path:
         root_path_directory = self._workspace.root.parent
-        import_module_list, _ = _get_imported_symbol_module_components_and_name(
+        import_module_list, _ = get_imported_symbol_module_components_and_name(
             imported_symbol
         )
         import_path = Path("/".join(import_module_list)).with_suffix(".fhy")
