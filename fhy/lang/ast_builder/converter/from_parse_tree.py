@@ -8,6 +8,7 @@ Functions:
 
 """
 
+import re
 from collections import ChainMap
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -443,22 +444,26 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Primitive_expressionContext
     ) -> ast.Expression:
         span: Span = _get_source_info(ctx)
-        # TODO: Add support of Tuple Access Expressions
         if ctx.tuple_access_expression is not None:
-            primitive_expression_ctx: FhYParser.Primitive_expressionContext = (
+            expression: ast.Expression = self.visitPrimitive_expression(
                 ctx.primitive_expression()
             )
-            primitive_expression: ast.Expression = self.visitPrimitive_expression(
-                primitive_expression_ctx
-            )
+
+            # Grammar Hack to support Tuple Indexers require validation
+            index_text: str = ctx.FLOAT_LITERAL().getText()
+            if not index_text.startswith(".") or not re.search(
+                r"^\.[0-9][0-9_]*$", index_text
+            ):
+                lines = _source_position(span)
+                raise FhYSyntaxError(f"Invalid Tuple Accessor `{index_text}`: {lines}")
 
             return ast.TupleAccessExpression(
                 span=span,
-                tuple_expression=primitive_expression,
-                element_index=int(ctx.INT_LITERAL().getText()),
+                tuple_expression=expression,
+                element_index=int(index_text[1:]),
             )
 
-        if ctx.function_expression is not None:
+        elif ctx.function_expression is not None:
             function_expression_ctx: FhYParser.Primitive_expressionContext = (
                 ctx.primitive_expression()
             )

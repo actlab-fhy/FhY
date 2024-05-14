@@ -94,7 +94,7 @@ type
     ;
 
 tuple_type
-    : TUPLE OPEN_BRACKET ((type COMMA) | (type (COMMA type)+))? CLOSE_BRACKET
+    : TUPLE OPEN_BRACKET ((type COMMA) | (type (COMMA type)+ COMMA?))? CLOSE_BRACKET
     ;
 
 numerical_type
@@ -140,16 +140,21 @@ expression_list
     ;
 
 primitive_expression
-    : tuple_access_expression=primitive_expression DOT DIGIT_SEQUENCE
+    : tuple_access_expression=primitive_expression FLOAT_LITERAL
     | function_expression=primitive_expression (LESS_THAN expression_list GREATER_THAN)? (OPEN_BRACKET expression_list CLOSE_BRACKET)? OPEN_PARENTHESES expression_list CLOSE_PARENTHESES
     | array_access_expression=primitive_expression OPEN_BRACKET expression_list CLOSE_BRACKET
     | atom
     ;
 
 atom
-    : tuple=OPEN_PARENTHESES ((expression COMMA) | (expression (COMMA expression)+ (COMMA)?))? CLOSE_PARENTHESES
+    : tuple
     | identifier_expression
     | literal
+    ;
+
+tuple
+    : OPEN_PARENTHESES expression COMMA CLOSE_PARENTHESES
+    | OPEN_PARENTHESES expression (COMMA expression)+ COMMA? CLOSE_PARENTHESES
     ;
 
 identifier_expression
@@ -376,29 +381,7 @@ LOGICAL_OR
  */
 
 IDENTIFIER
-    : IDENTIFIER_NON_DIGIT (IDENTIFIER_NON_DIGIT | DIGIT)*
-    ;
-
-fragment IDENTIFIER_NON_DIGIT
-    : NONDIGIT
-    ;
-
-fragment NONDIGIT
-    : [a-zA-Z_]
-    ;
-
-FLOAT_LITERAL
-    : DECIMAL_FLOAT_LITERAL
-    ;
-
-fragment DECIMAL_FLOAT_LITERAL
-    : FRACTION_PART EXPONENT_PART?
-    | DIGIT_SEQUENCE EXPONENT_PART
-    ;
-
-fragment FRACTION_PART
-    : DIGIT_SEQUENCE? DOT DIGIT_SEQUENCE
-    | DIGIT_SEQUENCE DOT
+    : NONDIGIT (NONDIGIT | DEC_DIGIT)*
     ;
 
 INT_LITERAL
@@ -408,36 +391,62 @@ INT_LITERAL
     | HEXADECIMAL_INT_LITERAL
     ;
 
-fragment BINARY_INT_LITERAL
+FLOAT_LITERAL
+    : FRACTION_PART EXPONENT_PART?
+    | DIGIT_SEQUENCE EXPONENT_PART
+    ;
+
+FRACTION_PART
+    : DIGIT_SEQUENCE? DOT DIGIT_SEQUENCE
+    | DIGIT_SEQUENCE DOT
+    ;
+
+NONDIGIT
+    : [a-zA-Z_]
+    ;
+
+BINARY_INT_LITERAL
     : '0' [bB] [01_]+
     ;
 
-fragment OCTAL_INT_LITERAL
+OCTAL_INT_LITERAL
     : '0' [oO] [0-7_]+
     ;
 
-fragment DECIMAL_INT_LITERAL
+DECIMAL_INT_LITERAL
     : DIGIT_SEQUENCE
     ;
 
-fragment HEXADECIMAL_INT_LITERAL
-    : '0' [xX] [0-9a-fA-F][0-9a-fA-F_]*
+HEXADECIMAL_INT_LITERAL
+    : '0' [xX] HEX_DIGIT (HEX_DIGIT | '_')*
     ;
 
 EXPONENT_PART
     : [eE] SIGN? DIGIT_SEQUENCE
     ;
 
-fragment SIGN
+DIGIT_SEQUENCE
+    : DEC_DIGIT (DEC_DIGIT | '_')*
+    ;
+
+SIGN
     : [+-]
     ;
 
-DIGIT_SEQUENCE
-    : [0-9][0-9_]*
+BIN_DIGIT
+    : [0-1]
     ;
 
-fragment DIGIT
+OCT_DIGIT
+    : [0-7]
+    ;
+
+DEC_DIGIT
     : [0-9]
+    ;
+
+HEX_DIGIT
+    : [0-9a-fA-F]
     ;
 
 WHITESPACE

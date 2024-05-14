@@ -63,7 +63,12 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
     elif isinstance(expr1, ast.TupleAccessExpression) and isinstance(
         expr2, ast.TupleAccessExpression
     ):
-        raise NotImplementedError()
+        return (
+            is_primitive_expression_equal(
+                expr1.tuple_expression, expr2.tuple_expression
+            )
+            and expr1.element_index == expr2.element_index
+        )
 
     elif isinstance(expr1, ast.ArrayAccessExpression) and isinstance(
         expr2, ast.ArrayAccessExpression
@@ -571,7 +576,7 @@ def test_expression_statement_with_assignment(construct_ast):
         ast.ExpressionStatement, statement
     )
 
-    is_primitive_expression_equal(
+    assert is_primitive_expression_equal(
         statement.left, ast.IdentifierExpression(identifier=ir.Identifier("A"))
     )
 
@@ -655,7 +660,7 @@ def test_unary_expression(construct_ast, operator: ast.UnaryOperation):
         expression.operation == operator
     ), f"Expected `{operator}` operation. Received: `{expression.operation}`"
 
-    is_primitive_expression_equal(expression.expression, ast.IntLiteral(value=5))
+    assert is_primitive_expression_equal(expression.expression, ast.IntLiteral(value=5))
 
 
 @pytest.mark.parametrize(["operator"], [(i,) for i in ast.BinaryOperation])
@@ -675,8 +680,8 @@ def test_binary_expressions(construct_ast, operator: ast.BinaryOperation):
         expression.operation == operator
     ), f"Expected `{operator}` operation. Received: `{expression.operation}`"
 
-    is_primitive_expression_equal(expression.left, ast.IntLiteral(value=5))
-    is_primitive_expression_equal(expression.right, ast.IntLiteral(value=6))
+    assert is_primitive_expression_equal(expression.left, ast.IntLiteral(value=5))
+    assert is_primitive_expression_equal(expression.right, ast.IntLiteral(value=6))
 
 
 def test_ternary_expressions(construct_ast):
@@ -698,18 +703,29 @@ def test_ternary_expressions(construct_ast):
     assert isinstance(expression.condition, ast.BinaryExpression), wrong_node_babe(
         ast.BinaryExpression, expression.condition
     )
-    is_primitive_expression_equal(expression.true, ast.IntLiteral(value=7))
-    is_primitive_expression_equal(expression.false, ast.IntLiteral(value=8))
+    assert is_primitive_expression_equal(expression.true, ast.IntLiteral(value=7))
+    assert is_primitive_expression_equal(expression.false, ast.IntLiteral(value=8))
 
 
 # TODO: Debug and Support Tuple Access Expressions.
 # NOTE: Identifier Expressions are Taking Precedence over Tuple Access Primitives.
-@pytest.mark.skip(reason="Unsupported. Problematic")
-def test_tuple_access_expression(construct_ast):
+# @pytest.mark.skip(reason="Unsupported. Problematic")
+@pytest.mark.parametrize(["name"], [("A",), ("A1",), ("A_",)])
+def test_tuple_access_expression(construct_ast, name: str):
     """Test a Tuple Access Expression."""
-    source: str = "x = A.1;"
+    source: str = "x = %s.1;" % name
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    _assert_is_expected_expression_statement(
+        statement,
+        ast.IdentifierExpression(identifier=ir.Identifier("x")),
+        ast.TupleAccessExpression(
+            tuple_expression=ast.IdentifierExpression(identifier=ir.Identifier(name)),
+            element_index=1,
+        ),
+    )
 
 
 @pytest.mark.parametrize(
@@ -747,7 +763,7 @@ def test_function_expression(construct_ast, source: str, nargs: int, name: str):
     assert isinstance(expression, ast.FunctionExpression), wrong_node_babe(
         ast.FunctionExpression, expression
     )
-    is_primitive_expression_equal(
+    assert is_primitive_expression_equal(
         expression.function, ast.IdentifierExpression(identifier=ir.Identifier(name))
     )
 
@@ -762,7 +778,7 @@ def test_function_expression(construct_ast, source: str, nargs: int, name: str):
 
     if nargs:
         expect = ast.IdentifierExpression(identifier=ir.Identifier("A"))
-        is_primitive_expression_equal(expression.args[0], expect)
+        assert is_primitive_expression_equal(expression.args[0], expect)
 
 
 @pytest.mark.parametrize(
@@ -835,9 +851,16 @@ def test_index_type(construct_ast):
     )
 
 
-def test_tuple_type(construct_ast):
+@pytest.mark.parametrize(
+    ["source"],
+    [
+        ("output tuple[int32[m, n], int32] i;",),
+        ("output tuple[int32[m, n], int32,] i;",),
+    ],
+)
+def test_tuple_type(construct_ast, source: str):
     """Test construction of Tuple Type."""
-    source: str = "output tuple[int32[m, n], int32] i;"  # Semantically Invalid
+    # source: str = "output tuple[int32[m, n], int32] i;"  # Semantically Invalid
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -874,7 +897,7 @@ def test_tuple_type(construct_ast):
         ("0x1;", 1),
         ("0XFF;", 255),
         ("0o1;", 1),
-        ("0O7;", 1),
+        ("0O7;", 7),
     ],
 )
 def test_int_literal(construct_ast, source: str, value: int):
@@ -886,7 +909,7 @@ def test_int_literal(construct_ast, source: str, value: int):
     assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
         ast.ExpressionStatement, statement
     )
-    is_primitive_expression_equal(statement.right, ast.IntLiteral(value=value))
+    assert is_primitive_expression_equal(statement.right, ast.IntLiteral(value=value))
 
 
 @pytest.mark.parametrize(
@@ -902,7 +925,7 @@ def test_float_literal(construct_ast, source: str, value: float):
     assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
         ast.ExpressionStatement, statement
     )
-    is_primitive_expression_equal(statement.right, ast.FloatLiteral(value=value))
+    assert is_primitive_expression_equal(statement.right, ast.FloatLiteral(value=value))
 
 
 # =============
