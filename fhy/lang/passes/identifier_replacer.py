@@ -26,9 +26,6 @@ class IdentifierReplacer(Transformer):
         self._identifier_map = identifier_map
 
     def visit_Identifier(self, identifier: ir.Identifier) -> ir.Identifier:
-        # NOTE: All we want to do is copy the existing Identifier?
-        #       Do we not want to also bank encountered identifiers?
-        # NOTE: This is a transformer by virtue of providing return values.
         return copy(self._identifier_map.get(identifier, identifier))
 
 

@@ -1,18 +1,23 @@
 """Fhy Builder Module."""
 
+import logging
 from collections import deque
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 import networkx as nx
 
 from fhy import ir
-from fhy.lang import collect_imported_identifiers
+from fhy.lang import collect_imported_identifiers, replace_identifiers
+from fhy.utils import error
 
 from ..compilation_options import CompilationOptions
 from ..workspace import Workspace
 from .module_tree import ModuleTree
 from .source_file_ast import SourceFileAST, build_source_file_ast
+
+log: logging.Logger = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 def _get_imported_symbol_module_components_and_name(
@@ -123,7 +128,17 @@ class ASTProgramBuilder(object):
             source_file_path.relative_to(root_directory_path).with_suffix("")
         ).replace("/", ".")
 
-    def _confirm_import_exists(self): ...
+    def _confirm_import_exists(self, identifier: ir.Identifier, tree: ModuleTree):
+        # TODO: Implement Confirmation Check.
+        ...
+
+    def _is_cyclical(self, graph: nx.Graph) -> Optional[list]:
+        try:
+            result = list(nx.find_cycle(graph, orientation="ignore"))
+            return result
+
+        except nx.NetworkXNoCycle:
+            ...
 
     def _resolve_imports(
         self, source_file_asts: Set[SourceFileAST], module_tree: ModuleTree
@@ -146,18 +161,26 @@ class ASTProgramBuilder(object):
         for source in source_file_asts:
             import_ids: Set[ir.Identifier] = collect_imported_identifiers(source.ast)
             for iid in import_ids:
-                ...
+                if not (leaf := self._confirm_import_exists(iid, module_tree)):
+                    msg = f"Import Not Found: {iid}"
+                    log.error(msg)
+                    raise error.FhYImportError(msg)
 
-            source.path
+                graph.add_edge(source.path, leaf)
 
         # Cycle Detection
-        try:
-            result = list(nx.find_cycle(graph, orientation="ignore"))
-        except nx.NetworkXNoCycle:
-            result = None
-        if result is not None:
-            # Cycle has been detected
-            raise ImportError(f"Circular Import Detected: {result}")
+        if result := self._is_cyclical(graph):
+            msg = f"Circular Import Detected: {result}"
+            log.error(msg)
+            raise error.FhYImportError(msg)
+
+        # Resolve Import Identifiers
+        id_map = {}
+        bank = set()
+        for k in source_file_asts:
+            bank.add(replace_identifiers(k.ast, id_map))
+
+        return bank
 
     def _build_program(self, source_file_asts: Set[SourceFileAST]) -> ir.Program:
         # TODO: Chris will change this later
@@ -180,4 +203,5 @@ def build_ast_program(workspace: Workspace, options: CompilationOptions) -> ir.P
 
     """
     builder = ASTProgramBuilder(workspace, options)
+
     return builder.build()

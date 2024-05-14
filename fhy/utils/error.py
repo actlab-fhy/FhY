@@ -60,6 +60,13 @@ class FhYSemanticsError(Exception):
 
 
 @register_fhy_error
+class FhYImportError(ImportError):
+    """Problematic Import Statement Detected from FhY Source Code."""
+
+    ...
+
+
+@register_fhy_error
 class UnregisteredASTNode(KeyError):
     """ASTNode information has not been registered with FhY."""
 
