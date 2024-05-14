@@ -175,7 +175,7 @@ class ASTProgramBuilder(object):
             raise error.FhYImportError(msg)
 
         # Resolve Import Identifiers
-        id_map = {}
+        id_map = {}  # TODO: Collect Map Somehow
         bank = set()
         for k in source_file_asts:
             bank.add(replace_identifiers(k.ast, id_map))

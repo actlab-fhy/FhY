@@ -23,10 +23,12 @@ class Status(IntEnum):
 
 
 # TODO: We might want a filehandler to output log to a file on user flag.
+# TODO: Capture Root Directory Information to define Consistent logging location
 def make_logger(verbose: bool = False) -> logging.Logger:
     """Constructs a Simple Logger."""
     level: int = logging.DEBUG if verbose else logging.INFO
     log: logging.Logger = get_logger("FhY", level=level)
+
     return log
 
 
@@ -62,6 +64,7 @@ def output_path(filepath: str, override_dir: Optional[str]) -> str:
     if override_dir is None:
         parent_relative = os.path.join(filepath, os.pardir)
         parent_dir = os.path.abspath(parent_relative)
+
     else:
         if not os.path.exists(override_dir):
             raise FileNotFoundError(
@@ -97,6 +100,7 @@ def main():
         log.error(
             f"No Filepaths were collected from provided file arguments: {args.files}"
         )
+        # return Status.USAGE_ERROR
         raise error.UsageError("No Filepaths were collected, or defined to compile.")
 
     options = CompilationOptions(
@@ -106,7 +110,18 @@ def main():
     workspace = Workspace(root=Path(filepaths[0]))
 
     # TODO: have compilation function return status
-    compile_fhy(workspace, options)
+    # NOTE: I Disagree Here. compile_fhy should not be client facing. Main should.
+
+    try:
+        compile_fhy(workspace, options)
+
+    except KeyboardInterrupt as e:
+        log.error("FhY Compilation has been Interrupted by client.", exc_info=e)
+        return Status.INTERRUPTED
+
+    except Exception as e:
+        log.error("FhY Compilation has Failed", exc_info=e)
+        return Status.FAILED
 
     # NOTE: This should go into a `Root` or `Project` ASTNode
     # constructed: List[Module] = []
