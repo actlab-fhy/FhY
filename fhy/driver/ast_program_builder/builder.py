@@ -45,7 +45,11 @@ class ASTProgramBuilder(object):
 
     @property
     def root_dir(self) -> Path:
-        return self._workspace.root.parent
+        return self._workspace.root
+
+    @property
+    def src_dir(self):
+        return self._workspace.source
 
     def build(self) -> ir.Program:
         unresolved_source_file_asts = self._build_source_file_asts()
@@ -70,7 +74,7 @@ class ASTProgramBuilder(object):
 
         """
         source_file_asts: List[SourceFileAST] = []
-        source_file_queue = deque([self._workspace.root])
+        source_file_queue = deque([self._workspace.main])
 
         while source_file_queue:
             filepath: Path = source_file_queue.popleft()
@@ -114,9 +118,8 @@ class ASTProgramBuilder(object):
         for module_name in module_names:
             current_tree: ModuleTree = tree
             for source_file_name in module_name.split("."):
-                if source_file_name not in {
-                    child.name for child in current_tree.children
-                }:
+                options = {child.module_name for child in current_tree.children}
+                if source_file_name not in options:
                     new_node = ModuleTree(source_file_name, parent=current_tree)
                     current_tree.children.add(new_node)
                     current_tree = new_node
@@ -124,7 +127,7 @@ class ASTProgramBuilder(object):
                     current_tree = next(
                         child
                         for child in current_tree.children
-                        if child.name == source_file_name
+                        if child.module_name == source_file_name
                     )
 
         return tree
@@ -145,7 +148,7 @@ class ASTProgramBuilder(object):
         route, name = get_imported_symbol_module_components_and_name(imported_symbol)
         import_path = Path(*route, name).with_suffix(".fhy")
 
-        return self.root_dir.parent / import_path
+        return self.root_dir / import_path
 
     def _get_module_name_from_source_file_path(self, filepath: Path) -> str:
         path: str = str(filepath.relative_to(self.root_dir).with_suffix(""))
@@ -164,9 +167,22 @@ class ASTProgramBuilder(object):
         except nx.NetworkXNoCycle:
             ...
 
+    def _get_module_by_name(self, tree: ModuleTree, name: str) -> Optional[ModuleTree]:
+        for a in name.split("."):
+            tree = next(i for i in tree.children if i.module_name == a)
+            if tree is None:
+                break
+
+        return tree
+
+    def _get_module_by_path(self, tree: ModuleTree, path: Path) -> Optional[ModuleTree]:
+        route = self._get_module_name_from_source_file_path(path)
+
+        return self._get_module_by_name(tree, route)
+
     def _resolve_imports(
-        self, source_file_asts: Set[SourceFileAST], module_tree: ModuleTree
-    ) -> Set[SourceFileAST]:
+        self, source_file_asts: List[SourceFileAST], module_tree: ModuleTree
+    ) -> List[SourceFileAST]:
         # TODO: fill in;
         #   1. iterate over all of the imported symbols (i.e., iterate over all modules,
         #      use the get imported identifier pass to grab, and iterate over those
@@ -185,12 +201,20 @@ class ASTProgramBuilder(object):
         for source in source_file_asts:
             import_ids: Set[ir.Identifier] = collect_imported_identifiers(source.ast)
             for iid in import_ids:
-                if not (leaf := self._confirm_import_exists(iid, module_tree)):
+                relevant_module = self._get_module_by_name(module_tree, iid.name_hint)
+
+                if relevant_module is None:
+                    msg = f"Invalid Import Statement. Module Not Found: {iid}"
+                    log.error(msg)
+                    raise error.FhYImportError(msg)
+
+                validate = self._confirm_import_exists(iid, relevant_module)
+                if not validate:
                     msg = f"Import Not Found: {iid}"
                     log.error(msg)
                     raise error.FhYImportError(msg)
 
-                graph.add_edge(source.path, leaf)
+                # graph.add_edge(source.path.name, leaf)
 
         # Cycle Detection
         if result := self._is_cyclical(graph):

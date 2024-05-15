@@ -30,6 +30,11 @@ class ModuleTree(object):
 
         return ".".join(reversed(name_components))
 
+    @property
+    def module_name(self) -> str:
+        """Basename of Module Filepath."""
+        return self.name.split(".")[-1]
+
     def __hash__(self) -> int:
         return hash(self.name)
 

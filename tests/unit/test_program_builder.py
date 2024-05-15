@@ -12,6 +12,7 @@ from fhy.driver.ast_program_builder.module_tree import ModuleTree
 from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.workspace import Workspace
+from fhy.lang.passes import collect_imported_identifiers
 
 
 @pytest.fixture
@@ -68,7 +69,18 @@ def test_get_filepath_names(unidirectional_import, config):
     paths = {i.path for i in ast_files}
 
     result = {program._get_module_name_from_source_file_path(j) for j in paths}
-    assert result == {"a", "b"}, "Expected Source Path names to match."
+    assert result == {
+        "unidirectional_import.a",
+        "unidirectional_import.b",
+    }, "Expected Source Path names to match."
+
+
+def test_get_path_from_symbol(unidirectional_import, config):
+    symbol = "unidirectional_import.a"
+    program = ASTProgramBuilder(unidirectional_import, config)
+    result = program._get_source_file_path_from_imported_symbol(symbol)
+
+    assert result == unidirectional_import.main
 
 
 def test_builder_module_tree(unidirectional_import, config):
@@ -78,13 +90,45 @@ def test_builder_module_tree(unidirectional_import, config):
 
     result = program._build_module_tree(paths)
     assert isinstance(result, ModuleTree), "Expected to return ModuleTree Object"
-    assert len(result.children) == 2, "Expected Two Children"
+    assert len(result.children) == 1, "Expected One Child"
 
-    for child in result.children:
+    # Confirm Source Directory
+    src_name = {i.name for i in result.children}
+    assert src_name == {"root.unidirectional_import"}, "Unexpected Source Name"
+    src_module_name = {i.module_name for i in result.children}
+    assert src_module_name == {"unidirectional_import"}, "Unexpected Source Module Name"
+
+    # Confirm Modules (chilren) of Source Directory
+    src_dir_tree = next(iter(result.children))
+    assert isinstance(src_dir_tree, ModuleTree), "Expected to return ModuleTree Object"
+
+    assert len(src_dir_tree.children) == 2, "Expected Two Children"
+    src_dir_names = {i.name for i in src_dir_tree.children}
+    assert src_dir_names == {
+        "root.unidirectional_import.a",
+        "root.unidirectional_import.b",
+    }, "Unexpected Source Name"
+    src_dir_module_names = {i.module_name for i in src_dir_tree.children}
+    assert src_dir_module_names == {"a", "b"}, "Unexpected Source Module Names"
+
+    for child in src_dir_tree.children:
         assert isinstance(
             child, ModuleTree
         ), "Expected to Children to be ModuleTree Objects"
         assert len(child.children) == 0, "Expected children to be end leaf nodes."
 
-    names = {i.name for i in result.children}
-    assert names == {"root.a", "root.b"}, "Expected ModuleTree Names to be identical."
+
+def test_get_correct_module_by_name(unidirectional_import, config):
+    program = ASTProgramBuilder(unidirectional_import, config)
+    ast_files = program._build_source_file_asts()
+    paths = {i.path for i in ast_files}
+    tree = program._build_module_tree(paths)
+
+    ids = collect_imported_identifiers(ast_files[0].ast)
+    assert len(ids) == 1, "Expected one ID."
+    name = next(iter(ids)).name_hint
+    print("ID Name:", name)
+
+    result = program._get_module_by_name(tree, name)
+    assert isinstance(result, ModuleTree), "Expected Module Tree"
+    assert result.name == f"root.{name}", "Expected Identical Names."
