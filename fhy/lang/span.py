@@ -18,7 +18,7 @@ class Slice:
     """
 
     start: int
-    end: int
+    stop: int
 
     def __init__(self, start: int, stop: int) -> None:
         self.start = start
