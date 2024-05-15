@@ -1,0 +1,3 @@
+import circular_import.b;
+
+temp int32 A = b.B + 5;

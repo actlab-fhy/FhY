@@ -3,7 +3,7 @@
 import logging
 from collections import deque
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set
 
 import networkx as nx
 
@@ -22,13 +22,14 @@ log.setLevel(logging.DEBUG)
 
 
 class ASTProgramBuilder(object):
-    """_summary_.
+    """Construct an AST Program.
 
     Args:
-        object (_type_): _description_
+        workspace (Workspace): describe project root directory file.
+        options (CompilationOptions): Configuration options during compilation
 
     Raises:
-        NotImplementedError: _description_
+        FhYImportError: Problematic Import statement detected.
 
     Returns:
         _type_: _description_
@@ -42,9 +43,14 @@ class ASTProgramBuilder(object):
         self._workspace = workspace
         self._options = options
 
+    @property
+    def root_dir(self) -> Path:
+        return self._workspace.root.parent
+
     def build(self) -> ir.Program:
         unresolved_source_file_asts = self._build_source_file_asts()
-        module_tree = self._build_module_tree(unresolved_source_file_asts)
+        paths: Set[Path] = {i.path for i in unresolved_source_file_asts}
+        module_tree: ModuleTree = self._build_module_tree(paths)
         resolved_source_file_asts = self._resolve_imports(
             unresolved_source_file_asts, module_tree
         )
@@ -52,24 +58,37 @@ class ASTProgramBuilder(object):
 
         return ast_program
 
-    def _build_source_file_asts(self) -> Set[SourceFileAST]:
-        source_file_asts = set()
+    def _build_source_file_asts(self) -> List[SourceFileAST]:
+        """This Compiles Files Propagating Outward from Main Root Module.
+
+        Note:
+            This appears to avoid any modules which are not imported, or in some
+            way connected directly, or indirectly via imports. This may or may
+            not be desired for end user. We will need to thoroughly document
+            this expected behavior of compilation (i.e. that lone modules are
+            not included in compilation)
+
+        """
+        source_file_asts: List[SourceFileAST] = []
         source_file_queue = deque([self._workspace.root])
 
         while source_file_queue:
-            source_file_path = source_file_queue.popleft()
-            if source_file_path in source_file_asts:
+            filepath: Path = source_file_queue.popleft()
+            paths = map(lambda k: k.path, source_file_asts)
+            if any(i == filepath for i in paths):
                 continue
 
-            source_file_ast = build_source_file_ast(source_file_path)
-            source_file_asts.add(source_file_ast)
+            ast_source: SourceFileAST = build_source_file_ast(filepath)
+            source_file_asts.append(ast_source)
 
-            imported_identifiers = collect_imported_identifiers(source_file_ast.ast)
-            imported_symbols = {
+            imported_identifiers: Set[ir.Identifier] = collect_imported_identifiers(
+                ast_source.ast
+            )
+            imported_symbols: Set[str] = {
                 import_identifier.name_hint
                 for import_identifier in imported_identifiers
             }
-            import_paths = set(
+            import_paths: Set[Path] = set(
                 self._get_source_file_path_from_imported_symbol(imported_symbol)
                 for imported_symbol in imported_symbols
             )
@@ -77,26 +96,36 @@ class ASTProgramBuilder(object):
 
         return source_file_asts
 
-    def _build_module_tree(self, source_file_paths: Set[Path]) -> ModuleTree:
+    def _build_module_tree(self, filepaths: Set[Path]) -> ModuleTree:
+        """Construct a Module Tree Node Graph from a set of Filepaths.
+
+        Args:
+            filepaths (Set[Path]): Unique set of connected Filepaths.
+
+        Returns:
+            ModuleTree: Interconnected Module Tree
+
+        """
         tree = ModuleTree("root")
-        module_names = {
-            self._get_module_name_from_source_file_path(path)
-            for path in source_file_paths
+        module_names: Set[str] = {
+            self._get_module_name_from_source_file_path(path) for path in filepaths
         }
 
         for module_name in module_names:
-            current_tree = tree
+            current_tree: ModuleTree = tree
             for source_file_name in module_name.split("."):
                 if source_file_name not in {
                     child.name for child in current_tree.children
                 }:
                     new_node = ModuleTree(source_file_name, parent=current_tree)
                     current_tree.children.add(new_node)
-                current_tree = next(
-                    child
-                    for child in current_tree.children
-                    if child.name == source_file_name
-                )
+                    current_tree = new_node
+                else:
+                    current_tree = next(
+                        child
+                        for child in current_tree.children
+                        if child.name == source_file_name
+                    )
 
         return tree
 
@@ -104,20 +133,24 @@ class ASTProgramBuilder(object):
         self,
         imported_symbol: str,
     ) -> Path:
-        root_path_directory = self._workspace.root.parent
-        import_module_list, _ = get_imported_symbol_module_components_and_name(
-            imported_symbol
-        )
-        import_path = Path("/".join(import_module_list)).with_suffix(".fhy")
+        """Construct a Filepath Representation from Import Name Hint Symbol.
 
-        return root_path_directory / import_path
+        Args:
+            imported_symbol (str): Name Hint Symbol from Import Statement Identifier
 
-    def _get_module_name_from_source_file_path(self, source_file_path: Path) -> str:
-        root_directory_path = self._workspace.root.parent
+        Returns:
+            Path: Module Path to a given import symbol.
 
-        return str(
-            source_file_path.relative_to(root_directory_path).with_suffix("")
-        ).replace("/", ".")
+        """
+        route, name = get_imported_symbol_module_components_and_name(imported_symbol)
+        import_path = Path(*route, name).with_suffix(".fhy")
+
+        return self.root_dir.parent / import_path
+
+    def _get_module_name_from_source_file_path(self, filepath: Path) -> str:
+        path: str = str(filepath.relative_to(self.root_dir).with_suffix(""))
+
+        return path.replace("/", ".")
 
     def _confirm_import_exists(self, identifier: ir.Identifier, tree: ModuleTree):
         # TODO: Implement Confirmation Check.

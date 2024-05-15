@@ -24,7 +24,7 @@ class ModuleTree(object):
         """Full Project Filepath Import Name."""
         current_node: Optional[ModuleTree] = self
         name_components = []
-        while current_node is not None:
+        while current_node:
             name_components.append(current_node.file_name)
             current_node = current_node.parent
 
