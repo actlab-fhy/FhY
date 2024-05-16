@@ -26,6 +26,9 @@ class Import(Statement):
     """Import statement node.
 
     Args:
+        name (IRIdentifier): Name of imported object.
+
+    Attributes:
         name (IRIdentifier): Name of imported object
 
     """
@@ -41,6 +44,10 @@ class Import(Statement):
 @dataclass(frozen=True, kw_only=True)
 class Argument(ASTNode):
     """Function argument node.
+
+    Args:
+        name (IRIdentifier): Variable name of the argument.
+        qualified_type (QualifiedType): Type of the argument.
 
     Attributes:
         name (IRIdentifier): Variable name of the argument.
@@ -60,6 +67,11 @@ class Argument(ASTNode):
 @dataclass(frozen=True, kw_only=True)
 class Procedure(Function):
     """FhY procedure AST node.
+
+    Args:
+        templates (List[ir.Identifier], optional): Template types.
+        args (List[Argument], optional): Arguments of the procedure.
+        body (List[Statement], optional): Body of the procedure.
 
     Attributes:
         templates (List[IRIdentifier]): Template types.
@@ -81,6 +93,12 @@ class Procedure(Function):
 @dataclass(frozen=True, kw_only=True)
 class Operation(Function):
     """FhY operation AST node.
+
+    Args:
+        templates (List[ir.Identifier], optional): Template types.
+        args (List[Argument], optional): Arguments of the operation.
+        body (List[Statement], optional): Body of the operation.
+        return_type (QualifiedType): Return type of the operation.
 
     Attributes:
         templates (List[ir.Identifier]): Template types.
@@ -105,6 +123,9 @@ class Operation(Function):
 class Native(Function):
     """FhY native AST node.
 
+    Args:
+        args (List[Argument], optional): Arguments of the native function.
+
     Attributes:
         args (List[Argument]): Arguments of the native function.
 
@@ -121,6 +142,12 @@ class Native(Function):
 @dataclass(frozen=True, kw_only=True)
 class DeclarationStatement(Statement):
     """Declaration statement AST node.
+
+    Args:
+        variable_name (IRIdentifier): Name of the declared variable.
+        variable_type (QualifiedType): Type of the declared variable.
+        expression (Optional[Expression], optional): Expression to assign to
+            the variable.
 
     Attributes:
         variable_name (IRIdentifier): Name of the declared variable.
@@ -143,6 +170,10 @@ class DeclarationStatement(Statement):
 class ExpressionStatement(Statement):
     """Expression statement AST node.
 
+    Args:
+        left (Optional[Expression], optional): Expression assigned to.
+        right (Expression): Expression to be evaluated.
+
     Attributes:
         left (Optional[Expression]): Expression assigned to.
         right (Expression): Expression to be evaluated.
@@ -164,6 +195,10 @@ class ForAllStatement(Statement):
 
     Args:
         index (Expression): Loop index to iterate through.
+        body (List[Statement], optional): Body of the ForAll statement.
+
+    Attributes:
+        index (Expression): Loop index to iterate through.
         body (List[Statement]): Body of the ForAll statement.
 
     """
@@ -182,6 +217,11 @@ class SelectionStatement(Statement):
     """Selection statement AST node.
 
     Args:
+        condition (Expression): Condition to evaluate.
+        true_body (List[Statement], optional): Statements to evaluate if true.
+        false_body (List[Statement], optional): Statements to evaluate if false.
+
+    Attributes:
         condition (Expression): Condition to evaluate.
         true_body (List[Statement]): Statements to evaluate if true.
         false_body (List[Statement]): Statements to evaluate if false.
@@ -203,6 +243,9 @@ class ReturnStatement(Statement):
     """Return statement AST node.
 
     Args:
+        expression (Expression): Expression to return.
+
+    Attributes:
         expression (Expression): Expression to be evaluated and returned.
 
     """
