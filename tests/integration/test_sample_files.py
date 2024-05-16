@@ -58,7 +58,7 @@ def cleanup_pretty_print_output(output: str) -> str:
 @pytest.mark.parametrize("file", examples)
 def test_single_file_examples_through_cli_pretty(file):
     """Tests FhY Entry Point using Pretty Print on a collection of Example Files."""
-    output = access_cli(file, "--pretty")
+    output = access_cli("-m", file, "serialize", "-f", "pretty")
     result = cleanup_pretty_print_output(output)
 
     out_path = grab_expected_output_file(file)

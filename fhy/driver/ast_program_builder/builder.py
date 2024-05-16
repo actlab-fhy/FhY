@@ -245,10 +245,6 @@ class ASTProgramBuilder(object):
                     raise Exception("Make a Better Module not Found Error.")
 
                 # Build symbol tables to properly handle identifier scope
-                # NOTE: Variables used through Imports are not Previously Declared
-                #       This makes building the symbol table a little problematic.
-                # TODO: Resolve Preliminary Table building step to avoid catching
-                #       undeclared variables.
                 table_from: ir.SymbolTable = build_symbol_table(source_imported.ast)
                 module_context: ir.Table = list(table_from.values())[0]
 

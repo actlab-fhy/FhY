@@ -3,13 +3,20 @@
 import argparse
 import logging
 import os
+import sys
 from enum import IntEnum
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
+from fhy import __version__
 from fhy.driver import CompilationOptions, Workspace, compile_fhy
-from fhy.utils import error
-from fhy.utils.discovery import confirm_files
+from fhy.driver.ast_program_builder.source_file_ast import (
+    SourceFileAST,
+    build_source_file_ast,
+)
+from fhy.lang.pprint import pformat_ast
+from fhy.lang.serialization.to_json import dump
+from fhy.utils.discovery import standard_path
 from fhy.utils.logger import get_logger
 
 
@@ -35,26 +42,27 @@ def make_logger(verbose: bool = False) -> logging.Logger:
 def arguments() -> argparse.ArgumentParser:
     """Defines FhY cli arguments."""
     parser = argparse.ArgumentParser("FhY")
-    parser.add_argument(
-        "files",
-        nargs="+",
-        help="Filepath(s) or Directory(ies) of FhY files to compile.",
-    )
+    subparser = parser.add_subparsers(help="FhY subparser")
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Provide more verbose logging"
     )
+    parser.add_argument("--version", action="store_true", help="Display FhY Version")
     parser.add_argument(
-        "-p", "--pretty", action="store_true", help="Pretty Print Constructed AST Nodes"
+        "-m", "--module", help="Filepath to a single module (file).", type=str
     )
     parser.add_argument(
-        "-j", "--json", action="store_true", help="Serialize AST Nodes to JSON Format"
+        "--library", help="Source directory path to a project.", type=str
     )
-    parser.add_argument(
-        "-o",
-        "--output",
-        required=False,
-        help="Defines Output Directory. Otherwise defaults to `{filepath}_out.ast`",
-    )
+
+    serialize = subparser.add_parser("serialize", help="Serialize AST Nodes")
+    serialize.add_argument("-f", "--format", choices=["json", "pretty"], default=None)
+
+    # parser.add_argument(
+    #     "-o",
+    #     "--output",
+    #     required=False,
+    #     help="Defines Output Directory. Otherwise defaults to `{filepath}_out.ast`",
+    # )
 
     return parser
 
@@ -78,75 +86,62 @@ def output_path(filepath: str, override_dir: Optional[str]) -> str:
     return new_path
 
 
-def main():
-    """Primary Entry Point for Compilation of FhY Files."""
-    arg_parser = arguments()
-    args = arg_parser.parse_args()
+def main() -> int:
+    """Primary entry point for compilation of FhY files."""
+    arg_parser: argparse.ArgumentParser = arguments()
+    args: argparse.Namespace = arg_parser.parse_args()
 
-    filepaths: List[str] = []
-    for f in args.files:
-        filepaths.extend(confirm_files(f))
+    # Check Arguments that Shunt Compilation First
+    if args.version:
+        sys.stdout.write(f"FhY v{__version__}\n")
+        return Status.OK
 
-    log = make_logger(args.verbose)
-    log.debug(f"Filepaths Collected: {filepaths}")
+    log: logging.Logger = make_logger(args.verbose)
 
-    if args.output is not None:
-        raise NotImplementedError(
-            "We are not supporting Custom Output Directories yet."
-        )
-
-    # Quick Double Check before Proceeding
-    if len(filepaths) == 0:
+    if file := (args.module or args.library):
+        filepath: Path = standard_path(file)
+    else:
         log.error(
-            f"No Filepaths were collected from provided file arguments: {args.files}"
+            "No Filepath(s) were defined. Provide a path either through "
+            "`--module` or `--library` command line arguments."
         )
-        # return Status.USAGE_ERROR
-        raise error.UsageError("No Filepaths were collected, or defined to compile.")
+        return Status.USAGE_ERROR
+
+    log.debug(f"Filepath(s) Collected: {filepath}")
 
     options = CompilationOptions(
         verbose=args.verbose,
     )
 
-    workspace = Workspace(root=Path(filepaths[0]))
+    if args.library:
+        workspace = Workspace(root=filepath)
 
-    # TODO: have compilation function return status
-    # NOTE: I Disagree Here. compile_fhy should not be client facing. Main should.
+        try:
+            compile_fhy(workspace, options)
 
-    try:
-        compile_fhy(workspace, options)
+        except KeyboardInterrupt as e:
+            log.error("FhY Compilation has been Interrupted by client.", exc_info=e)
+            return Status.INTERRUPTED
 
-    except KeyboardInterrupt as e:
-        log.error("FhY Compilation has been Interrupted by client.", exc_info=e)
-        return Status.INTERRUPTED
+        except Exception as e:
+            log.error("FhY Compilation has Failed", exc_info=e)
+            return Status.FAILED
 
-    except Exception as e:
-        log.error("FhY Compilation has Failed", exc_info=e)
-        return Status.FAILED
+    elif args.module:
+        result: SourceFileAST = build_source_file_ast(filepath)
 
-    # NOTE: This should go into a `Root` or `Project` ASTNode
-    # constructed: List[Module] = []
-    # for file in filepaths:
-    #     log.debug(f"Started Compiling: {file}")
+        # NOTE: Currently only supporting Serialization for Single Module
+        #       Roadmap should include expansion to library compilation as well
+        if args.format:
+            if args.format == "json":
+                print(dump(result.ast, None))
 
-    #     # Out of an abundance of caution, Fail Fast during reading.
-
-    #     if ast is None or not isinstance(ast, Module):
-    #         log.error(f"Unable to Construct AST from: {file}")
-    #         raise error.FhYASTBuildError(f"Unable to Construct AST from: {file}")
-    #     constructed.append(ast)
-
-    # # TODO: Rename this, since we are essentially returning our ASTNodes to FhY Text
-    # #       Pretty Printing should be a text repr of our nodes (and not json)
-    # if args.pretty:
-    #     print("\n\n")
-    #     for fname, node in zip(filepaths, constructed):
-    #         header = f"// {fname}\n"
-    #         header += "=" * len(header)
-    #         print(header)
-    #         print(pformat_ast(node), end="\n\n")
-
-    # if args.json:
-    #     print([dump(node, None) for node in constructed])
+            elif args.format == "pretty":
+                print("\n\n")
+                header = f"// {result.path}\n"
+                header += "=" * len(header)
+                print(header)
+                print(pformat_ast(result.ast), end="\n\n")
 
     return Status.OK
 

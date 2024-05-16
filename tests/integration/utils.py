@@ -15,10 +15,9 @@ def get_diff(a, b):
             print('Add "{}" to position {}'.format(s[-1], i))
 
 
-def access_cli(filepath: str, *args) -> str:
+def access_cli(*args) -> str:
     """Access FhY Entry Point using subprocess and return the decoded stdout"""
-    result = subprocess.run(
-        ["fhy", filepath, *args], stdout=subprocess.PIPE, check=False
-    )
+    result = subprocess.run(["fhy", *args], stdout=subprocess.PIPE, check=False)
     output = result.stdout.decode()
+
     return output
