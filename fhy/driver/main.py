@@ -9,9 +9,9 @@ from fhy.lang import ast, collect_imported_identifiers, from_fhy_source
 from fhy.lang.pprint import pformat_ast
 
 from .ast_program_builder import build_ast_program
-from .utils import get_imported_symbol_module_components_and_name
 from .compilation_options import CompilationOptions
 from .file_reader import read_file
+from .utils import get_imported_symbol_module_components_and_name
 from .workspace import Workspace
 
 
