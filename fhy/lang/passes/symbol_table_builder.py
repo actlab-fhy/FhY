@@ -185,10 +185,6 @@ def build_symbol_table(node: ast.Module) -> ir.SymbolTable:
             by appropriate frame.
 
     Raises:
-        UndeclaredIdentifierException: A variable is used before being Declared.
-        AlreadyDeclaredIdentifierException: A variable is declared more than once within
-            the same namespace.
-
         FhYSemanticsError: A variable is used before being declared (undefined), or
             the variable is defined again (redefined), within the current namespace.
         RuntimeError: Unexpected Behavior, indicating improper use.
