@@ -68,14 +68,14 @@ class ASTProgramBuilder(object):
         return ast_program
 
     def _build_source_file_asts(self) -> List[SourceFileAST]:
-        """Compile Files to AST, propagating outward from main root module.
+        """Compile files to AST, propagating outward from primary entry module.
 
         Note:
             This appears to avoid any modules which are not imported, or in some
             way connected directly, or indirectly via imports. This may or may
             not be desired for end user. We will need to thoroughly document
             this expected behavior of compilation (i.e. that lone modules are
-            not included in compilation)
+            not included in compilation).
 
         """
         source_file_asts: List[SourceFileAST] = []
@@ -109,10 +109,10 @@ class ASTProgramBuilder(object):
         """Construct a ModuleTree graph from a set of filepaths.
 
         Args:
-            filepaths (Set[Path]): Unique set of connected Filepaths.
+            filepaths (Set[Path]): Unique set of connected filepaths.
 
         Returns:
-            ModuleTree: Directory structure representation of project.
+            ModuleTree: Directory structure graph representation of a project.
 
         """
         tree = ModuleTree("root")
@@ -138,23 +138,25 @@ class ASTProgramBuilder(object):
         return tree
 
     def _get_source_file_path_from_imported_symbol(
-        self,
-        imported_symbol: str,
+        self, imported_symbol: str, no_symbol: bool = False
     ) -> Path:
-        """Construct a Filepath Representation from Import Name Hint Symbol.
+        """Construct a filepath representation from import name hint symbol.
 
         Args:
-            imported_symbol (str): Name Hint Symbol from Import Statement Identifier
+            imported_symbol (str): Name hint symbol from import statement identifier
+            no_symbol (bool): If true, do not strip the final element in the symbol.
 
         Returns:
-            Path: Module Path to a given import symbol.
+            Path: Module path to a given import symbol.
 
         """
         route, name = get_imported_symbol_module_components_and_name(imported_symbol)
         if route[0] == "root":
-            import_path = Path(*route[1:], name).with_suffix(".fhy")
-        else:
+            route = route[1:]
+        if no_symbol:
             import_path = Path(*route, name).with_suffix(".fhy")
+        else:
+            import_path = Path(*route).with_suffix(".fhy")
 
         return self.root_dir / import_path
 
@@ -166,7 +168,7 @@ class ASTProgramBuilder(object):
     def _find_source(
         self, tree: ModuleTree, ast_sources: List[SourceFileAST]
     ) -> Optional[SourceFileAST]:
-        path: Path = self._get_source_file_path_from_imported_symbol(tree.name)
+        path: Path = self._get_source_file_path_from_imported_symbol(tree.name, True)
         for source in ast_sources:
             if source.path == path:
                 return source
@@ -184,7 +186,9 @@ class ASTProgramBuilder(object):
         return None
 
     def _get_module_by_name(self, tree: ModuleTree, name: str) -> Optional[ModuleTree]:
-        for a in name.split("."):
+        route, name = get_imported_symbol_module_components_and_name(name)
+
+        for a in route:
             tree = next(i for i in tree.children if i.module_name == a)
             if tree is None:
                 break
@@ -209,6 +213,11 @@ class ASTProgramBuilder(object):
         self, source_file_asts: List[SourceFileAST], module_tree: ModuleTree
     ) -> List[SourceFileAST]:
         # TODO: Refactor to extract out into smaller more testable pieces.
+        # NOTE: We currently only support a specific import style.
+        #       We cannot import modules, but rather symbols from modules.
+        #       All imports are absolute paths, not relative.
+        #       Do not define yet a method to import outside of package (e.g. stdlib)
+        #       Aliasing not yet supported (e.g. `import x as y;`).
         # Initialize a Directional Graph
         graph = nx.DiGraph()
 
@@ -225,6 +234,12 @@ class ASTProgramBuilder(object):
                 # Find Source of Import
                 source_imported: Optional[SourceFileAST] = self._find_source(
                     relevant_module, source_file_asts
+                )
+                print(relevant_module.name, source_imported)
+                print(
+                    self._get_source_file_path_from_imported_symbol(
+                        relevant_module.name
+                    )
                 )
                 if source_imported is None:
                     raise Exception("Make a Better Module not Found Error.")

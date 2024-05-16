@@ -11,6 +11,7 @@ from fhy.driver.ast_program_builder.builder import ASTProgramBuilder
 from fhy.driver.ast_program_builder.module_tree import ModuleTree
 from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
+from fhy.driver.utils import get_imported_symbol_module_components_and_name
 from fhy.driver.workspace import Workspace
 from fhy.lang.passes import collect_imported_identifiers
 from fhy.utils import error
@@ -77,7 +78,7 @@ def test_get_filepath_names(unidirectional_import, config):
 
 
 def test_get_path_from_symbol(unidirectional_import, config):
-    symbol = "unidirectional_import.a"
+    symbol = "unidirectional_import.a.A"
     program = ASTProgramBuilder(unidirectional_import, config)
     result = program._get_source_file_path_from_imported_symbol(symbol)
 
@@ -132,7 +133,11 @@ def test_get_correct_module_by_name(unidirectional_import, config):
 
     result = program._get_module_by_name(tree, name)
     assert isinstance(result, ModuleTree), "Expected Module Tree"
-    assert result.name == f"root.{name}", "Expected Identical Names."
+    assert result.name != f"root.{name}", "Expected Different Names."
+    route, symbol = get_imported_symbol_module_components_and_name(name)
+
+    assert f"{result.name}.{symbol}" == f"root.{name}", "Expected Same Names"
+    assert result.name == ".".join(("root", *route)), "Expected Same Names"
 
 
 def test_identifier_validation(unidirectional_import, config):
