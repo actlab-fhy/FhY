@@ -1,4 +1,3 @@
 import circular_import.a;
 
 temp int32 B = 7;
-temp int32 D = a.A * B;

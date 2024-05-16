@@ -13,6 +13,7 @@ from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.workspace import Workspace
 from fhy.lang.passes import collect_imported_identifiers
+from fhy.utils import error
 
 
 @pytest.fixture
@@ -98,7 +99,7 @@ def test_builder_module_tree(unidirectional_import, config):
     src_module_name = {i.module_name for i in result.children}
     assert src_module_name == {"unidirectional_import"}, "Unexpected Source Module Name"
 
-    # Confirm Modules (chilren) of Source Directory
+    # Confirm Modules (children) of Source Directory
     src_dir_tree = next(iter(result.children))
     assert isinstance(src_dir_tree, ModuleTree), "Expected to return ModuleTree Object"
 
@@ -132,3 +133,23 @@ def test_get_correct_module_by_name(unidirectional_import, config):
     result = program._get_module_by_name(tree, name)
     assert isinstance(result, ModuleTree), "Expected Module Tree"
     assert result.name == f"root.{name}", "Expected Identical Names."
+
+
+def test_identifier_validation(unidirectional_import, config):
+    # TODO: Complete this Unit Tests
+    program = ASTProgramBuilder(unidirectional_import, config)
+    ast_files = program._build_source_file_asts()
+    paths = {i.path for i in ast_files}
+    tree = program._build_module_tree(paths)
+
+    program._resolve_imports(ast_files, tree)
+
+
+def test_identifier_validation_circular(circular_dir, config):
+    program = ASTProgramBuilder(circular_dir, config)
+    ast_files = program._build_source_file_asts()
+    paths = {i.path for i in ast_files}
+    tree = program._build_module_tree(paths)
+
+    with pytest.raises(error.FhYImportError):
+        program._resolve_imports(ast_files, tree)

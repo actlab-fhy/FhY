@@ -31,6 +31,10 @@ def build_source_file_ast(source_file_path: Path) -> SourceFileAST:
     Returns:
         SourceFileAST: Dataclass containing both built Module AST and filepath info.
 
+    Note:
+        Provided File path should be validated to exist before use in order
+        to provide client with cleaner expected error handling messages.
+
     """
     source_text = read_file(source_file_path)
     source_ast = from_fhy_source(source_text)

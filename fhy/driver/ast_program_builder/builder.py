@@ -3,12 +3,14 @@
 import logging
 from collections import deque
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set
 
-import networkx as nx
+import networkx as nx  # type: ignore[import-untyped]
 
 from fhy import ir
-from fhy.lang import collect_imported_identifiers, replace_identifiers
+from fhy.lang import collect_imported_identifiers
+from fhy.lang.passes import build_symbol_table, replace_identifiers
+from fhy.lang.passes.identifier_collector import collect_identifiers
 from fhy.utils import error
 
 from ..compilation_options import CompilationOptions
@@ -22,10 +24,10 @@ log.setLevel(logging.DEBUG)
 
 
 class ASTProgramBuilder(object):
-    """Construct an AST Program.
+    """Construct an AST program.
 
     Args:
-        workspace (Workspace): describe project root directory file.
+        workspace (Workspace): Define project root directory file.
         options (CompilationOptions): Configuration options during compilation
 
     Raises:
@@ -45,13 +47,16 @@ class ASTProgramBuilder(object):
 
     @property
     def root_dir(self) -> Path:
+        """Project root directory."""
         return self._workspace.root
 
     @property
     def src_dir(self):
+        """Source code directory."""
         return self._workspace.source
 
     def build(self) -> ir.Program:
+        """Build an IR Program composed of (multiple) modules."""
         unresolved_source_file_asts = self._build_source_file_asts()
         paths: Set[Path] = {i.path for i in unresolved_source_file_asts}
         module_tree: ModuleTree = self._build_module_tree(paths)
@@ -63,7 +68,7 @@ class ASTProgramBuilder(object):
         return ast_program
 
     def _build_source_file_asts(self) -> List[SourceFileAST]:
-        """This Compiles Files Propagating Outward from Main Root Module.
+        """Compile Files to AST, propagating outward from main root module.
 
         Note:
             This appears to avoid any modules which are not imported, or in some
@@ -101,13 +106,13 @@ class ASTProgramBuilder(object):
         return source_file_asts
 
     def _build_module_tree(self, filepaths: Set[Path]) -> ModuleTree:
-        """Construct a Module Tree Node Graph from a set of Filepaths.
+        """Construct a ModuleTree graph from a set of filepaths.
 
         Args:
             filepaths (Set[Path]): Unique set of connected Filepaths.
 
         Returns:
-            ModuleTree: Interconnected Module Tree
+            ModuleTree: Directory structure representation of project.
 
         """
         tree = ModuleTree("root")
@@ -146,7 +151,10 @@ class ASTProgramBuilder(object):
 
         """
         route, name = get_imported_symbol_module_components_and_name(imported_symbol)
-        import_path = Path(*route, name).with_suffix(".fhy")
+        if route[0] == "root":
+            import_path = Path(*route[1:], name).with_suffix(".fhy")
+        else:
+            import_path = Path(*route, name).with_suffix(".fhy")
 
         return self.root_dir / import_path
 
@@ -155,9 +163,15 @@ class ASTProgramBuilder(object):
 
         return path.replace("/", ".")
 
-    def _confirm_import_exists(self, identifier: ir.Identifier, tree: ModuleTree):
-        # TODO: Implement Confirmation Check.
-        ...
+    def _find_source(
+        self, tree: ModuleTree, ast_sources: List[SourceFileAST]
+    ) -> Optional[SourceFileAST]:
+        path: Path = self._get_source_file_path_from_imported_symbol(tree.name)
+        for source in ast_sources:
+            if source.path == path:
+                return source
+
+        return None
 
     def _is_cyclical(self, graph: nx.Graph) -> Optional[list]:
         try:
@@ -166,6 +180,8 @@ class ASTProgramBuilder(object):
 
         except nx.NetworkXNoCycle:
             ...
+
+        return None
 
     def _get_module_by_name(self, tree: ModuleTree, name: str) -> Optional[ModuleTree]:
         for a in name.split("."):
@@ -180,23 +196,21 @@ class ASTProgramBuilder(object):
 
         return self._get_module_by_name(tree, route)
 
+    def _confirm_import_exists(
+        self, name_hint: str, reference_table: ir.Table
+    ) -> Optional[ir.Identifier]:
+        for symbol in reference_table.keys():
+            if symbol.name_hint == name_hint:
+                return symbol
+
+        return None
+
     def _resolve_imports(
         self, source_file_asts: List[SourceFileAST], module_tree: ModuleTree
     ) -> List[SourceFileAST]:
-        # TODO: fill in;
-        #   1. iterate over all of the imported symbols (i.e., iterate over all modules,
-        #      use the get imported identifier pass to grab, and iterate over those
-        #      imported identifiers), use the module tree to check that the symbol
-        #      exists in the file, and create a networkx graph of the dependencies
-        #      between the modules.
-        #   2. check for cycles on the networkx graph using built-in networkx functions
-        #      (raise an exception if there is a cycle)
-        #   3. iterate over the imported symbols and replace the identifier in the
-        #      module where the identifier was imported with the original identifier (I
-        #      wrote a pass that replaces identifiers; use that)
-        #   4. return the set of source file asts with the imports resolved
-
-        graph = nx.Graph()
+        # TODO: Refactor to extract out into smaller more testable pieces.
+        # Initialize a Directional Graph
+        graph = nx.DiGraph()
 
         for source in source_file_asts:
             import_ids: Set[ir.Identifier] = collect_imported_identifiers(source.ast)
@@ -208,13 +222,42 @@ class ASTProgramBuilder(object):
                     log.error(msg)
                     raise error.FhYImportError(msg)
 
-                validate = self._confirm_import_exists(iid, relevant_module)
-                if not validate:
-                    msg = f"Import Not Found: {iid}"
-                    log.error(msg)
-                    raise error.FhYImportError(msg)
+                # Find Source of Import
+                source_imported: Optional[SourceFileAST] = self._find_source(
+                    relevant_module, source_file_asts
+                )
+                if source_imported is None:
+                    raise Exception("Make a Better Module not Found Error.")
 
-                # graph.add_edge(source.path.name, leaf)
+                # Build symbol tables to properly handle identifier scope
+                # NOTE: Variables used through Imports are not Previously Declared
+                #       This makes building the symbol table a little problematic.
+                # TODO: Resolve Preliminary Table building step to avoid catching
+                #       undeclared variables.
+                table_from: ir.SymbolTable = build_symbol_table(source_imported.ast)
+                module_context: ir.Table = list(table_from.values())[0]
+
+                # Collect all Identifiers derived from use of given Import within source
+                skip = ".".join(iid.name_hint.split(".")[:-1]) + "."
+                bank: Set[ir.Identifier] = {
+                    i
+                    for i in collect_identifiers(source.ast)
+                    if i != iid and i.name_hint.startswith(skip)
+                }
+
+                # Compare usage in source, to availability in found module
+                id_map: Dict[ir.Identifier, ir.Identifier] = {}
+                for b in bank:
+                    name = b.name_hint.split(skip)[0]
+                    exists = self._confirm_import_exists(name, module_context)
+                    if not exists:
+                        msg = f"Import Not Found: {iid}"
+                        log.error(msg)
+                        raise error.FhYImportError(msg)
+                    id_map[b] = exists
+                replace_identifiers(source.ast, id_map)
+
+                graph.add_edge(str(source.path), str(source_imported.path))
 
         # Cycle Detection
         if result := self._is_cyclical(graph):
@@ -222,15 +265,9 @@ class ASTProgramBuilder(object):
             log.error(msg)
             raise error.FhYImportError(msg)
 
-        # Resolve Import Identifiers
-        id_map = {}  # TODO: Collect Map Somehow
-        bank = set()
-        for k in source_file_asts:
-            bank.add(replace_identifiers(k.ast, id_map))
+        return source_file_asts
 
-        return bank
-
-    def _build_program(self, source_file_asts: Set[SourceFileAST]) -> ir.Program:
+    def _build_program(self, source_file_asts: List[SourceFileAST]) -> ir.Program:
         # TODO: Chris will change this later
         program = ir.Program()
         for source_file_ast in source_file_asts:
