@@ -108,7 +108,7 @@ def literals(span) -> Callable[[Union[int, float, complex]], Tuple[dict, TLitera
         else:
             raise TypeError(f"Invalid Value Type: {value}")
 
-        name = _literal.keyname()
+        name = _literal.get_key_name()
         obj = dict(cls_name=name, attributes=dict(span=span_obj, value=result))
         return obj, _literal
 

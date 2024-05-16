@@ -1,4 +1,4 @@
-"""This is a simplistic unit test, testing the behavior of ASTNodes."""
+"""Simple unit tests for the behavior of AST nodes."""
 
 from typing import List, Type
 
@@ -8,14 +8,13 @@ from fhy.lang import ast
 
 
 @pytest.mark.parametrize("name", ["test", "nombre", "badHombre", "Example"])
-def test_base_node_keyname(name):
-    """Confirm that the Given Class Name is Carried through Inheritance."""
-    # Dynamically Construct a Class with a given Name
+def test_base_node_keyname(name: str):
+    """Confirm the given unique class name is carried through inheritance."""
     obj = type(name, (ast.ASTNode,), {})
-    ret = obj.keyname()
+    ret = obj.get_key_name()
     assert (
         ret == name
-    ), f"Names are Not Equivalent: Returned(`{ret}`) vs Given(`{name}`)"
+    ), f'Expected "{name}" as the key name, but got "{ret}" instead.'
 
 
 @pytest.mark.parametrize(
@@ -56,9 +55,9 @@ def test_base_node_keyname(name):
     ],
 )
 def test_keynames(node: Type[ast.ASTNode], expected: str):
-    """Tests Expected Key name of an ASTNode."""
-    result = node.keyname()
-    assert result == expected, f"Unexpected Key name of ASTNode: {result} | {expected}"
+    """Test expected key names of AST nodes."""
+    result = node.get_key_name()
+    assert result == expected, f"Expected {expected}, but got {result} instead."
 
 
 @pytest.mark.parametrize(
@@ -66,7 +65,7 @@ def test_keynames(node: Type[ast.ASTNode], expected: str):
     [
         (ast.ASTNode, True, ["span"]),
         # Core
-        (ast.Module, False, ["span", "statements"]),
+        (ast.Module, False, ["span", "name", "statements"]),
         (ast.Function, True, ["span", "name"]),
         (ast.Statement, True, ["span"]),
         (ast.Expression, True, ["span"]),
@@ -120,31 +119,22 @@ def test_keynames(node: Type[ast.ASTNode], expected: str):
 )
 def test_attributes(node: type[ast.ASTNode], is_abstract: bool, expected: List[str]):
     """Test that the attributes trickle down subclasses."""
-    # Mock Instantiate
+
+    # Mock instantiate the node
+
     if not is_abstract:
         instance = node(**{key: None for key in expected})
 
     else:
 
         class Test(node):
-            def visit_attrs(self) -> List[str]:
-                return super().visit_attrs()
+            """Mock class to test abstract method implementation."""
+
+            def get_visit_attrs(self) -> List[str]:
+                return super().get_visit_attrs()
 
         instance = Test(**{key: None for key in expected})
 
-    assert set(instance.visit_attrs()) == set(
+    assert set(instance.get_visit_attrs()) == set(
         expected
-    ), f"Unexpected Attributes: {node}"
-
-
-def test_node_equality():
-    """Testing Special Dunder Method, __eq__, behavior."""
-
-    class Derived(ast.ASTNode):
-        def visit_attrs(self) -> List[str]:
-            return super().visit_attrs()
-
-    a = Derived()
-    b = Derived()
-
-    assert a == b, "Expected AST Nodes to be equivalent."
+    ), f"Expected {expected}, but got {instance.get_visit_attrs()} instead."

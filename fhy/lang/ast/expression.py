@@ -1,24 +1,24 @@
-"""All Defined Nodes within this module are Subclasses of the core Expression ASTNode.
-
-The Expression ASTNode is also a subclass of `fhy.ir.Expression`.
+"""Expression nodes for the expressions in the FhY language.
 
 Supported Operators:
-    UnaryOperation (StrEnum): Operators acting on a single expression
-    BinaryOperation (StrEnum): Operators acting on two expressions
+    UnaryOperation (StrEnum): Operators acting on a single expression.
+    BinaryOperation (StrEnum): Operators acting on two expressions.
 
-ASTNode Expressions:
-    UnaryExpressions: Expressions acting on a Single expression
-    BinaryOperation: Expressions acting on two expressions (left and right)
-    TernaryExpression: A conditional expression, which performs true or false expression
+AST Expressions:
+    UnaryExpressions: Expression acting on a single expression.
+    BinaryOperation: Expression acting on two expressions (left and right).
+    TernaryExpression: Conditional expression.
 
-Identities:
-    IdentifierExpression: An expression Defining a Variable.
-
-ASTNode Expression Literals:
-    Literal: Abstract Expression ASTNode to define concrete values
-    IntLiteral: Defines an integer value
-    FloatLiteral: Defines a floating point Value
-    ComplexLiteral: Defines a complex Value
+Primitive Expressions:
+    TupleExpression: An expression defining a tuple.
+    TupleAccessExpression: An expression accessing a tuple element.
+    FunctionExpression: An expression defining a function call.
+    ArrayAccessExpression: An expression accessing an array element.
+    IdentifierExpression: An expression defining a variable.
+    Literal: Abstract expression node to define concrete values.
+    IntLiteral: Defines an integer value.
+    FloatLiteral: Defines a floating point value.
+    ComplexLiteral: Defines a complex value.
 
 """
 
@@ -27,13 +27,24 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import List
 
-from fhy.ir import Type
+from fhy.ir.identifier import Identifier as IRIdentifier
+from fhy.ir.type import Type as IRType
 
-from .core import Expression, Identifier
+from .core import Expression
 
 
 class UnaryOperation(StrEnum):
-    """Unary (Single) Operators."""
+    """FhY language unary operators.
+
+    Arithmetic:
+        Negative
+
+    Logical:
+        Logical Not
+
+    Bitwise:
+        Bitwise Not
+    """
 
     NEGATIVE = "-"
     BITWISE_NOT = "~"
@@ -42,31 +53,34 @@ class UnaryOperation(StrEnum):
 
 @dataclass(frozen=True, kw_only=True)
 class UnaryExpression(Expression):
-    """Expressions of Unary Operators.
+    """Expression node representing expressions requiring one argument.
 
-    Args:
-        operation (UnaryOperation): Supported Unary Operator
-        expression (Expression): An Expression the operator is performed on
+    Attributes:
+        operation (UnaryOperation): Supported unary operator.
+        expression (Expression): Input expression.
 
     """
 
     operation: UnaryOperation
     expression: Expression
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["operation", "expression"])
         return attrs
 
 
 class BinaryOperation(StrEnum):
-    """FhY Language Binary Operators.
+    """FhY language binary operators.
 
     Arithmetic:
         Addition
         Subtraction
         Multiplication
         Division
+        Floor Division
+        Modulo
+        Power
 
     Logical:
         And
@@ -86,9 +100,6 @@ class BinaryOperation(StrEnum):
         Xor
         Left Shift
         Right Shift
-
-    Note:
-        Assignment Operators are not (yet) supported (e.g. `+=`).
 
     """
 
@@ -116,12 +127,12 @@ class BinaryOperation(StrEnum):
 
 @dataclass(frozen=True, kw_only=True)
 class BinaryExpression(Expression):
-    """Expression Requiring Two Arguments, left and right.
+    """Expression node representing expressions requiring two arguments.
 
-    Args:
-        operation (BinaryOperation): Supported Binary Operator performed
-        left (Expression): Left Input Expression
-        right (Expression): Right Input Expression
+    Attributes:
+        operation (BinaryOperation): Binary operator.
+        left (Expression): Left input expression.
+        right (Expression): Right input expression.
 
     """
 
@@ -129,23 +140,20 @@ class BinaryExpression(Expression):
     left: Expression
     right: Expression
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["operation", "left", "right"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class TernaryExpression(Expression):
-    """A Conditional (?) Expression Node.
+    """Conditional (?) expression node.
 
-    Args:
-        condition (Expression): Expression to Evaluate Truth
-        true (Expression): Expression evaluated if true
-        false (Expression): Expression evaluated if false
-
-    Notes:
-        {condition} ? {true} : {false}
+    Attributes:
+        condition (Expression): Input expression evaluated as a boolean.
+        true (Expression): Input expression if condition is true.
+        false (Expression): Input expression if condition is false.
 
     """
 
@@ -153,133 +161,159 @@ class TernaryExpression(Expression):
     true: Expression
     false: Expression
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["condition", "true", "false"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class TupleAccessExpression(Expression):
-    """Expression to Access Elements within a Tuple.
+    """Expression node representing access to a tuple element.
 
-    Args:
-        tuple_expression (Expression): Tuple Identifier expression
-        element_index (IntLiteral): Index accessed in tuple
+    Attributes:
+        tuple_expression (Expression): Expression defining the tuple.
+        element_index (IntLiteral): Index of the element to access.
 
     """
 
     tuple_expression: Expression
     element_index: "IntLiteral"
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["tuple_expression", "element_index"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class FunctionExpression(Expression):
-    """An ASTNode expressing a Call to a Function.
+    """Function call expression node.
 
-    Args:
-        function (Expression): Identify the function being called
-        template_types (List[Type]):
-        indices (List[Expression]):
-        args (List[Expression]): List of user provided arguments to function call
+    Attributes:
+        function (Expression): Expression defining the function to call.
+        template_types (List[IRType]): Types for template arguments.
+        indices (List[Expression]): Reduced indices for a reduction
+            operation.
+        args (List[Expression]): Provided arguments to function call.
 
     """
 
     function: Expression
-    template_types: List[Type] = field(default_factory=list)
+    template_types: List[IRType] = field(default_factory=list)
     indices: List[Expression] = field(default_factory=list)
     args: List[Expression] = field(default_factory=list)
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["function", "template_types", "indices", "args"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class ArrayAccessExpression(Expression):
-    """Array Indexing Node.
+    """Array access expression node.
 
-    Args:
-        array_expression (Expression): Array Identifier Expression
-        indices (List[Expression]): List of index access on array axes.
+    Attributes:
+        array_expression (Expression): Expression defining the array.
+        indices (List[Expression]): Indices to access the array.
 
     """
 
     array_expression: Expression
     indices: List[Expression] = field(default_factory=list)
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["array_expression", "indices"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class TupleExpression(Expression):
-    """Defines a Tuple Expression of a given size."""
+    """Tuple expression node.
+
+    Attributes:
+        expressions (List[Expression]): Expressions defining the tuple.
+
+    """
 
     expressions: List[Expression] = field(default_factory=list)
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["expressions"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class IdentifierExpression(Expression):
-    """Expresses a Variable name independent of value assignment."""
+    """Wrapper node for a variable is used in an expression.
 
-    identifier: Identifier
+    Attributes:
+        identifier (IRIdentifier): Identifier of the variable.
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    """
+
+    identifier: IRIdentifier
+
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["identifier"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class Literal(Expression, ABC):
-    """Expression Literal defines concrete values."""
+    """Abstract expression node to define concrete values."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class IntLiteral(Literal):
-    """Integer value ASTNode."""
+    """Expression node for integer literals.
+
+    Attributes:
+        value (int): Integer value.
+
+    """
 
     value: int
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["value"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class FloatLiteral(Literal):
-    """Floating point value ASTNode."""
+    """Expression node for floating point literals.
+
+    Attributes:
+        value (float): Floating point value.
+
+    """
 
     value: float
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["value"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class ComplexLiteral(Literal):
-    """Complex number value ASTNode."""
+    """Expression node for complex literals.
+
+    Attributes:
+        value (complex): Complex value.
+
+    """
 
     value: complex
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["value"])
         return attrs

@@ -1,4 +1,4 @@
-"""All ASTNodes defined within this module are Subclasses of the core.Statement ASTNode.
+"""Statement nodes for the statements in the FhY language.
 
 Statement ASTNodes:
     DeclarationStatement: Declares a Variable, with or without assignment
@@ -10,7 +10,7 @@ Statement ASTNodes:
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from fhy import ir
+from fhy.ir.identifier import Identifier as IRIdentifier
 
 from .base import ASTNode
 from .core import Function, Statement
@@ -23,164 +23,168 @@ from .qualified_type import QualifiedType
 #       Define how we handle identifier with different name.
 @dataclass(frozen=True, kw_only=True)
 class Import(Statement):
-    """Import ASTNode.
+    """Import statement node.
 
     Args:
-        name (ir.Identifier): name of imported object
+        name (IRIdentifier): Name of imported object
 
     """
 
-    name: ir.Identifier
-    # alias: Optional[str] = field(default=None)
+    name: IRIdentifier
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["name"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class Argument(ASTNode):
-    """Function Argument ASTNode.
+    """Function argument node.
 
-    Args:
-        name (Identifier): Variable Identifier of the argument
-        qualified_type (QualifiedType): Qualified Type of given argument
+    Attributes:
+        name (IRIdentifier): Variable name of the argument.
+        qualified_type (QualifiedType): Type of the argument.
 
     """
 
-    name: ir.Identifier
+    name: IRIdentifier
     qualified_type: QualifiedType
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["name", "qualified_type"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class Procedure(Function):
-    """FhY Procedure function ASTNode.
+    """FhY procedure AST node.
 
-    Args:
-        templates (List[ir.Identifier]): list of Template Type Identifiers
-        args (List[Argument]): list of Arguments
-        body (List[Statement]): list of Statements, defining the body of the procedure
+    Attributes:
+        templates (List[IRIdentifier]): Template types.
+        args (List[Argument]): Arguments of the procedure.
+        body (List[Statement]): Body of the procedure.
 
     """
 
-    templates: List[ir.Identifier] = field(default_factory=list)
+    templates: List[IRIdentifier] = field(default_factory=list)
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
 
-    def visit_attrs(self) -> List[str]:
-        attrs: List[str] = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs: List[str] = super().get_visit_attrs()
         attrs.extend(["templates", "args", "body"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class Operation(Function):
-    """FhY Operation Function ASTNode.
+    """FhY operation AST node.
 
-    Args:
-        templates (List[ir.Identifier]): list of Template Type Identifiers
-        args (List[Argument]): list of Arguments
-        body (List[Statement]): list of Statements, defining the body of the operation
-        ret_type (QualifiedType): Type information of the Returned Value
+    Attributes:
+        templates (List[ir.Identifier]): Template types.
+        args (List[Argument]): Arguments of the operation.
+        body (List[Statement]): Body of the operation.
+        ret_type (QualifiedType): Return type of the operation.
 
     """
 
-    templates: List[ir.Identifier] = field(default_factory=list)
+    templates: List[IRIdentifier] = field(default_factory=list)
     args: List[Argument] = field(default_factory=list)
     body: List[Statement] = field(default_factory=list)
     return_type: QualifiedType
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["templates", "args", "body", "return_type"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class Native(Function):
-    """FhY Native Function ASTNode."""
+    """FhY native AST node.
+
+    Attributes:
+        args (List[Argument]): Arguments of the native function.
+
+    """
 
     args: List[Argument] = field(default_factory=list)
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["args"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class DeclarationStatement(Statement):
-    """Declaration Statements Are Declaration or Assignment to a Variable Name.
+    """Declaration statement AST node.
 
-    Args:
-        variable_name (Identifier): identity of a variable
-        variable_type (QualifiedType): qualified type of variable
-        expression (Optional[Expression]): optional expression assignment to variable
+    Attributes:
+        variable_name (IRIdentifier): Name of the declared variable.
+        variable_type (QualifiedType): Type of the declared variable.
+        expression (Optional[Expression]): Expression to assign to the variable.
 
     """
 
-    variable_name: ir.Identifier
+    variable_name: IRIdentifier
     variable_type: QualifiedType
     expression: Optional[Expression] = field(default=None)
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["variable_name", "variable_type", "expression"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class ExpressionStatement(Statement):
-    """Expression Statement.
+    """Expression statement AST node.
 
-    Args:
-        left (Optional[Expression]): primitive expression
-        right (Expression): qualified type of variable
+    Attributes:
+        left (Optional[Expression]): Expression assigned to.
+        right (Expression): Expression to be evaluated.
 
     """
 
     left: Optional[Expression] = field(default=None)
     right: Expression
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["left", "right"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class ForAllStatement(Statement):
-    """A Statement ASTNode describing a for loop.
+    """ForAll statement AST node.
 
     Args:
-        index (Expression): Expression to be iterated through
-        body (List[Statement]): Body of for loop statements to be performed iteratively
+        index (Expression): Loop index to iterate through.
+        body (List[Statement]): Body of the ForAll statement.
 
     """
 
     index: Expression
     body: List[Statement] = field(default_factory=list)
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["index", "body"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class SelectionStatement(Statement):
-    """A Conditional Branch Statement ASTNode.
+    """Selection statement AST node.
 
     Args:
-        condition (Expression): Condition to be evaluated
-        true_body (List[Statement]): Body of Statements Evaluated if True
-        false_body (List[Statement]): Body of Statements Evaluated if False
+        condition (Expression): Condition to evaluate.
+        true_body (List[Statement]): Statements to evaluate if true.
+        false_body (List[Statement]): Statements to evaluate if false.
 
     """
 
@@ -188,24 +192,24 @@ class SelectionStatement(Statement):
     true_body: List[Statement] = field(default_factory=list)
     false_body: List[Statement] = field(default_factory=list)
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["condition", "true_body", "false_body"])
         return attrs
 
 
 @dataclass(frozen=True, kw_only=True)
 class ReturnStatement(Statement):
-    """A control flow return Statement ASTNode.
+    """Return statement AST node.
 
     Args:
-        expression (Expression): expression value to be returned
+        expression (Expression): Expression to be evaluated and returned.
 
     """
 
     expression: Expression
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["expression"])
         return attrs

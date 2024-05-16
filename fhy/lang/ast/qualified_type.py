@@ -1,27 +1,28 @@
-"""Defines a Qualified Type ASTNode."""
+"""Qualified type AST node."""
 
 from dataclasses import dataclass
 from typing import List
 
-from fhy import ir
+from fhy.ir.type import Type as IRType
+from fhy.ir.type import TypeQualifier as IRTypeQualifier
 
-from .core import ASTNode
+from .base import ASTNode
 
 
 @dataclass(frozen=True, kw_only=True)
 class QualifiedType(ASTNode):
-    """Qualified Type ASTNode defining both primitive and qualified types.
+    """Qualified type AST node.
 
     Args:
-        base_type (Type): Primitive or Generic Type
-        type_qualifier (TypeQualifier): Qualifying Type Identifier
+        base_type (IRType): Type of the qualified type.
+        type_qualifier (IRTypeQualifier): Qualifier of the type.
 
     """
 
-    base_type: ir.Type
-    type_qualifier: ir.TypeQualifier
+    base_type: IRType
+    type_qualifier: IRTypeQualifier
 
-    def visit_attrs(self) -> List[str]:
-        attrs = super().visit_attrs()
+    def get_visit_attrs(self) -> List[str]:
+        attrs = super().get_visit_attrs()
         attrs.extend(["base_type", "type_qualifier"])
         return attrs
