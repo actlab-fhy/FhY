@@ -866,7 +866,7 @@ class JSONtoAST(visitor.BasePass):
         return Source(namespace=source.attributes.get("namespace") or "_null")
 
 
-def dump(node: ast.ASTNode, indent: str = "  ") -> str:
+def dump(node: ast.ASTNode, indent: Optional[str] = "  ") -> str:
     """Serialize an AST Node to json string, with a given indent."""
     to_json = ASTtoJSON()
     obj: AlmostJson = to_json.visit(node)
