@@ -24,6 +24,10 @@ from .base import ASTNode
 class Module(ASTNode):
     """FhY module AST node.
 
+    Args:
+        name (IRIdentifier): Name of the module.
+        statements (List[Statement]): List of statements in the module.
+
     Attributes:
         name (IRIdentifier): Name of the module.
         statements (List[Statement]): List of statements in the module.

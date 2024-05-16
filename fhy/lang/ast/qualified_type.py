@@ -17,6 +17,10 @@ class QualifiedType(ASTNode):
         base_type (IRType): Type of the qualified type.
         type_qualifier (IRTypeQualifier): Qualifier of the type.
 
+    Attributes:
+        base_type (IRType): Type of the qualified type.
+        type_qualifier (IRTypeQualifier): Qualifier of the type.
+
     """
 
     base_type: IRType

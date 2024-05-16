@@ -21,6 +21,9 @@ from ..span import Span
 class ASTNode(ABC):
     """A node in the FhY AST.
 
+    Args:
+        span (Span, optional): The Span of the node in the source code.
+
     Attributes:
         span (Span): The Span of the node in the source code.
 

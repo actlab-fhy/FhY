@@ -55,6 +55,10 @@ class UnaryOperation(StrEnum):
 class UnaryExpression(Expression):
     """Expression node representing expressions requiring one argument.
 
+    Args:
+        operation (UnaryOperation): Supported unary operator.
+        expression (Expression): Input expression.
+
     Attributes:
         operation (UnaryOperation): Supported unary operator.
         expression (Expression): Input expression.
@@ -129,10 +133,15 @@ class BinaryOperation(StrEnum):
 class BinaryExpression(Expression):
     """Expression node representing expressions requiring two arguments.
 
+    Args:
+        operation (BinaryOperation): Binary operator.
+        left (Expression): Left-input expression.
+        right (Expression): Right-input expression.
+
     Attributes:
         operation (BinaryOperation): Binary operator.
-        left (Expression): Left input expression.
-        right (Expression): Right input expression.
+        left (Expression): Left-input expression.
+        right (Expression): Right-input expression.
 
     """
 
@@ -149,6 +158,11 @@ class BinaryExpression(Expression):
 @dataclass(frozen=True, kw_only=True)
 class TernaryExpression(Expression):
     """Conditional (?) expression node.
+
+    Args:
+        condition (Expression): Input expression evaluated as a boolean.
+        true (Expression): Input expression if condition is true.
+        false (Expression): Input expression if condition is false.
 
     Attributes:
         condition (Expression): Input expression evaluated as a boolean.
@@ -171,6 +185,10 @@ class TernaryExpression(Expression):
 class TupleAccessExpression(Expression):
     """Expression node representing access to a tuple element.
 
+    Args:
+        tuple_expression (Expression): Expression defining the tuple.
+        element_index (IntLiteral): Index of the element to access.
+
     Attributes:
         tuple_expression (Expression): Expression defining the tuple.
         element_index (IntLiteral): Index of the element to access.
@@ -189,6 +207,13 @@ class TupleAccessExpression(Expression):
 @dataclass(frozen=True, kw_only=True)
 class FunctionExpression(Expression):
     """Function call expression node.
+
+    Args:
+        function (Expression): Expression defining the function to call.
+        template_types (List[IRType], optional): Types for template arguments.
+        indices (List[Expression], optional): Reduced indices for a reduction
+            operation.
+        args (List[Expression], optional): Provided arguments to function call.
 
     Attributes:
         function (Expression): Expression defining the function to call.
@@ -214,6 +239,10 @@ class FunctionExpression(Expression):
 class ArrayAccessExpression(Expression):
     """Array access expression node.
 
+    Args:
+        array_expression (Expression): Expression defining the array.
+        indices (List[Expression], optional): Indices to access the array.
+
     Attributes:
         array_expression (Expression): Expression defining the array.
         indices (List[Expression]): Indices to access the array.
@@ -233,6 +262,10 @@ class ArrayAccessExpression(Expression):
 class TupleExpression(Expression):
     """Tuple expression node.
 
+    Args:
+        expressions (List[Expression], optional): Expressions defining the
+            tuple.
+
     Attributes:
         expressions (List[Expression]): Expressions defining the tuple.
 
@@ -249,6 +282,9 @@ class TupleExpression(Expression):
 @dataclass(frozen=True, kw_only=True)
 class IdentifierExpression(Expression):
     """Wrapper node for a variable is used in an expression.
+
+    Args:
+        identifier (IRIdentifier): Identifier of the variable.
 
     Attributes:
         identifier (IRIdentifier): Identifier of the variable.
@@ -272,6 +308,9 @@ class Literal(Expression, ABC):
 class IntLiteral(Literal):
     """Expression node for integer literals.
 
+    Args:
+        value (int): Integer value.
+
     Attributes:
         value (int): Integer value.
 
@@ -289,6 +328,9 @@ class IntLiteral(Literal):
 class FloatLiteral(Literal):
     """Expression node for floating point literals.
 
+    Args:
+        value (float): Floating point value.
+
     Attributes:
         value (float): Floating point value.
 
@@ -305,6 +347,9 @@ class FloatLiteral(Literal):
 @dataclass(frozen=True, kw_only=True)
 class ComplexLiteral(Literal):
     """Expression node for complex literals.
+
+    Args:
+        value (complex): Complex value.
 
     Attributes:
         value (complex): Complex value.
