@@ -23,6 +23,12 @@ log: logging.Logger = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
+def _get_relative_path(path: Path, ref: Path) -> str:
+    path: str = str(path.relative_to(ref).with_suffix(""))
+
+    return path.replace("/", ".")
+
+
 class ASTProgramBuilder(object):
     """Construct an AST program.
 
@@ -161,9 +167,7 @@ class ASTProgramBuilder(object):
         return self.root_dir / import_path
 
     def _get_module_name_from_source_file_path(self, filepath: Path) -> str:
-        path: str = str(filepath.relative_to(self.root_dir).with_suffix(""))
-
-        return path.replace("/", ".")
+        return _get_relative_path(filepath, self.root_dir)
 
     def _find_source(
         self, tree: ModuleTree, ast_sources: List[SourceFileAST]
@@ -257,7 +261,10 @@ class ASTProgramBuilder(object):
                     raise error.FhYImportError(msg)
 
                 id_map[iid] = exists
-                graph.add_edge(str(source.path), str(source_imported.path))
+
+                a = self._get_module_name_from_source_file_path(source.path)
+                b = self._get_module_name_from_source_file_path(source_imported.path)
+                graph.add_edge(a, b)
 
             _ast = replace_identifiers(source.ast, id_map)
             resolved_sources.append(replace(source, ast=_ast))
