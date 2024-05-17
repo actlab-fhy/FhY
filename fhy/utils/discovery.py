@@ -41,22 +41,6 @@ def collect_files(
     return files
 
 
-def confirm_files(filepath: str) -> List[str]:
-    """Confirm Valid filepath, or directory path."""
-    path = os.path.abspath(filepath)
-    if not os.path.exists(path):
-        raise FileExistsError(f"File does not Exist: {path}")
-
-    elif os.path.isdir(path):
-        return collect_files(path)
-
-    elif os.path.isfile(path) and path.endswith(".fhy"):
-        return [path]
-
-    else:
-        raise FileNotFoundError(f"Invalid Filetype Provided: {path}")
-
-
 def collect_paths(root: Union[str, pathlib.Path]) -> List[pathlib.Path]:
     """Return a list of pathlib objects for children of root directory."""
     return [pathlib.Path(i.path) for i in os.scandir(root)]
@@ -165,6 +149,9 @@ class Root(Mapping):
 
         return self.tree[key]
 
+    # def __setitem__(self, key: str, value: "Root") -> None:
+    #     self.tree[key] = value
+
     def __iter__(self) -> Generator[str, None, None]:
         yield from self.tree
 
@@ -175,7 +162,7 @@ class Root(Mapping):
 class AParentLeaf(Root):
     """Child Directory and bad Pun."""
 
-    def __init__(self, path: str | pathlib.Path, parent: Root) -> None:
+    def __init__(self, path: Union[str, pathlib.Path], parent: Root) -> None:
         super().__init__(path)
         self.parent = parent
 
@@ -183,9 +170,16 @@ class AParentLeaf(Root):
 class Leaf(Root):
     """Leaf file, or module Node."""
 
-    def __init__(self, path: str | pathlib.Path, parent: Root) -> None:
+    def __init__(self, path: Union[str, pathlib.Path], parent: Root) -> None:
         super().__init__(path)
         self.parent = parent
+
+    @Root.path.setter
+    def path(self, value: Union[str, pathlib.Path]):
+        temp = standard_path(value)
+        if not temp.is_file():
+            warnings.warn(f"Leaf Node Path should be a File: {temp}")
+        self._path = temp
 
     def traverse_path(self, path: List[str]) -> Self:
         return self

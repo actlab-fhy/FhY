@@ -9,9 +9,13 @@ from fhy.utils import discovery
 
 
 @pytest.fixture
-def build_root():
-    directory = os.path.abspath(os.path.join(__file__, os.pardir))
-    yield directory, discovery.build_project_root(directory)
+def root_dir():
+    return os.path.abspath(os.path.join(__file__, os.pardir))
+
+
+@pytest.fixture
+def build_root(root_dir):
+    yield root_dir, discovery.build_project_root(root_dir)
 
 
 @pytest.fixture
@@ -79,3 +83,23 @@ def test_ascending_traversal(setup_traversal):
 
     new = traversed.traverse_up(1)
     assert new.path == root.path
+
+
+def test_collect_files_files_only(root_dir):
+    path = os.path.join(root_dir, "data", "file_search", "A")
+    extension = ".fhy"
+    result = discovery.collect_files(path, extension)
+    assert len(result) == 1, "Expected to find One File."
+    assert all(
+        i.endswith(extension) for i in result
+    ), "Expected Extension argument to be Honored"
+
+
+def test_collect_files_directories_too(root_dir):
+    path = os.path.join(root_dir, "data", "file_search")
+    extension = ".fhy"
+    result = discovery.collect_files(path, extension)
+    assert len(result) == 2, "Expected to find Two Files."
+    assert all(
+        i.endswith(extension) for i in result
+    ), "Expected Extension argument to be Honored"
