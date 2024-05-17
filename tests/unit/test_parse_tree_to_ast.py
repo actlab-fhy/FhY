@@ -86,8 +86,8 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
 def _assert_is_expected_module(node: ast.ASTNode, expected_num_statements: int) -> None:
     assert isinstance(node, ast.Module), wrong_node_babe(ast.Module, node)
 
-    assert all(isinstance(statement, ast.Statement) for statement in node.statements), (
-        "Expected all statementss to be `Statement` AST nodes, got "
+    assert all(map(lambda x: isinstance(x, ast.Statement), node.statements)), (
+        "Expected all statements to be `Statement` AST nodes, got "
         + f"`{list_to_types(node.statements)}`"
     )
     assert (

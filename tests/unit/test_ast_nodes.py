@@ -117,9 +117,7 @@ def test_keynames(node: Type[ast.ASTNode], expected: str):
 )
 def test_attributes(node: type[ast.ASTNode], is_abstract: bool, expected: List[str]):
     """Test that the attributes trickle down subclasses."""
-
     # Mock instantiate the node
-
     if not is_abstract:
         instance = node(**{key: None for key in expected})
 
@@ -135,4 +133,4 @@ def test_attributes(node: type[ast.ASTNode], is_abstract: bool, expected: List[s
 
     assert set(instance.get_visit_attrs()) == set(
         expected
-    ), f"Expected {expected}, but got {instance.get_visit_attrs()} instead."
+    ), f"Expected `{expected}`, but got `{instance.get_visit_attrs()}` instead."

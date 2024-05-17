@@ -6,6 +6,7 @@ from typing import List, Set, Tuple
 
 import pytest
 
+from fhy import ir
 from fhy.driver import utils
 from fhy.driver.ast_program_builder.builder import ASTProgramBuilder
 from fhy.driver.ast_program_builder.module_tree import ModuleTree
@@ -49,6 +50,24 @@ def test_separation(symbol: str, expected: Tuple[List[str], str]):
 
     assert result_a == expected[0], "Unexpected Import Components"
     assert result_b == expected[1], "Unexpected Import Name"
+
+
+def test_program_instantiation():
+    """Simple ir.Program Instantiation Check."""
+    program = ir.Program()
+    assert hasattr(
+        program, "_components"
+    ), "Expected `_components` Attribute to ir.Program."
+    assert isinstance(
+        program._components, dict
+    ), "Expected _component Attribute to be a dictionary."
+
+    assert hasattr(
+        program, "_symbol_table"
+    ), "Expected _symbol_table Attribute to ir.Program."
+    assert isinstance(
+        program._symbol_table, ir.SymbolTable
+    ), "Expected _component Attribute to be an ir.SymbolTable."
 
 
 def test_builder_file_asts(unidirectional_import, config):
@@ -175,3 +194,10 @@ def test_identifier_validation_circular_import(circular_dir, config):
 
     with pytest.raises(error.FhYImportError):
         program._resolve_imports(ast_files, tree)
+
+
+def test_program_build(unidirectional_import, config):
+    builder = ASTProgramBuilder(unidirectional_import, config)
+    program = builder.build()
+
+    assert isinstance(program, ir.Program), "Expected an ir.Program to be built."
