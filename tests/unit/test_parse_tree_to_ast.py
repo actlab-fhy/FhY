@@ -392,7 +392,28 @@ def test_empty_procedure(construct_ast, source: str):
     _assert_is_expected_procedure(procedure, "foo", 0, 0)
 
 
-@pytest.mark.parametrize(["name"], [("x",), ("arg",), ("arg1",), ("arg_1",)])
+@pytest.mark.parametrize(
+    ["name"],
+    [
+        ("x",),
+        ("arg",),
+        ("arg1",),
+        ("arg_1",),
+        # Check Identity Names similar to Keywords
+        ("importer",),
+        ("from_there",),
+        ("astype",),
+        ("tuples",),
+        ("indexed",),
+        ("proctor",),
+        ("operator",),
+        ("natives",),
+        ("reduction",),
+        ("if_true",),
+        ("else_if",),
+        ("return_value",),
+    ],
+)
 def test_empty_procedure_with_qualified_argument(construct_ast, name: str):
     """Test an empty procedure with a single qualified argument and argument names."""
     source: str = "proc foo(input int32 %s){}" % name

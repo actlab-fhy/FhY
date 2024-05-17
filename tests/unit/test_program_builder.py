@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import pytest
 
@@ -13,7 +13,7 @@ from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.utils import get_imported_symbol_module_components_and_name
 from fhy.driver.workspace import Workspace
-from fhy.lang.passes import collect_imported_identifiers
+from fhy.lang.passes import collect_identifiers, collect_imported_identifiers
 from fhy.utils import error
 
 
@@ -129,7 +129,6 @@ def test_get_correct_module_by_name(unidirectional_import, config):
     ids = collect_imported_identifiers(ast_files[0].ast)
     assert len(ids) == 1, "Expected one ID."
     name = next(iter(ids)).name_hint
-    print("ID Name:", name)
 
     result = program._get_module_by_name(tree, name)
     assert isinstance(result, ModuleTree), "Expected Module Tree"
@@ -141,16 +140,34 @@ def test_get_correct_module_by_name(unidirectional_import, config):
 
 
 def test_identifier_validation(unidirectional_import, config):
-    # TODO: Complete this Unit Tests
+    """Confirm that Identifiers are Correctly Replaced."""
     program = ASTProgramBuilder(unidirectional_import, config)
-    ast_files = program._build_source_file_asts()
-    paths = {i.path for i in ast_files}
-    tree = program._build_module_tree(paths)
+    ast_files: List[SourceFileAST] = program._build_source_file_asts()
+    paths: Set[Path] = {i.path for i in ast_files}
+    tree: ModuleTree = program._build_module_tree(paths)
 
-    program._resolve_imports(ast_files, tree)
+    result: List[SourceFileAST] = program._resolve_imports(ast_files, tree)
+
+    # Use sets to show differences in asts
+    previous_ids = set()
+    for j in ast_files:
+        previous_ids.update(collect_identifiers(j.ast))
+    current_ids = set()
+    for k in result:
+        current_ids.update(collect_identifiers(k.ast))
+
+    assert len(previous_ids) > len(current_ids), "Expected IDs to be Replaced."
+    difference = previous_ids.difference(current_ids)
+    assert len(difference) == 1, "Expected One Identifier to be Replaced."
+
+    identifier = next(iter(difference))
+    assert (
+        identifier.name_hint == "unidirectional_import.b.B"
+    ), "UnExpected Identifier Replaced."
 
 
-def test_identifier_validation_circular(circular_dir, config):
+def test_identifier_validation_circular_import(circular_dir, config):
+    """Raise ImportError when Encountering Circular Import."""
     program = ASTProgramBuilder(circular_dir, config)
     ast_files = program._build_source_file_asts()
     paths = {i.path for i in ast_files}
