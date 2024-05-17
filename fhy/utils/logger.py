@@ -45,3 +45,25 @@ def get_logger(
     log.addHandler(stream)
 
     return log
+
+
+def add_file_handler(
+    log: logging.Logger, path: str, level: int = logging.DEBUG
+) -> None:
+    """Append a FileHandler to an existing logger object.
+
+    Args:
+        log (logging.Logger): Logger instance object
+        path (str): valid file path to stream logs to
+        level (int, optional): Logging Level. Defaults to logging.DEBUG.
+
+    """
+    handler = logging.FileHandler(path, mode="a")
+    handler.setLevel(level)
+
+    # Update level of the log object itself, so that debug messages are emitted
+    # to the handlers. Both the level of the log and handlers are checked, in that order
+    # before emitting a message.
+    if level < log.level:
+        log.setLevel(level)
+    log.addHandler(handler)

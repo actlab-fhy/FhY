@@ -17,7 +17,7 @@ from fhy.driver.ast_program_builder.source_file_ast import (
 from fhy.lang.pprint import pformat_ast
 from fhy.lang.serialization.to_json import dump
 from fhy.utils.discovery import standard_path
-from fhy.utils.logger import get_logger
+from fhy.utils.logger import add_file_handler, get_logger
 
 
 class Status(IntEnum):
@@ -29,8 +29,6 @@ class Status(IntEnum):
     USAGE_ERROR = 3
 
 
-# TODO: We might want a filehandler to output log to a file on user flag.
-# TODO: Capture Root Directory Information to define Consistent logging location
 def make_logger(verbose: bool = False) -> logging.Logger:
     """Constructs a Simple Logger."""
     level: int = logging.DEBUG if verbose else logging.INFO
@@ -46,6 +44,7 @@ def arguments() -> argparse.ArgumentParser:
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Provide more verbose logging"
     )
+    parser.add_argument("--log-file", help="filepath to stream (save) log messages to.")
     parser.add_argument("--version", action="store_true", help="Display FhY Version")
     parser.add_argument(
         "-m", "--module", help="Filepath to a single module (file).", type=str
@@ -98,6 +97,12 @@ def main() -> int:
 
     log: logging.Logger = make_logger(args.verbose)
 
+    # TODO: If not specified, we should have a default log location within private
+    #       directory. Or in addition to client handler.
+    if args.log_file:
+        add_file_handler(log, args.log_file)
+        log.debug("Added File Handler to log instance: %s", args.log_file)
+
     if file := (args.module or args.library):
         filepath: Path = standard_path(file)
     else:
@@ -124,7 +129,7 @@ def main() -> int:
             return Status.INTERRUPTED
 
         except Exception as e:
-            log.error("FhY Compilation has Failed", exc_info=e)
+            log.error("FhY Compilation has Failed.", exc_info=e)
             return Status.FAILED
 
     elif args.module:
@@ -134,14 +139,14 @@ def main() -> int:
         #       Roadmap should include expansion to library compilation as well
         if args.format:
             if args.format == "json":
-                print(dump(result.ast, None))
+                sys.stdout.write(dump(result.ast, None))
+                sys.stdout.write("\n")
 
             elif args.format == "pretty":
-                print("\n\n")
                 header = f"// {result.path}\n"
-                header += "=" * len(header)
-                print(header)
-                print(pformat_ast(result.ast), end="\n\n")
+                header += "=" * (len(header) - 1)
+                sys.stdout.write(f"\n\n{header}\n")
+                sys.stdout.write(f"{pformat_ast(result.ast)}\n\n")
 
     return Status.OK
 
