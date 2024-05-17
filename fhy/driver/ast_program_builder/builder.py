@@ -2,6 +2,7 @@
 
 import logging
 from collections import deque
+from dataclasses import replace
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
@@ -10,7 +11,6 @@ import networkx as nx  # type: ignore[import-untyped]
 from fhy import ir
 from fhy.lang import collect_imported_identifiers
 from fhy.lang.passes import build_symbol_table, replace_identifiers
-from fhy.lang.passes.identifier_collector import collect_identifiers
 from fhy.utils import error
 
 from ..compilation_options import CompilationOptions
@@ -220,8 +220,10 @@ class ASTProgramBuilder(object):
         #       Aliasing not yet supported (e.g. `import x as y;`).
         # Initialize a Directional Graph
         graph = nx.DiGraph()
+        resolved_sources: List[SourceFileAST] = []
 
         for source in source_file_asts:
+            id_map: Dict[ir.Identifier, ir.Identifier] = {}
             import_ids: Set[ir.Identifier] = collect_imported_identifiers(source.ast)
             for iid in import_ids:
                 relevant_module = self._get_module_by_name(module_tree, iid.name_hint)
@@ -235,12 +237,7 @@ class ASTProgramBuilder(object):
                 source_imported: Optional[SourceFileAST] = self._find_source(
                     relevant_module, source_file_asts
                 )
-                print(relevant_module.name, source_imported)
-                print(
-                    self._get_source_file_path_from_imported_symbol(
-                        relevant_module.name
-                    )
-                )
+
                 if source_imported is None:
                     raise Exception("Make a Better Module not Found Error.")
 
@@ -248,27 +245,22 @@ class ASTProgramBuilder(object):
                 table_from: ir.SymbolTable = build_symbol_table(source_imported.ast)
                 module_context: ir.Table = list(table_from.values())[0]
 
-                # Collect all Identifiers derived from use of given Import within source
-                skip = ".".join(iid.name_hint.split(".")[:-1]) + "."
-                bank: Set[ir.Identifier] = {
-                    i
-                    for i in collect_identifiers(source.ast)
-                    if i != iid and i.name_hint.startswith(skip)
-                }
+                # Confirm Identifiers derived from use of given Import within source
+                _, name = get_imported_symbol_module_components_and_name(iid.name_hint)
+                exists = self._confirm_import_exists(name, module_context)
+                if not exists:
+                    msg = (
+                        f"Import symbol `{name}` Not Found within: "
+                        f"{source_imported.path}"
+                    )
+                    log.error(msg)
+                    raise error.FhYImportError(msg)
 
-                # Compare usage in source, to availability in found module
-                id_map: Dict[ir.Identifier, ir.Identifier] = {}
-                for b in bank:
-                    name = b.name_hint.split(skip)[0]
-                    exists = self._confirm_import_exists(name, module_context)
-                    if not exists:
-                        msg = f"Import Not Found: {iid}"
-                        log.error(msg)
-                        raise error.FhYImportError(msg)
-                    id_map[b] = exists
-                replace_identifiers(source.ast, id_map)
-
+                id_map[iid] = exists
                 graph.add_edge(str(source.path), str(source_imported.path))
+
+            _ast = replace_identifiers(source.ast, id_map)
+            resolved_sources.append(replace(source, ast=_ast))
 
         # Cycle Detection
         if result := self._is_cyclical(graph):
@@ -276,7 +268,7 @@ class ASTProgramBuilder(object):
             log.error(msg)
             raise error.FhYImportError(msg)
 
-        return source_file_asts
+        return resolved_sources
 
     def _build_program(self, source_file_asts: List[SourceFileAST]) -> ir.Program:
         # TODO: Chris will change this later
