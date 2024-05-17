@@ -2,6 +2,7 @@
 
 import logging
 import os
+from pathlib import Path
 from typing import Callable, Generator, Optional
 
 import pytest
@@ -21,18 +22,28 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
     yield _inner
 
     # Teardown Sequence Accounting for intentionally Failed Tests
-    if log is not None:
-        # A Hack to Remove the Temporary Logger made from Root Logging Manager Registry
-        registry = logging.Logger.manager.loggerDict
-        registry.pop(log.name)
-        assert log.name not in registry, "Expected to Remove Logger from registry"
+    if log is None:
+        return None
 
-        # Remove Temporary Filepath of Filehandler Loggers
-        if isinstance((handler := log.handlers[0]), logging.FileHandler):
-            os.remove(handler.baseFilename)
-            assert not os.path.exists(
-                handler.baseFilename
-            ), "Expected to Remove Temporary Logging Filepath."
+    # A Hack to Remove the Temporary Logger made from Root Logging Manager Registry
+    registry = logging.Logger.manager.loggerDict
+    registry.pop(log.name)
+    assert log.name not in registry, "Expected to Remove Logger from registry"
+
+    # Remove Temporary Filepath of Filehandler Loggers
+    def _test(x) -> bool:
+        return isinstance(x, logging.FileHandler)
+
+    if not any(map(_test, log.handlers)):
+        return None
+
+    for hand in log.handlers:
+        if not _test(hand):
+            continue
+        os.remove(hand.baseFilename)
+        assert not os.path.exists(
+            hand.baseFilename
+        ), "Expected to Remove Temporary Logging Filepath."
 
 
 @pytest.mark.parametrize(
@@ -42,7 +53,7 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
         ("foo", logging.INFO, None),
         ("bar", logging.CRITICAL, None),
         ("baz", logging.WARNING, logging.StreamHandler()),
-        ("baz", logging.WARNING, logging.FileHandler("test.log")),
+        ("bun", logging.WARNING, logging.FileHandler("test.log")),
     ],
 )
 def test_build_logger(get_log, name, level, stream):
@@ -68,3 +79,17 @@ def test_invalid_stream(get_log):
     """Confirm we raise a TypeError when providing an invalid stream arg."""
     with pytest.raises(TypeError):
         log = get_log("snap", logging.WARNING, "InvalidStream")
+
+
+def test_append_file_handler(get_log):
+    """Confirm a File Handler is appended to existing log."""
+    log = get_log("name", logging.INFO)
+    assert len(log.handlers) == 1, "Expected a Single Handler."
+
+    pathname = str(Path("sample.log").resolve())
+    logger.add_file_handler(log, pathname, logging.DEBUG)
+    assert len(log.handlers) == 2, "Expected an Additional Handler."
+    assert log.level == logging.DEBUG, "Expected Log Level to be Modified."
+    handler = log.handlers[1]
+    assert isinstance(handler, logging.FileHandler), "Expected new FileHandler"
+    assert handler.baseFilename == pathname, "Expected Same Log Path Name."

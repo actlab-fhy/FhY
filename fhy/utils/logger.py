@@ -75,9 +75,9 @@ def add_file_handler(
 
     if level < log.level:
         previous = logging.getLevelName(log.level)
-        current = logging.getLevelName(level)
         log.setLevel(level)
         log.addHandler(handler)
+        current = logging.getLevelName(log.level)
         log.debug(f"Modifying Log Level from `{previous}` to `{current}`")
 
     else:
