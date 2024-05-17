@@ -12,9 +12,7 @@ def test_base_node_keyname(name: str):
     """Confirm the given unique class name is carried through inheritance."""
     obj = type(name, (ast.ASTNode,), {})
     ret = obj.get_key_name()
-    assert (
-        ret == name
-    ), f'Expected "{name}" as the key name, but got "{ret}" instead.'
+    assert ret == name, f'Expected "{name}" as the key name, but got "{ret}" instead.'
 
 
 @pytest.mark.parametrize(

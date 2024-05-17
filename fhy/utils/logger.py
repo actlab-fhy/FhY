@@ -50,20 +50,35 @@ def get_logger(
 def add_file_handler(
     log: logging.Logger, path: str, level: int = logging.DEBUG
 ) -> None:
-    """Append a FileHandler to an existing logger object.
+    """Append a FileHandler object to an existing logger object.
 
     Args:
         log (logging.Logger): Logger instance object
         path (str): valid file path to stream logs to
         level (int, optional): Logging Level. Defaults to logging.DEBUG.
 
+    Note:
+        This function may change the logging level of the log object itself. To emit
+        a log message, the filterer first checks the log level compared to level of the
+        message. Only if this passes, are the levels of the handlers evaluated. To
+        ensure the appended file handler receives relevant messages, we update the
+        logging level if appropriate.
+
     """
     handler = logging.FileHandler(path, mode="a")
     handler.setLevel(level)
 
-    # Update level of the log object itself, so that debug messages are emitted
-    # to the handlers. Both the level of the log and handlers are checked, in that order
-    # before emitting a message.
+    # Use previous formatting
+    if log.hasHandlers():
+        form = log.handlers[0].formatter
+        handler.setFormatter(form)
+
     if level < log.level:
+        previous = logging.getLevelName(log.level)
+        current = logging.getLevelName(level)
         log.setLevel(level)
-    log.addHandler(handler)
+        log.addHandler(handler)
+        log.debug(f"Modifying Log Level from `{previous}` to `{current}`")
+
+    else:
+        log.addHandler(handler)
