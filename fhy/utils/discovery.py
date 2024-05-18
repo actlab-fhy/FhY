@@ -47,7 +47,13 @@ def collect_paths(root: Union[str, pathlib.Path]) -> List[pathlib.Path]:
 
 
 def standard_path(value: Union[str, pathlib.Path]) -> pathlib.Path:
-    """Standardize and Resolve File Path."""
+    """Standardize and resolve file path.
+
+    Raises:
+        TypeError: Provided type of value is not of type AnyPath (str | pathlib.Path)
+        FileExistsError: Provided Path does not exist on file system.
+
+    """
     if isinstance(value, str):
         path = pathlib.Path(value)
 
