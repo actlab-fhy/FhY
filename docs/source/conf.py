@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "fhy"
-copyright = "2024, Christopher Priebe, Jason Del Rio"
+copyright = "2024, Christopher Priebe, Jason C Del Rio, Hadi Esmaeilzadeh"
 author = "Christopher Priebe, Jason Del Rio"
 
 # -- General configuration ---------------------------------------------------

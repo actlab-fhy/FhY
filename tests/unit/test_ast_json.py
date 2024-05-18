@@ -54,16 +54,12 @@ from fhy.lang.serialization.to_json import (
     JSONtoAST,
     dump,
     load,
-    to_almost_json,
 )
 from fhy.lang.span import Source, Span
 
+from ..utils import load_text
+
 TLiteral = TypeVar("TLiteral", IntLiteral, FloatLiteral, ComplexLiteral)
-
-
-def load_text(text: str) -> AlmostJson:
-    """Utility Function for this module to convert json text into AlmostJson Object."""
-    return json.loads(text, object_hook=to_almost_json)
 
 
 def construct_id(name: str) -> Tuple[dict, Span]:
