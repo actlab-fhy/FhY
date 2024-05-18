@@ -49,6 +49,7 @@ omit = [
 ]
 exclude_also = [
     "def __repr__",
+    'if __name__ == "__main__"'
     ]
 
 [tool.mypy]
