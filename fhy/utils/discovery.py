@@ -25,9 +25,6 @@ def collect_files(
     files: List[str] = []
     for f in os.scandir(directory):
         if f.is_dir():
-            # NOTE: We may have Rules about Subfolders. e.g.
-            # root = os.path.join(f.path, "__root__.fhy")
-            # if os.path.exists(root): ...
             files.extend(collect_files(f.path))
             continue
 
@@ -155,9 +152,6 @@ class Root(Mapping):
 
         return self.tree[key]
 
-    # def __setitem__(self, key: str, value: "Root") -> None:
-    #     self.tree[key] = value
-
     def __iter__(self) -> Generator[str, None, None]:
         yield from self.tree
 
@@ -180,7 +174,8 @@ class Leaf(Root):
         super().__init__(path)
         self.parent = parent
 
-    @Root.path.setter
+    # https://github.com/python/mypy/issues/5936
+    @Root.path.setter  # type: ignore[attr-defined]
     def path(self, value: Union[str, pathlib.Path]):
         temp = standard_path(value)
         if not temp.is_file():

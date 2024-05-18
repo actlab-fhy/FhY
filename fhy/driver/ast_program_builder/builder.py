@@ -24,9 +24,9 @@ _log.setLevel(logging.INFO)
 
 
 def _get_relative_path(path: Path, ref: Path) -> str:
-    path: str = str(path.relative_to(ref).with_suffix(""))
+    relative: str = str(path.relative_to(ref).with_suffix(""))
 
-    return path.replace("/", ".")
+    return relative.replace("/", ".")
 
 
 class ASTProgramBuilder(object):
