@@ -9,7 +9,7 @@ from typing import Generator, Optional, Tuple
 def open_file(
     file_path: Path, mode: str
 ) -> Generator[Tuple[Optional[str], Optional[Exception]], None, None]:
-    """Overly Cautious Context manager to Open a File with Better Error Reporting.
+    """Overly cautious context manager to open a file with better error reporting.
 
     Args:
         file_path (Path): _description_
@@ -22,11 +22,14 @@ def open_file(
     """
     try:
         stream = open(file_path, mode)
+
     except Exception as e:
         yield None, e
+
     else:
         try:
             yield stream.read(), None
+
         finally:
             stream.close()
 
@@ -47,6 +50,7 @@ def read_file(file_path: Path) -> str:
     with open_file(file_path, "r") as (text, err):
         if err is not None:
             raise FileExistsError(f"Unable to Read provided file: {file_path}") from err
+
         if text is None:
             raise FileExistsError(f"No Text was read from file: {file_path}")
 
