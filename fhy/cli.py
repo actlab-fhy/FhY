@@ -2,11 +2,9 @@
 
 import argparse
 import logging
-import os
 import sys
 from enum import IntEnum
 from pathlib import Path
-from typing import Optional
 
 from fhy import __version__
 from fhy.driver import CompilationOptions, Workspace, compile_fhy
@@ -66,26 +64,28 @@ def arguments() -> argparse.ArgumentParser:
     return parser
 
 
-def output_path(filepath: str, override_dir: Optional[str]) -> str:
-    """Construct an output path for a given file."""
-    if override_dir is None:
-        parent_relative = os.path.join(filepath, os.pardir)
-        parent_dir = os.path.abspath(parent_relative)
+# TODO: Define More Exacting Rules on Expectations of user override.
+#       Since we plan on creating a temporary directory, this will be on hold.
+# def output_path(filepath: str, override_dir: Optional[str]) -> str:
+#     """Construct an output path for a given file."""
+#     if override_dir is None:
+#         parent_relative = os.path.join(filepath, os.pardir)
+#         parent_dir = os.path.abspath(parent_relative)
 
-    else:
-        if not os.path.exists(override_dir):
-            raise FileNotFoundError(
-                f"Output Filepath Directory Not Found: {override_dir}"
-            )
-        parent_dir = os.path.abspath(override_dir)
+#     else:
+#         if not os.path.exists(override_dir):
+#             raise FileNotFoundError(
+#                 f"Output Filepath Directory Not Found: {override_dir}"
+#             )
+#         parent_dir = os.path.abspath(override_dir)
 
-    basename = os.path.basename(filepath).split(".")[0]
-    new_path = os.path.join(parent_dir, f"{basename}_out.ast")
+#     basename = os.path.basename(filepath).split(".")[0]
+#     new_path = os.path.join(parent_dir, f"{basename}_out.ast")
 
-    return new_path
+#     return new_path
 
 
-def main() -> int:
+def main() -> int:  # noqa: PLR0912
     """Primary entry point for compilation of FhY files."""
     arg_parser: argparse.ArgumentParser = arguments()
     args: argparse.Namespace = arg_parser.parse_args()
@@ -104,7 +104,13 @@ def main() -> int:
         log.debug("Added File Handler to log instance: %s", args.log_file)
 
     if file := (args.module or args.library):
-        filepath: Path = standard_path(file)
+        try:
+            filepath: Path = standard_path(file)
+
+        except (TypeError, FileExistsError) as e:
+            log.error(str(e), exc_info=e)
+            return Status.USAGE_ERROR
+
     else:
         log.error(
             "No Filepath(s) were defined. Provide a path either through "
