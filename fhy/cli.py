@@ -128,7 +128,7 @@ def main() -> int:  # noqa: PLR0912
         workspace = Workspace(root=filepath)
 
         try:
-            compile_fhy(workspace, options)
+            compile_fhy(workspace, options, log)
 
         except KeyboardInterrupt as e:
             log.error("FhY Compilation has been Interrupted by client.", exc_info=e)

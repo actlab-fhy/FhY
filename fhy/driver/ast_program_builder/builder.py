@@ -19,8 +19,8 @@ from ..workspace import Workspace
 from .module_tree import ModuleTree
 from .source_file_ast import SourceFileAST, build_source_file_ast
 
-log: logging.Logger = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+_log: logging.Logger = logging.getLogger(__name__)
+_log.setLevel(logging.INFO)
 
 
 def _get_relative_path(path: Path, ref: Path) -> str:
@@ -35,21 +35,26 @@ class ASTProgramBuilder(object):
     Args:
         workspace (Workspace): Define project root directory file.
         options (CompilationOptions): Configuration options during compilation
+        log (logging.Logger): Define a logger to report for debugging purposes.
 
     Raises:
         FhYImportError: Problematic Import statement detected.
-
-    Returns:
-        _type_: _description_
 
     """
 
     _workspace: Workspace
     _options: CompilationOptions
+    _log: logging.Logger
 
-    def __init__(self, workspace: Workspace, options: CompilationOptions):
+    def __init__(
+        self,
+        workspace: Workspace,
+        options: CompilationOptions,
+        log: logging.Logger = _log,
+    ):
         self._workspace = workspace
         self._options = options
+        self._log = log
 
     @property
     def root_dir(self) -> Path:
@@ -63,13 +68,13 @@ class ASTProgramBuilder(object):
 
     def build(self) -> ir.Program:
         """Build an IR Program composed of (multiple) modules."""
-        unresolved_source_file_asts = self._build_source_file_asts()
-        paths: Set[Path] = {i.path for i in unresolved_source_file_asts}
+        unresolved_asts: List[SourceFileAST] = self._build_source_file_asts()
+        paths: Set[Path] = {i.path for i in unresolved_asts}
         module_tree: ModuleTree = self._build_module_tree(paths)
-        resolved_source_file_asts = self._resolve_imports(
-            unresolved_source_file_asts, module_tree
+        resolved_asts: List[SourceFileAST] = self._resolve_imports(
+            unresolved_asts, module_tree
         )
-        ast_program = self._build_program(resolved_source_file_asts)
+        ast_program: ir.Program = self._build_program(resolved_asts)
 
         return ast_program
 
@@ -89,6 +94,9 @@ class ASTProgramBuilder(object):
 
         while source_file_queue:
             filepath: Path = source_file_queue.popleft()
+            self._log.debug(
+                "Building AST: %s", _get_relative_path(filepath, self.src_dir)
+            )
             paths = map(lambda k: k.path, source_file_asts)
             if any(i == filepath for i in paths):
                 continue
@@ -227,6 +235,9 @@ class ASTProgramBuilder(object):
         resolved_sources: List[SourceFileAST] = []
 
         for source in source_file_asts:
+            _rel_path = self._get_module_name_from_source_file_path(source.path)
+            self._log.debug("Resolving Imports: %s", _rel_path)
+
             id_map: Dict[ir.Identifier, ir.Identifier] = {}
             import_ids: Set[ir.Identifier] = collect_imported_identifiers(source.ast)
             for iid in import_ids:
@@ -234,7 +245,7 @@ class ASTProgramBuilder(object):
 
                 if relevant_module is None:
                     msg = f"Invalid Import Statement. Module Not Found: {iid}"
-                    log.error(msg)
+                    self._log.error(msg)
                     raise error.FhYImportError(msg)
 
                 # Find Source of Import
@@ -257,22 +268,22 @@ class ASTProgramBuilder(object):
                         f"Import symbol `{name}` Not Found within: "
                         f"{source_imported.path}"
                     )
-                    log.error(msg)
+                    self._log.error(msg)
                     raise error.FhYImportError(msg)
 
                 id_map[iid] = exists
 
-                a = self._get_module_name_from_source_file_path(source.path)
                 b = self._get_module_name_from_source_file_path(source_imported.path)
-                graph.add_edge(a, b)
+                graph.add_edge(_rel_path, b)
 
+            self._log.debug("Completed Resolving Imports: %s", _rel_path)
             _ast = replace_identifiers(source.ast, id_map)
             resolved_sources.append(replace(source, ast=_ast))
 
         # Cycle Detection
         if result := self._is_cyclical(graph):
             msg = f"Circular Import Detected: {result}"
-            log.error(msg)
+            self._log.error(msg)
             raise error.FhYImportError(msg)
 
         return resolved_sources
@@ -286,17 +297,23 @@ class ASTProgramBuilder(object):
         return program
 
 
-def build_ast_program(workspace: Workspace, options: CompilationOptions) -> ir.Program:
+def build_ast_program(
+    workspace: Workspace, options: CompilationOptions, log: logging.Logger = _log
+) -> ir.Program:
     """Build an AST Program.
 
     Args:
-        workspace (Workspace): _description_
-        options (CompilationOptions): _description_
+        workspace (Workspace): Define project root directory file.
+        options (CompilationOptions): Configuration options during compilation
+        log (optional, logging.Logger): Provide a logger for debugging purposes.
+
+    Raises:
+        FhYImportError: Problematic Import statement detected.
 
     Returns:
         ir.Program: _description_
 
     """
-    builder = ASTProgramBuilder(workspace, options)
+    builder = ASTProgramBuilder(workspace, options, log)
 
     return builder.build()
