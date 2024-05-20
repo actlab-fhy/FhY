@@ -10,9 +10,13 @@ We also have visitor and listener patterns for FhY ASTNodes.
 
 """
 
-from .base import ASTNode
-from .core import Expression, Function, Module, Statement
-from .expression import (
+from .span import Span, Source
+from .node import (
+    ASTNode,
+    Expression,
+    Function,
+    Module,
+    Statement,
     ArrayAccessExpression,
     BinaryExpression,
     BinaryOperation,
@@ -27,9 +31,7 @@ from .expression import (
     TupleExpression,
     UnaryExpression,
     UnaryOperation,
-)
-from .qualified_type import QualifiedType
-from .statement import (
+    QualifiedType,
     Argument,
     DeclarationStatement,
     ExpressionStatement,
@@ -40,5 +42,10 @@ from .statement import (
     Procedure,
     ReturnStatement,
     SelectionStatement,
+)
+from .passes import (
+    collect_identifiers,
+    collect_imported_identifiers,
+    replace_identifiers,
 )
 from .visitor import BasePass, Listener, Transformer, Visitor

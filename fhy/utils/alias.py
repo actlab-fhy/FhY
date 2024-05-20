@@ -4,7 +4,7 @@ from typing import TypeVar, Union
 
 from fhy import ir as _ir
 from fhy.lang import ast as _ast
-from fhy.lang.span import Source, Span
+from fhy.lang.ast.span import Source, Span
 
 # Define Commonly Used Aliases
 ASTTypeNodes = Union[_ast.ASTNode, _ir.Type]

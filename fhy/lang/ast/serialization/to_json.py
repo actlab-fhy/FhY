@@ -26,7 +26,7 @@ from typing import Any, Callable, List, Optional, Sequence, Union
 from fhy import ir
 from fhy.lang import ast
 from fhy.lang.ast import visitor
-from fhy.lang.span import Source, Span
+from fhy.lang.ast.span import Source, Span
 from fhy.utils.alias import ASTObject
 
 

@@ -10,7 +10,7 @@ import networkx as nx  # type: ignore[import-untyped]
 
 from fhy import ir
 from fhy.lang import collect_imported_identifiers
-from fhy.lang.passes import build_symbol_table, replace_identifiers
+from fhy.lang.ast.passes import build_symbol_table, replace_identifiers
 from fhy.utils import error
 
 from ..compilation_options import CompilationOptions

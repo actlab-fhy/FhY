@@ -8,7 +8,7 @@ from fhy.ir import (
     TypeQualifier,
 )
 from fhy.lang.ast import Module, Operation, QualifiedType
-from fhy.lang.pprint import pformat_ast
+from fhy.lang.ast.pprint import pformat_ast
 
 
 # TODO: Complete Coverage of AST Pretty Print Module in Unit Testing.

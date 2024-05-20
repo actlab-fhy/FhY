@@ -3,7 +3,7 @@
 import pytest
 
 from fhy import ir
-from fhy.lang.passes import build_symbol_table
+from fhy.lang.ast.passes import build_symbol_table
 from fhy.utils import error
 
 

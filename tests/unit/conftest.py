@@ -15,7 +15,7 @@ from antlr4.atn.ATNState import DecisionState
 from antlr4.error.ErrorListener import ErrorListener
 
 from fhy.lang.ast import ASTNode
-from fhy.lang.ast_builder.converter.from_parse_tree import from_parse_tree
+from fhy.lang.converter.from_parse_tree import from_parse_tree
 from fhy.lang.parser import FhYLexer, FhYParser
 from fhy.utils import error as fhy_error
 from fhy.utils.logger import get_logger

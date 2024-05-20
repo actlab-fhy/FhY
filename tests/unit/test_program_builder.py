@@ -14,7 +14,7 @@ from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.utils import get_imported_symbol_module_components_and_name
 from fhy.driver.workspace import Workspace
-from fhy.lang.passes import collect_identifiers, collect_imported_identifiers
+from fhy.lang.ast.passes import collect_identifiers, collect_imported_identifiers
 from fhy.utils import error
 
 

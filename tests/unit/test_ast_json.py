@@ -48,14 +48,14 @@ from fhy.lang.ast import (
     UnaryExpression,
     UnaryOperation,
 )
-from fhy.lang.serialization.to_json import (
+from fhy.lang.ast.serialization.to_json import (
     AlmostJson,
     ASTtoJSON,
     JSONtoAST,
     dump,
     load,
 )
-from fhy.lang.span import Source, Span
+from fhy.lang.ast.span import Source, Span
 
 from ..utils import load_text
 

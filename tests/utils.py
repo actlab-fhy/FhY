@@ -3,7 +3,7 @@
 import json
 from typing import Any, List
 
-from fhy.lang.serialization.to_json import AlmostJson, to_almost_json
+from fhy.lang.ast.serialization.to_json import AlmostJson, to_almost_json
 
 
 def list_to_types(xs: List[Any]) -> List[type]:

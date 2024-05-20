@@ -13,7 +13,7 @@ from fhy.lang.ast import (
     Procedure,
     QualifiedType,
 )
-from fhy.lang.passes.identifier_collector import (
+from fhy.lang.ast.passes.identifier_collector import (
     IdentifierCollector,
     collect_identifiers,
 )

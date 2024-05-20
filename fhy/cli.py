@@ -12,8 +12,8 @@ from fhy.driver.ast_program_builder.source_file_ast import (
     SourceFileAST,
     build_source_file_ast,
 )
-from fhy.lang.pprint import pformat_ast
-from fhy.lang.serialization.to_json import dump
+from fhy.lang.ast.pprint import pformat_ast
+from fhy.lang.ast.serialization.to_json import dump
 from fhy.utils.discovery import standard_path
 from fhy.utils.logger import add_file_handler, get_logger
 

@@ -3,11 +3,12 @@
 from typing import Set
 
 from fhy import ir
-from fhy.lang import ast
+from fhy.lang.ast import node as ast
+from fhy.lang.ast.visitor import Visitor
 from fhy.utils.alias import ASTObject
 
 
-class ImportedIdentifierCollector(ast.Visitor):
+class ImportedIdentifierCollector(Visitor):
     """Visitor pass to Collect Import identifiers from AST Nodes."""
 
     _identifiers: Set[ir.Identifier]

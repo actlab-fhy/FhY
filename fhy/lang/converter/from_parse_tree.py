@@ -20,7 +20,7 @@ from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped
 from fhy.utils.alias import Expressions
 from fhy.utils.error import FhYASTBuildError, FhYSyntaxError
 
-from ...span import Span
+from fhy.lang.ast import Span
 
 
 def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:
