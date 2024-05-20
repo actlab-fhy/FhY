@@ -1,23 +1,35 @@
-"""A Simple Visitor Pattern base class to visit ASTNode objects.
+"""Visitor patterns to visit AST nodes.
 
 Classes:
-    BasePass: abstract visitor pattern class
-    Visitor:
-    Listener:
-    Transformer:
+    BasePass: Abstract visitor pattern base class.
+    Visitor: Visitor with control for how to visit child nodes.
+    Listener: Visitor without control for how to visit child nodes.
+    Transformer: Visitor to modify AST nodes.
 
 """
 
 from abc import ABC
+from collections import deque
 from copy import copy
-from typing import Any, Callable, List, Sequence, Union
+from functools import partial
+from typing import Any, Callable, List, Sequence, Tuple, Union
 
-from fhy import ir
+from fhy.ir.identifier import Identifier as IRIdentifier
+from fhy.ir.type import DataType as IRDataType
+from fhy.ir.type import IndexType as IRIndexType
+from fhy.ir.type import NumericalType as IRNumericalType
+from fhy.ir.type import PrimitiveDataType as IRPrimitiveDataType
+from fhy.ir.type import Type as IRType
+from fhy.ir.type import TypeQualifier as IRTypeQualifier
 from fhy.utils.alias import ASTObject
+from fhy.utils import Stack
 
-from ..span import Source, Span
-from .core import Expression, Module, Statement
-from .expression import (
+from .span import Source, Span
+from .node import (
+    ASTNode,
+    Expression,
+    Module,
+    Statement,
     ArrayAccessExpression,
     BinaryExpression,
     FloatLiteral,
@@ -28,9 +40,7 @@ from .expression import (
     TupleAccessExpression,
     TupleExpression,
     UnaryExpression,
-)
-from .qualified_type import QualifiedType
-from .statement import (
+    QualifiedType,
     Argument,
     DeclarationStatement,
     ExpressionStatement,
@@ -66,170 +76,420 @@ from .statement import (
 #                     yield child
 
 
-def get_cls_name(obj: Any) -> str:
-    """Retrieves the Class name of an object instance."""
-    if not hasattr(obj, "keyname"):
+def get_cls_name(obj: ASTObject) -> str:
+    if not hasattr(obj, "get_key_name"):
         return obj.__class__.__name__
 
-    return obj.keyname()
+    return obj.get_key_name()
+
+
+def _get_visit_attrs(node: ASTObject) -> List[str]:
+    if isinstance(node, ASTNode):
+        return node.get_visit_attrs()
+    elif isinstance(node, IRDataType):
+        return ["primitive_data_type"]
+    elif isinstance(node, IRIndexType):
+        return ["lower_bound", "upper_bound", "stride"]
+    elif isinstance(node, IRNumericalType):
+        return ["data_type", "shape"]
+    else:
+        return []
 
 
 class BasePass(ABC):
-    """Abstract Visitor Pattern Class for Node objects.
+    """Abstract visitor pattern AST nodes and structures."""
 
-    Args:
-        is_recursive (bool): If true, recursively visit child nodes.
-
-    """
-
-    _is_recursive: bool
-
-    def __init__(self, is_recursive: bool = True) -> None:
-        self._is_recursive = is_recursive
-
-    def __call__(self, node: Any, *args: Any, **kwargs: Any) -> Any:
+    def __call__(self, node: Any) -> Any:
         return self.visit(node)
 
     def visit(self, node: Any) -> Any:
-        """A unified entry point that determines how to visit an AST object node."""
+        """Visit a node or structure based on its class name.
+
+        Args:
+            node (Any): AST node or structure to visit.
+
+        Returns:
+            Any: Result of visiting the node.
+
+        """
         name = f"visit_{get_cls_name(node)}"
         method: Callable[[Any], Any] = getattr(self, name, self.default)
 
         return method(node)
 
     def default(self, node: Any) -> Any:
-        """Default node visiting method."""
-        raise NotImplementedError(f"Node `{type(node)}` is not supported.")
+        """Visit a node that is not supported.
+
+        Args:
+            node (Any): AST node or structure to visit.
+
+        Returns:
+            Any: Result of visiting the node.
+
+        Raises:
+            NotImplementedError: If the node is not supported.
+
+        """
+        raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
 
-# TODO: we should be using all "visit" for each child node as everything returns None
 class Visitor(BasePass):
-    """ASTObject Visitor Pattern Class."""
+    """AST node visitor."""
 
-    def visit(self, node: Union[ASTObject, Sequence[ASTObject]]) -> None:
+    def visit(self, node: Union[ASTObject, List[ASTObject]]) -> None:
         if isinstance(node, list):
-            self.visit_sequence(node)
+            self.visit_list(node)
         else:
             super().visit(node)
 
     def visit_Module(self, node: Module) -> None:
+        """Visit a module node.
+
+        Args:
+            node (Module): Module node to visit.
+
+        """
         self.visit(node.name)
-        self.visit_sequence(node.statements)
+        self.visit(node.statements)
 
     def visit_Import(self, node: Import) -> None:
+        """Visit an import node.
+
+        Args:
+            node (Import): Import node to visit.
+
+        """
         self.visit(node.name)
 
     def visit_Operation(self, node: Operation) -> None:
-        self.visit_Identifier(node.name)
-        self.visit_sequence(node.args)
+        """Visit an operation node.
+
+        Args:
+            node (Operation): Operation node to visit.
+
+        """
+        self.visit(node.name)
+        self.visit(node.args)
         self.visit(node.return_type)
-        self.visit_sequence(node.body)
+        self.visit(node.body)
 
     def visit_Procedure(self, node: Procedure) -> None:
-        self.visit_Identifier(node.name)
-        self.visit_sequence(node.args)
-        self.visit_sequence(node.body)
+        """Visit a procedure node.
+
+        Args:
+            node (Procedure): Procedure node to visit.
+
+        """
+        self.visit(node.name)
+        self.visit(node.args)
+        self.visit(node.body)
 
     def visit_Argument(self, node: Argument) -> None:
+        """Visit an argument node.
+
+        Args:
+            node (Argument): Argument node to visit.
+
+        """
         self.visit(node.qualified_type)
         if node.name is not None:
             self.visit(node.name)
 
     def visit_DeclarationStatement(self, node: DeclarationStatement) -> None:
+        """Visit a declaration statement node.
+
+        Args:
+            node (DeclarationStatement): Declaration statement node to visit.
+
+        """
         self.visit(node.variable_name)
         self.visit(node.variable_type)
         if node.expression is not None:
             self.visit(node.expression)
 
     def visit_ExpressionStatement(self, node: ExpressionStatement) -> None:
+        """Visit an expression statement node.
+
+        Args:
+            node (ExpressionStatement): Expression statement node to visit.
+
+        """
         if node.left is not None:
             self.visit(node.left)
         self.visit(node.right)
 
     def visit_SelectionStatement(self, node: SelectionStatement) -> None:
+        """Visit a selection statement node.
+
+        Args:
+            node (SelectionStatement): Selection statement node to visit.
+
+        """
         self.visit(node.condition)
-        self.visit_sequence(node.true_body)
-        self.visit_sequence(node.false_body)
+        self.visit(node.true_body)
+        self.visit(node.false_body)
 
     def visit_ForAllStatement(self, node: ForAllStatement) -> None:
+        """Visit a for-all statement node.
+
+        Args:
+            node (ForAllStatement): For-all statement node to visit.
+
+        """
         self.visit(node.index)
-        self.visit_sequence(node.body)
+        self.visit(node.body)
 
     def visit_ReturnStatement(self, node: ReturnStatement) -> None:
+        """Visit a return statement node.
+
+        Args:
+            node (ReturnStatement): Return statement node to visit.
+
+        """
         self.visit(node.expression)
 
     def visit_UnaryExpression(self, node: UnaryExpression) -> None:
+        """Visit a unary expression node.
+
+        Args:
+            node (UnaryExpression): Unary expression node to visit.
+
+        """
         self.visit(node.expression)
 
     def visit_BinaryExpression(self, node: BinaryExpression) -> None:
+        """Visit a binary expression node.
+
+        Args:
+            node (BinaryExpression): Binary expression node to visit.
+
+        """
         self.visit(node.left)
         self.visit(node.right)
 
     def visit_TernaryExpression(self, node: TernaryExpression) -> None:
+        """Visit a ternary expression node.
+
+        Args:
+            node (TernaryExpression): Ternary expression node to visit.
+
+        """
         self.visit(node.condition)
         self.visit(node.true)
         self.visit(node.false)
 
     def visit_FunctionExpression(self, node: FunctionExpression) -> None:
+        """Visit a function expression node.
+
+        Args:
+            node (FunctionExpression): Function expression node to visit.
+
+        """
         self.visit(node.function)
-        self.visit_sequence(node.template_types)
-        self.visit_sequence(node.indices)
-        self.visit_sequence(node.args)
+        self.visit(node.template_types)
+        self.visit(node.indices)
+        self.visit(node.args)
 
     def visit_ArrayAccessExpression(self, node: ArrayAccessExpression) -> None:
+        """Visit an array access expression node.
+
+        Args:
+            node (ArrayAccessExpression): Array access expression node to visit.
+
+        """
         self.visit(node.array_expression)
-        self.visit_sequence(node.indices)
+        self.visit(node.indices)
 
     def visit_TupleExpression(self, node: TupleExpression) -> None:
-        self.visit_sequence(node.expressions)
+        """Visit a tuple expression node.
+
+        Args:
+            node (TupleExpression): Tuple expression node to visit.
+
+        """
+        self.visit(node.expressions)
 
     def visit_TupleAccessExpression(self, node: TupleAccessExpression) -> None:
+        """Visit a tuple access expression node.
+
+        Args:
+            node (TupleAccessExpression): Tuple access expression node to visit.
+
+        """
         self.visit(node.tuple_expression)
-        self.visit_IntLiteral(node.element_index)
+        self.visit(node.element_index)
 
     def visit_IdentifierExpression(self, node: IdentifierExpression) -> None:
+        """Visit an identifier expression node.
+
+        Args:
+            node (IdentifierExpression): Identifier expression node to visit.
+
+        """
         self.visit(node.identifier)
 
-    def visit_IntLiteral(self, node: IntLiteral) -> None: ...
+    def visit_IntLiteral(self, node: IntLiteral) -> None:
+        """Visit an integer literal node.
 
-    def visit_FloatLiteral(self, node: FloatLiteral) -> None: ...
+        Args:
+            node (IntLiteral): Integer literal node to visit.
+
+        """
+
+    def visit_FloatLiteral(self, node: FloatLiteral) -> None:
+        """Visit a float literal node.
+
+        Args:
+            node (FloatLiteral): Float literal node to visit.
+
+        """
 
     def visit_QualifiedType(self, node: QualifiedType) -> None:
+        """Visit a qualified type node.
+
+        Args:
+            node (QualifiedType): Qualified type node to visit.
+
+        """
         self.visit(node.base_type)
         self.visit(node.type_qualifier)
 
-    def visit_NumericalType(self, numerical_type: ir.NumericalType) -> None:
-        self.visit(numerical_type.data_type)
-        self.visit_sequence(numerical_type.shape)
+    def visit_NumericalType(self, numerical_type: IRNumericalType) -> None:
+        """Visit a numerical type.
 
-    def visit_IndexType(self, index_type: ir.IndexType) -> None:
+        Args:
+            numerical_type (IRNumericalType): Numerical type to visit.
+
+        """
+        self.visit(numerical_type.data_type)
+        self.visit(numerical_type.shape)
+
+    def visit_IndexType(self, index_type: IRIndexType) -> None:
+        """Visit an index type.
+
+        Args:
+            index_type (IRIndexType): Index type to visit.
+
+        """
         self.visit(index_type.lower_bound)
         self.visit(index_type.upper_bound)
         if index_type.stride is not None:
             self.visit(index_type.stride)
 
-    def visit_DataType(self, data_type: ir.DataType) -> None:
+    def visit_DataType(self, data_type: IRDataType) -> None:
+        """Visit a data type.
+
+        Args:
+            data_type (IRDataType): Data type to visit.
+
+        """
         self.visit(data_type.primitive_data_type)
 
-    def visit_TypeQualifier(self, type_qualifier: ir.TypeQualifier) -> None: ...
+    def visit_TypeQualifier(self, type_qualifier: IRTypeQualifier) -> None:
+        """Visit a type qualifier.
 
-    def visit_PrimitiveDataType(self, primitive: ir.PrimitiveDataType) -> None: ...
+        Args:
+            type_qualifier (IRTypeQualifier): Type qualifier to visit.
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> None: ...
+        """
 
-    def visit_sequence(self, nodes: Sequence[ASTObject]) -> None:
+    def visit_PrimitiveDataType(self, primitive: IRPrimitiveDataType) -> None:
+        """Visit a primitive data type.
+
+        Args:
+            primitive (IRPrimitiveDataType): Primitive data type to visit.
+
+        """
+
+    def visit_Identifier(self, identifier: IRIdentifier) -> None:
+        """Visit an identifier.
+
+        Args:
+            identifier (IRIdentifier): Identifier to visit.
+
+        """
+
+    def visit_list(self, nodes: list[ASTObject]) -> None:
+        """Visit a list of nodes or structures.
+
+        Args:
+            nodes (List[ASTObject]): Nodes or structures to visit.
+
+        """
+
         for node in nodes:
             self.visit(node)
 
     def visit_Span(self, span: Span) -> None:
-        self.visit_Source(span.source)
+        """Visit a span.
 
-    def visit_Source(self, source: Source) -> None: ...
+        Args:
+            span (Span): Span to visit.
+
+        """
+        self.visit(span.source)
+
+    def visit_Source(self, source: Source) -> None:
+        """Visit a source.
+
+        Args:
+            source (Source): Source to visit.
+
+        """
 
 
-# TODO: this doesn't visit anything after the first node...
 class Listener(BasePass):
-    """ASTObject Listener Pattern Class."""
+    """AST node listener.
+
+    Listener is a visitor that does not control how to visit child nodes.
+    """
+
+    def __call__(self, node: Union[ASTObject, List[ASTObject]]) -> None:
+        return self.visit(node)
+
+    def visit(self, node: Union[ASTObject, List[ASTObject]]) -> None:
+        name = f"visit_{get_cls_name(node)}"
+        method: Callable[[Any], Any] = getattr(self, name, self.default)
+
+        return method(node)
+
+    # def _dispatch(self, node: Union[ASTObject, List[ASTObject]]) -> None:
+    #     node_stack = Stack()
+    #     node_stack.push(node)
+
+    #     while len(node_stack) != 0:
+    #         current_node = node_stack.pop()
+    #         nodes_to_visit = _get_visit_attrs(current_node)
+    #         for n in nodes_to_visit:
+    #             node_stack.push(getattr(current_node, n))
+
+    # def _get_visit_methods(
+    #     self,
+    #     node: Union[ASTObject, List[ASTObject]]
+    # ) -> Tuple[List[Callable[[], None]], List[Callable[[], None]]]:
+    #     if isinstance(node, ASTObject):
+    #         return self._get_ast_object_visit_methods(node)
+    #     else:
+    #         visit_enter_methods: List[Callable[[], None]] = []
+    #         visit_exit_methods: List[Callable[[], None]] = []
+    #         for n in node:
+    #             enter, exit = self._get_ast_object_visit_methods(n)
+    #             visit_enter_methods.extend(enter)
+    #             visit_exit_methods.extend(exit)
+
+    # def _get_ast_object_visit_methods(
+    #     self,
+    #     node: ASTObject
+    # ) -> Tuple[List[Callable[[], None]], List[Callable[[], None]]]:
+    #     visit_attrs = _get_visit_attrs(node)
+    #     visit_enter_methods: List[Callable[[], None]] = []
+    #     visit_exit_methods: List[Callable[[], None]] = []
+    #     for attr in visit_attrs:
+    #         method_enter = f"enter_{get_cls_name(attr)}"
+    #         method_exit = f"exit_{get_cls_name(attr)}"
+    #         visit_enter_methods.append(partial(getattr(self, method_enter), attr))
+    #         visit_exit_methods.append(partial(getattr(self, method_exit), attr))
+    #     return visit_enter_methods, visit_exit_methods
 
     def default(self, node: Union[ASTObject, Sequence[ASTObject]]) -> None:
         if isinstance(node, list):
@@ -296,17 +556,17 @@ class Listener(BasePass):
     def enter_QualifiedType(self, node: QualifiedType) -> None: ...
     def exit_QualifiedType(self, node: QualifiedType) -> None: ...
 
-    def enter_DataType(self, node: ir.DataType) -> None: ...
-    def exit_DataType(self, node: ir.DataType) -> None: ...
+    def enter_DataType(self, node: IRDataType) -> None: ...
+    def exit_DataType(self, node: IRDataType) -> None: ...
 
-    def enter_NumericalType(self, numerical_type: ir.NumericalType) -> None: ...
-    def exit_NumericalType(self, numerical_type: ir.NumericalType) -> None: ...
+    def enter_NumericalType(self, numerical_type: IRNumericalType) -> None: ...
+    def exit_NumericalType(self, numerical_type: IRNumericalType) -> None: ...
 
-    def enter_IndexType(self, index_type: ir.IndexType) -> None: ...
-    def exit_IndexType(self, index_type: ir.IndexType) -> None: ...
+    def enter_IndexType(self, index_type: IRIndexType) -> None: ...
+    def exit_IndexType(self, index_type: IRIndexType) -> None: ...
 
-    def enter_Identifier(self, identifier: ir.Identifier) -> None: ...
-    def exit_Identifier(self, identifier: ir.Identifier) -> None: ...
+    def enter_Identifier(self, identifier: IRIdentifier) -> None: ...
+    def exit_Identifier(self, identifier: IRIdentifier) -> None: ...
 
     def enter_sequence(self, nodes: Sequence[ASTObject]) -> None: ...
     def exit_sequence(self, nodes: Sequence[ASTObject]) -> None: ...
@@ -319,7 +579,7 @@ class Listener(BasePass):
 
 
 class Transformer(BasePass):
-    """ASTObject Transformer Pass Pattern."""
+    """AST node transformer."""
 
     def visit_Module(self, node: Module) -> Module:
         span: Span = self.visit_Span(node.span)
@@ -571,24 +831,24 @@ class Transformer(BasePass):
             span=span, base_type=new_base_type, type_qualifier=new_type_qualifier
         )
 
-    def visit_Types(self, nodes: List[ir.Type]) -> List[ir.Type]:
+    def visit_Types(self, nodes: List[IRType]) -> List[IRType]:
         return [self.visit_Type(node) for node in nodes]
 
-    def visit_Type(self, node: ir.Type) -> ir.Type:
-        if isinstance(node, ir.NumericalType):
+    def visit_Type(self, node: IRType) -> IRType:
+        if isinstance(node, IRNumericalType):
             return self.visit_NumericalType(node)
-        elif isinstance(node, ir.IndexType):
+        elif isinstance(node, IRIndexType):
             return self.visit_IndexType(node)
         else:
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
-    def visit_NumericalType(self, numerical_type: ir.NumericalType) -> ir.NumericalType:
+    def visit_NumericalType(self, numerical_type: IRNumericalType) -> IRNumericalType:
         new_data_type = self.visit_DataType(numerical_type.data_type)
         new_shape = [self.visit(j) for j in numerical_type.shape]
 
-        return ir.NumericalType(data_type=new_data_type, shape=new_shape)
+        return IRNumericalType(data_type=new_data_type, shape=new_shape)
 
-    def visit_IndexType(self, index_type: ir.IndexType) -> ir.IndexType:
+    def visit_IndexType(self, index_type: IRIndexType) -> IRIndexType:
         new_lower_bound = self.visit(index_type.lower_bound)
         new_upper_bound = self.visit(index_type.upper_bound)
         if index_type.stride is not None:
@@ -596,26 +856,26 @@ class Transformer(BasePass):
         else:
             new_stride = None
 
-        return ir.IndexType(
+        return IRIndexType(
             lower_bound=new_lower_bound,
             upper_bound=new_upper_bound,
             stride=new_stride,
         )
 
-    def visit_DataType(self, data_type: ir.DataType) -> ir.DataType:
+    def visit_DataType(self, data_type: IRDataType) -> IRDataType:
         new_primitive_data_type = self.visit(data_type.primitive_data_type)
 
-        return ir.DataType(primitive_data_type=new_primitive_data_type)
+        return IRDataType(primitive_data_type=new_primitive_data_type)
 
-    def visit_TypeQualifier(self, type_qualifier: ir.TypeQualifier) -> ir.TypeQualifier:
+    def visit_TypeQualifier(self, type_qualifier: IRTypeQualifier) -> IRTypeQualifier:
         return copy(type_qualifier)
 
     def visit_PrimitiveDataType(
-        self, primitive: ir.PrimitiveDataType
-    ) -> ir.PrimitiveDataType:
+        self, primitive: IRPrimitiveDataType
+    ) -> IRPrimitiveDataType:
         return copy(primitive)
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> ir.Identifier:
+    def visit_Identifier(self, identifier: IRIdentifier) -> IRIdentifier:
         return copy(identifier)
 
     def visit_Span(self, span: Span) -> Span:
