@@ -7,7 +7,7 @@ from typing import Callable, Generator, Optional
 
 import pytest
 
-from fhy.utils import logger
+from fhy import logger
 
 
 @pytest.fixture
