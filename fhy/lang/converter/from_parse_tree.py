@@ -16,11 +16,10 @@ from antlr4 import ParserRuleContext  # type: ignore[import-untyped]
 
 from fhy import ir
 from fhy.lang import ast
+from fhy.lang.ast import Span
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
 from fhy.utils.alias import Expressions
 from fhy.utils.error import FhYASTBuildError, FhYSyntaxError
-
-from fhy.lang.ast import Span
 
 
 def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:
@@ -218,7 +217,6 @@ class ParseTreeConverter(FhYVisitor):
             return_type = self.visitQualified_type(return_type_ctx)
 
         return keyword, name, template, indices, args, return_type
-        # return keyword, name, None, None, args, return_type
 
     def visitFunction_args(
         self, ctx: FhYParser.Function_argsContext
