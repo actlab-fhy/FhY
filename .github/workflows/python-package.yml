@@ -99,7 +99,8 @@ jobs:
     needs: [build]
     strategy:
       fail-fast: false
-      python-version: ["3.11"]
+      matrix:
+        python-version: ["3.11"]
 
     steps:
       - name: Checkout
