@@ -14,8 +14,8 @@ maintainers = [
    {name = "Christopher Priebe", email = "cpriebe@ucsd.edu"},
    {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
 ]
-requires-python = ">=3.8"
-keywords = ["Compiler", "Cross-Compiler", "ML", "Accelerator"]
+requires-python = ">=3.11"
+keywords = ["Compiler", "Cross-Domain Language", "Cross-Domain Compiler", "Multi-Target Compiler"]
 classifiers = [
    "Development Status :: 1 - Planning",
    "Programming Language :: Python :: 3",
