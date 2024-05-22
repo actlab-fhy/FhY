@@ -24,7 +24,6 @@ from fhy.utils.alias import ASTObject
 from .node import (
     Argument,
     ArrayAccessExpression,
-    ASTNode,
     BinaryExpression,
     DeclarationStatement,
     Expression,
@@ -49,29 +48,6 @@ from .node import (
 )
 from .span import Source, Span
 
-# def iter_fields(node: ASTNode) -> Generator[Tuple[str, Any], None, None]:
-#     """Iterates through Relevant Attributes of a Node.
-
-#     Returns:
-#         Tuple[str, Any]
-
-#     """
-#     for field in node.visit_attrs():
-#         if not hasattr(node, field):
-#             continue
-#         yield field, getattr(node, field)
-
-
-# def iter_children(node: ASTNode) -> Generator[ASTNode, None, None]:
-#     """Yields all Direct Child Nodes"""
-#     for _, field in iter_fields(node):
-#         if isinstance(field, ASTNode):
-#             yield field
-#         elif isinstance(field, list):
-#             for child in field:
-#                 if isinstance(child, ASTNode):
-#                     yield child
-
 
 def get_cls_name(obj: ASTObject) -> str:
     """Retrieve the class name of an object."""
@@ -81,17 +57,17 @@ def get_cls_name(obj: ASTObject) -> str:
     return obj.get_key_name()
 
 
-def _get_visit_attrs(node: ASTObject) -> List[str]:
-    if isinstance(node, ASTNode):
-        return node.get_visit_attrs()
-    elif isinstance(node, IRDataType):
-        return ["primitive_data_type"]
-    elif isinstance(node, IRIndexType):
-        return ["lower_bound", "upper_bound", "stride"]
-    elif isinstance(node, IRNumericalType):
-        return ["data_type", "shape"]
-    else:
-        return []
+# def _get_visit_attrs(node: ASTObject) -> List[str]:
+#     if isinstance(node, ASTNode):
+#         return node.get_visit_attrs()
+#     elif isinstance(node, IRDataType):
+#         return ["primitive_data_type"]
+#     elif isinstance(node, IRIndexType):
+#         return ["lower_bound", "upper_bound", "stride"]
+#     elif isinstance(node, IRNumericalType):
+#         return ["data_type", "shape"]
+#     else:
+#         return []
 
 
 class BasePass(ABC):
