@@ -406,11 +406,11 @@ NONDIGIT
     ;
 
 BINARY_INT_LITERAL
-    : '0' [bB] [01_]+
+    : '0' [bB] (BIN_DIGIT | '_')+
     ;
 
 OCTAL_INT_LITERAL
-    : '0' [oO] [0-7_]+
+    : '0' [oO] (OCT_DIGIT | '_')+
     ;
 
 DECIMAL_INT_LITERAL
