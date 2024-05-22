@@ -67,7 +67,7 @@ def test_procedure_with_arguments(construct_ast):
     for char in "abABC":
         assert char in _get_symbol_table_string_keys(
             main_namespace_symbol_table
-        ), f"Expected Variable in Symbol table: `{char}`"
+        ), f'Expected Variable in Symbol table: "{char}"'
 
 
 def test_procedure_with_declaration_statement(construct_ast):
@@ -89,11 +89,11 @@ def test_procedure_with_declaration_statement(construct_ast):
     for char in "abAB":
         assert char in _get_symbol_table_string_keys(
             main_namespace_symbol_table
-        ), f"Expected Variable in Symbol table: `{char}`"
+        ), f'Expected Variable in Symbol table: "{char}"'
 
 
 def test_fails_with_undefined_shape_variable(construct_ast):
-    """Tests an error is raised with an undeclared shape variable, `C`."""
+    """Tests an error is raised with an undeclared shape variable, 'C'."""
     source_file_content = "proc main(input int32[A, B] a) {temp int32[C] b;}"
     _ast = construct_ast(source_file_content)
 

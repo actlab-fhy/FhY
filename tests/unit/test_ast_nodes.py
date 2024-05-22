@@ -133,4 +133,4 @@ def test_attributes(node: type[ast.ASTNode], is_abstract: bool, expected: List[s
 
     assert set(instance.get_visit_attrs()) == set(
         expected
-    ), f"Expected `{expected}`, but got `{instance.get_visit_attrs()}` instead."
+    ), f'Expected "{expected}", but got "{instance.get_visit_attrs()}" instead.'

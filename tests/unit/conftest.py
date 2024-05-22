@@ -41,10 +41,10 @@ class ThrowingErrorListener(ErrorListener):
     ):
         text = self.get_text(recognizer, None, None)
         context = type(recognizer._ctx).__name__
-        message = f"context={context}(Line {line}:{column}) input=`{offendingSymbol}` "
+        message = f'context={context}(Line {line}:{column}) input="{offendingSymbol}" '
         # result = ParseTreeConverter().visit(recognizer._ctx)
-        # message += f"text=`{text}` - msg={msg} - ast={result}"
-        message += f"text=`{text}` - msg={msg}"
+        # message += f'text="{text}" - msg={msg} - ast={result}'
+        message += f'text="{text}" - msg={msg}'
 
         log.error(message)
 

@@ -58,7 +58,7 @@ def arguments() -> argparse.ArgumentParser:
     #     "-o",
     #     "--output",
     #     required=False,
-    #     help="Defines Output Directory. Otherwise defaults to `{filepath}_out.ast`",
+    #     help="Defines Output Directory. Otherwise defaults to \"{filepath}_out.ast\"",
     # )
 
     return parser
@@ -114,7 +114,7 @@ def main() -> int:  # noqa: PLR0912
     else:
         log.error(
             "No Filepath(s) were defined. Provide a path either through "
-            "`--module` or `--library` command line arguments."
+            '"--module" or "--library" command line arguments.'
         )
         return Status.USAGE_ERROR
 

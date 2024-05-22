@@ -20,7 +20,7 @@ def wrong_node_babe(node_a, node_b) -> str:
 
     """
     name = node_a.__name__
-    return f"Expected `{name}` (AST) node. Received: `{type(node_b)}`"
+    return f'Expected "{name}" (AST) node. Received: "{type(node_b)}"'
 
 
 def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) -> bool:
@@ -86,8 +86,8 @@ def _assert_is_expected_module(node: ast.ASTNode, expected_num_statements: int) 
     assert isinstance(node, ast.Module), wrong_node_babe(ast.Module, node)
 
     assert all(map(lambda x: isinstance(x, ast.Statement), node.statements)), (
-        "Expected all statements to be `Statement` AST nodes, got "
-        + f"`{list_to_types(node.statements)}`"
+        'Expected all statements to be "Statement" AST nodes, got '
+        + f'"{list_to_types(node.statements)}"'
     )
     assert (
         len(node.statements) == expected_num_statements
@@ -121,15 +121,15 @@ def _assert_is_expected_procedure(
         node.name.name_hint == expected_name
     ), f'Expected procedure name to be "{expected_name}", got "{node.name.name_hint}"'
     assert all(isinstance(arg, ast.Argument) for arg in node.args), (
-        "Expected all arguments to be `Argument` AST nodes, got "
-        + f"`{list_to_types(node.args)}`"
+        'Expected all arguments to be "Argument" AST nodes, got '
+        + f'"{list_to_types(node.args)}"'
     )
     assert len(node.args) == expected_num_args, (
         f"Expected procedure to have {expected_num_args} arguments, got "
         + f"{len(node.args)}"
     )
     assert all(isinstance(statement, ast.Statement) for statement in node.body), (
-        "Expected all statements to be `Statement` AST nodes, got "
+        'Expected all statements to be "Statement" AST nodes, got '
         + f"{list_to_types(node.body)}"
     )
     assert len(node.body) == expected_num_statements, (
@@ -153,16 +153,16 @@ def _assert_is_expected_operation(
         node.name.name_hint == expected_name
     ), f'Expected operation name to be "{expected_name}", got "{node.name.name_hint}"'
     assert all(isinstance(arg, ast.Argument) for arg in node.args), (
-        "Expected all arguments to be `Argument` AST nodes, got "
-        + f"`{list_to_types(node.args)}`"
+        'Expected all arguments to be "Argument" AST nodes, got '
+        + f'"{list_to_types(node.args)}"'
     )
     assert len(node.args) == expected_num_args, (
         f"Expected operation to have {expected_num_args} arguments, got "
         + f"{len(node.args)}"
     )
     assert all(isinstance(statement, ast.Statement) for statement in node.body), (
-        "Expected all statements to be `Statement` AST nodes, got "
-        + f"`{list_to_types(node.body)}`"
+        'Expected all statements to be "Statement" AST nodes, got '
+        + f'"{list_to_types(node.body)}"'
     )
     assert len(node.body) == expected_num_statements, (
         f"Expected operation to have {expected_num_statements} statements, got "
@@ -178,12 +178,12 @@ def _assert_is_expected_qualified_type(
     assert isinstance(node, ast.QualifiedType), wrong_node_babe(ast.QualifiedType, node)
 
     assert node.type_qualifier == expected_type_qualifier, (
-        f"Expected type qualifier to be `{expected_type_qualifier}`, "
-        + f"got `{node.type_qualifier}`"
+        f'Expected type qualifier to be "{expected_type_qualifier}", '
+        + f'got "{node.type_qualifier}"'
     )
     assert isinstance(node.base_type, expected_base_type_cls), (
         f'Expected base type to be "{expected_base_type_cls}", '
-        + f"got `{type(node.base_type)}`"
+        + f'got "{type(node.base_type)}"'
     )
 
 
@@ -213,13 +213,13 @@ def _assert_is_expected_numerical_type(
     assert (
         numerical_type.data_type.primitive_data_type == expected_primitive_data_type
     ), (
-        f"Expected primitive data type to be `{expected_primitive_data_type}`, got "
-        + f"`{numerical_type.data_type.primitive_data_type}`"
+        f'Expected primitive data type to be "{expected_primitive_data_type}", got '
+        + f'"{numerical_type.data_type.primitive_data_type}"'
     )
 
     assert all(isinstance(expr, ast.Expression) for expr in numerical_type.shape), (
-        "Expected all shape components to be `Expression` AST nodes, got "
-        + f"`{list_to_types(numerical_type.shape)}`"
+        'Expected all shape components to be "Expression" AST nodes, got '
+        + f'"{list_to_types(numerical_type.shape)}"'
     )
     assert len(numerical_type.shape) == len(expected_shape), (
         f"Expected numerical type shape to have {len(expected_shape)} components, got "
@@ -237,8 +237,8 @@ def _assert_is_expected_shape(
 ) -> None:
     assert isinstance(shape, list), f'Expected shape to be a list, got "{type(shape)}"'
     assert all(isinstance(expr, ast.Expression) for expr in shape), (
-        "Expected all shape components to be `Expression` AST nodes, got "
-        + f"`{list_to_types(shape)}`"
+        'Expected all shape components to be "Expression" AST nodes, got '
+        + f'"{list_to_types(shape)}"'
     )
     assert len(shape) == len(
         expected_shape
@@ -300,8 +300,8 @@ def _assert_is_expected_declaration_statement(
     )
 
     assert node.variable_name.name_hint == expected_variable_name.name_hint, (
-        f"Expected variable name to be `{expected_variable_name.name_hint}`, "
-        + f"got `{node.variable_name.name_hint}`"
+        f'Expected variable name to be "{expected_variable_name.name_hint}", '
+        + f'got "{node.variable_name.name_hint}"'
     )
     assert isinstance(node.variable_type, ast.QualifiedType), wrong_node_babe(
         ast.QualifiedType, node.variable_type
@@ -638,7 +638,7 @@ def test_for_all_statement(construct_ast):
     )
     assert statement.index.identifier.name_hint == "i", (
         'Expected index name hint to be "i", got '
-        + f"`{statement.index.identifier.name_hint}`"
+        + f'"{statement.index.identifier.name_hint}"'
     )
     assert (
         len(statement.body) == 0
@@ -678,7 +678,7 @@ def test_unary_expression(construct_ast, operator: ast.UnaryOperation):
     )
     assert (
         expression.operation == operator
-    ), f"Expected `{operator}` operation. Received: `{expression.operation}`"
+    ), f'Expected "{operator}" operation. Received: "{expression.operation}"'
 
     assert is_primitive_expression_equal(expression.expression, ast.IntLiteral(value=5))
 
@@ -698,7 +698,7 @@ def test_binary_expressions(construct_ast, operator: ast.BinaryOperation):
     expression = statement.expression
     assert (
         expression.operation == operator
-    ), f"Expected `{operator}` operation. Received: `{expression.operation}`"
+    ), f'Expected "{operator}" operation. Received: "{expression.operation}"'
 
     assert is_primitive_expression_equal(expression.left, ast.IntLiteral(value=5))
     assert is_primitive_expression_equal(expression.right, ast.IntLiteral(value=6))
@@ -888,7 +888,7 @@ def test_tuple_type(construct_ast, source: str):
     assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
         ast.DeclarationStatement, statement
     )
-    assert statement.variable_name.name_hint == "i", "Expected Variable Name `i`"
+    assert statement.variable_name.name_hint == "i", 'Expected Variable Name "i"'
     _assert_is_expected_qualified_type(
         statement.variable_type, ir.TypeQualifier.OUTPUT, ir.TupleType
     )

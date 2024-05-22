@@ -56,7 +56,7 @@ def test_program_instantiation():
     program = ir.Program()
     assert hasattr(
         program, "_components"
-    ), "Expected `_components` Attribute to ir.Program."
+    ), 'Expected "_components" Attribute to ir.Program.'
     assert isinstance(
         program._components, dict
     ), "Expected _component Attribute to be a dictionary."
