@@ -1,4 +1,4 @@
-"""A Generic Table Mapping typed objects."""
+"""A generic table mapping typed objects."""
 
 from typing import Dict, Generic, List, Tuple, TypeVar
 
@@ -7,7 +7,7 @@ V = TypeVar("V")
 
 
 class Table(Generic[K, V]):
-    """A Generic table mapping typed key objects to typed value objects."""
+    """A generic table mapping typed key objects to typed value objects."""
 
     _table: Dict[K, V]
 

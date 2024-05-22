@@ -1,4 +1,4 @@
-"""Variable Identifier Class Object to assign Unique ID."""
+"""Variable identifier class object to assign unique ID."""
 
 from typing import Any
 
@@ -7,7 +7,7 @@ class Identifier(object):
     """Identifier node to assign a unique ID.
 
     Args:
-        name_hint (str): Variable Name
+        name_hint (str): Variable name
 
     """
 
@@ -23,7 +23,7 @@ class Identifier(object):
 
     @property
     def name_hint(self) -> str:
-        """Variable Name."""
+        """Variable name."""
         return self._name_hint
 
     @property
@@ -35,6 +35,7 @@ class Identifier(object):
         identifier = Identifier.__new__(Identifier)
         identifier._id = self._id
         identifier._name_hint = self._name_hint
+
         return identifier
 
     def __eq__(self, other: Any) -> bool:

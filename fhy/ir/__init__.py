@@ -1,4 +1,4 @@
-"""FhY Intermediate Representation Tool kit."""
+"""FhY intermediate representation tool kit."""
 
 from .expression import Expression
 from .identifier import Identifier

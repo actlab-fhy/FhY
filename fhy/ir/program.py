@@ -5,7 +5,7 @@ from .table import SymbolTable
 
 
 class Program(object):
-    """Program Object."""
+    """Program object."""
 
     _components: dict  # Dict[Identifier, Union[ASTModule]]
     _symbol_table: SymbolTable

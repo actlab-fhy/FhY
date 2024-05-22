@@ -1,9 +1,9 @@
-"""IR base Expression Module."""
+"""IR base expression module."""
 
 from abc import ABC
 
 
 class Expression(ABC):
-    """Abstract IR Expression Node."""
+    """Abstract IR expression node."""
 
     ...

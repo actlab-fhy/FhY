@@ -1,12 +1,12 @@
-"""Separate Frames of a Given Table, comprising a Symbol Table Representation.
+"""Separate frames of a given table, comprising a symbol table representation.
 
-We define separate Table Frames to catalog different types of symbols, to define and
+We define separate TableFrames to catalog different types of symbols, to define and
 retrieve unique symbols, by distinct attributes.
 
 Frames (derived from SymbolTableFrame):
     ImportSymbolTableFrame: Defining any imported modules or variables
-    VariableSymbolTableFrame: Defining any Variables
-    FunctionSymbolTableFrame: Defining any Functions (proc, op, or native)
+    VariableSymbolTableFrame: Defining any variables
+    FunctionSymbolTableFrame: Defining any functions
 
 Tables:
     SymbolTable: The primary table used to catalog symbol variables by defined frames.
@@ -25,7 +25,7 @@ from .base import Table
 
 @dataclass(frozen=True, kw_only=True)
 class SymbolTableFrame(ABC):
-    """Base Symbol table Frame Definition.
+    """Base symbol table frame definition.
 
     Args:
         name (Identifier): Variable (symbol) name and ID

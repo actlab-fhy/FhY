@@ -1,4 +1,4 @@
-"""Data Type Node Definitions."""
+"""Data type node definitions."""
 
 from abc import ABC
 from enum import StrEnum
@@ -8,23 +8,22 @@ from .expression import Expression
 
 
 class Type(ABC):
-    """Abstract Node Defining Data Type."""
+    """Abstract node defining data type."""
 
 
 class PrimitiveDataType(StrEnum):
-    """Supported Primitive Data Types."""
+    """Supported primitive data types."""
 
     INT = "int"
-
     INT32 = "int32"
     FLOAT32 = "float32"
 
 
 class DataType(object):
-    """Data Type Defines Core Type Primitive, but of Flexible Bit Width.
+    """Data type defines core type primitive, but of flexible Bit Width.
 
     Args:
-        primitive_data_type: (PrimitiveType):
+        primitive_data_type (PrimitiveType):
 
     """
 
@@ -38,7 +37,7 @@ class DataType(object):
 
     @property
     def primitive_data_type(self) -> PrimitiveDataType:
-        """Primitive Data Type."""
+        """Primitive data type."""
         return self._primitive_data_type
 
     def __repr__(self) -> str:
@@ -46,7 +45,7 @@ class DataType(object):
 
 
 class NumericalType(Type):
-    """Vector Array of a given DataType and Shape.
+    """Vector array of a given DataType and shape.
 
     Args:
         data_type (DataType): Type information of data contained in vector
@@ -78,12 +77,12 @@ class NumericalType(Type):
 
 
 class IndexType(Type):
-    """An Indexer, or Slice.
+    """An indexer, or slice.
 
     Args:
-        lower_bound (Expression): start index [inclusive]
-        upper_bound (Expression): end index [inclusive]
-        stride (Optional[Expression]): increment
+        lower_bound (Expression): Start index [inclusive]
+        upper_bound (Expression): End index [inclusive]
+        stride (Optional[Expression]): Increment
 
     Notes:
         * Grammatically similar to a python slice or range(start, stop, step)
@@ -121,7 +120,7 @@ class IndexType(Type):
 
 
 class TupleType(Type):
-    """Tuple Data Type.
+    """Tuple data type.
 
     Args:
         types (List[Type]): types of each element within the tuple
