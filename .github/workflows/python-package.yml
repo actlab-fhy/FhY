@@ -107,8 +107,8 @@ jobs:
 
       - name: Download Built Parser Files
         uses: actions/download-artifact@v4
-          with:
-            name: parser-files
+        with:
+          name: parser-files
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -151,8 +151,8 @@ jobs:
 
       - name: Download Built Parser Files
         uses: actions/download-artifact@v4
-          with:
-            name: parser-files
+        with:
+          name: parser-files
 
       - name: Download coverage data
         uses: actions/download-artifact@v4
