@@ -2,7 +2,31 @@
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, Optional, Tuple
+from typing import Generator, Optional, Tuple, Union
+
+
+def standard_path(value: Union[str, Path]) -> Path:
+    """Standardize and resolve a file path.
+
+    Raises:
+        TypeError: Provided type of value is not of type AnyPath (str | pathlib.Path)
+        FileExistsError: Provided Path does not exist on file system.
+
+    """
+    if isinstance(value, str):
+        path = Path(value)
+
+    elif isinstance(value, Path):
+        path = value
+
+    else:
+        msg = 'Expected "value" argument of type "str" | "pathlib.Path".'
+        raise TypeError(f"{msg} Received: {value}")
+
+    if not path.exists():
+        raise FileExistsError(f"Filepath Does Not Exist: {value}")
+
+    return path.resolve()
 
 
 @contextmanager
