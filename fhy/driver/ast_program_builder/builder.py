@@ -1,4 +1,8 @@
-"""Fhy Builder Module."""
+"""FhY builder module.
+
+Orchestrate the build of a FhY source into an ir.Program.
+
+"""
 
 import logging
 from collections import deque
@@ -29,7 +33,7 @@ def _get_relative_path(path: Path, ref: Path) -> str:
 
 
 class ASTProgramBuilder(object):
-    """Construct an AST program.
+    """Construct an AST ir.Program.
 
     Args:
         workspace (Workspace): Define project root directory file.
@@ -66,7 +70,7 @@ class ASTProgramBuilder(object):
         return self._workspace.source
 
     def build(self) -> ir.Program:
-        """Build an IR Program composed of (multiple) modules."""
+        """Build an ir.Program composed of (multiple) modules."""
         unresolved_asts: List[SourceFileAST] = self._build_source_file_asts()
         paths: Set[Path] = {i.path for i in unresolved_asts}
         module_tree: ModuleTree = self._build_module_tree(paths)
@@ -93,13 +97,13 @@ class ASTProgramBuilder(object):
 
         while source_file_queue:
             filepath: Path = source_file_queue.popleft()
-            self.log.debug(
-                "Building AST: %s", _get_relative_path(filepath, self.src_dir)
-            )
             paths = map(lambda k: k.path, source_file_asts)
             if any(i == filepath for i in paths):
                 continue
 
+            self.log.debug(
+                "Building AST: %s", _get_relative_path(filepath, self.src_dir)
+            )
             ast_source: SourceFileAST = build_source_file_ast(filepath)
             source_file_asts.append(ast_source)
 
@@ -303,7 +307,7 @@ class ASTProgramBuilder(object):
 def build_ast_program(
     workspace: Workspace, options: CompilationOptions, log: logging.Logger = _log
 ) -> ir.Program:
-    """Build an AST Program.
+    """Build an ir.Program.
 
     Args:
         workspace (Workspace): Define project root directory file.
@@ -314,7 +318,7 @@ def build_ast_program(
         FhYImportError: Problematic Import statement detected.
 
     Returns:
-        ir.Program: _description_
+        (ir.Program):
 
     """
     builder = ASTProgramBuilder(workspace, options, log)

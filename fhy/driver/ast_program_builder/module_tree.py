@@ -1,4 +1,4 @@
-"""Project Module Tree Path."""
+"""Project ModuleTree path."""
 
 from dataclasses import dataclass, field
 from typing import Optional, Set
@@ -6,12 +6,12 @@ from typing import Optional, Set
 
 @dataclass
 class ModuleTree(object):
-    """Module Tree Path.
+    """Module tree path.
 
     Args:
         file_name (str): filepath basename
-        parent (Optional[ModuleTree]): Parent Directory Module Tree
-        children (Set[ModuleTree]): Child Module Trees (relevant if file is a directory)
+        parent (Optional[ModuleTree]): Parent directory
+        children (Set[ModuleTree]): Child ModuleTrees (relevant if path is a directory)
 
     """
 
@@ -21,7 +21,7 @@ class ModuleTree(object):
 
     @property
     def name(self) -> str:
-        """Full Project Filepath Import Name."""
+        """Full project filepath import name."""
         current_node: Optional[ModuleTree] = self
         name_components = []
         while current_node:
@@ -32,7 +32,7 @@ class ModuleTree(object):
 
     @property
     def module_name(self) -> str:
-        """Basename of Module Filepath."""
+        """Basename of module filepath."""
         return self.name.rsplit(".", maxsplit=1)[-1]
 
     def __hash__(self) -> int:

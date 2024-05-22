@@ -1,4 +1,4 @@
-"""IO File Handlers."""
+"""IO file handlers."""
 
 from contextlib import contextmanager
 from pathlib import Path
@@ -24,7 +24,7 @@ def standard_path(value: Union[str, Path]) -> Path:
         raise TypeError(f"{msg} Received: {value}")
 
     if not path.exists():
-        raise FileExistsError(f"Filepath Does Not Exist: {value}")
+        raise FileExistsError(f"Filepath does not exist: {value}")
 
     return path.resolve()
 
@@ -36,8 +36,8 @@ def open_file(
     """Overly cautious context manager to open a file with better error reporting.
 
     Args:
-        file_path (Path): _description_
-        mode (str): Valid Read File Mode.
+        file_path (Path): valid file path
+        mode (str): Valid IO mode literal to read a file.
 
     Yields:
         Generator[Tuple[Optional[str], Optional[Exception]], None, None]: Provide

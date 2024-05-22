@@ -1,4 +1,4 @@
-"""Main Compilation Driver."""
+"""Main compilation driver."""
 
 import logging
 
@@ -15,7 +15,7 @@ _log.setLevel(logging.INFO)
 def compile_fhy(
     workspace: Workspace, options: CompilationOptions, log: logging.Logger = _log
 ) -> ir.Program:
-    """Compile Fhy source into a Program."""
+    """Compile Fhy source into a ir.Program."""
     ast_program = build_ast_program(workspace, options, log)
 
     return ast_program

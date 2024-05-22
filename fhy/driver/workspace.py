@@ -1,13 +1,13 @@
-"""Workspace Root Path."""
+"""Workspace root path."""
 
 from pathlib import Path
 
 
 class Workspace(object):
-    """Workspace Describing Project Root Main File Path.
+    """Workspace describing project root main file path.
 
     Args:
-        root (Path): Path to main FhY Filepath in src directory
+        root (Path): Path to main FhY filepath in src directory
 
     Usage:
         If we have the following project diagram:
@@ -35,15 +35,15 @@ class Workspace(object):
 
     @property
     def main(self) -> Path:
-        """Path Indicating Primary Entry Point Module of Project."""
+        """Path indicating primary entry point module of project."""
         return self._root
 
     @property
     def source(self) -> Path:
-        """Parent Source Directory Containing Project."""
+        """Parent source directory containing project."""
         return self._root.parent
 
     @property
     def root(self) -> Path:
-        """Root Directory Encapsulating Source."""
+        """Root directory encapsulating source."""
         return self.source.parent

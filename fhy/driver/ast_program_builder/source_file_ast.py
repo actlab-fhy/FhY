@@ -1,4 +1,4 @@
-"""Source File Compilation to AST."""
+"""Source file compilation to AST."""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,11 +10,11 @@ from ..file_reader import read_file
 
 @dataclass(frozen=True)
 class SourceFileAST(object):
-    """Data Container mapping File information to ast module build.
+    """Data container mapping file information to ast module build.
 
     Args:
-        path (pathlib.Path): Filepath to Module
-        ast (ast.Module): Constructed AST Module
+        path (pathlib.Path): Filepath to module
+        ast (ast.Module): Constructed AST module
 
     """
 
@@ -23,13 +23,13 @@ class SourceFileAST(object):
 
 
 def build_source_file_ast(source_file_path: Path) -> SourceFileAST:
-    """Build an AST Module from a valid Filepath.
+    """Build an AST module from a valid filepath.
 
     Args:
-        source_file_path (Path): Filepath to Module
+        source_file_path (Path): Filepath to module
 
     Returns:
-        SourceFileAST: Dataclass containing both built Module AST and filepath info.
+        SourceFileAST: Dataclass containing both built module AST and filepath info.
 
     Note:
         Provided File path should be validated to exist before use in order
