@@ -112,6 +112,8 @@ jobs:
         with:
           name: parser-files
           path: src/fhy/lang/parser/
+
+      - name: Debug Download
         run: |
           ls src/fhy/lang/parser/
 
