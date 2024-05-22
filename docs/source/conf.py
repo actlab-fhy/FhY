@@ -16,7 +16,7 @@ import os
 import sys
 
 # https://sphinx-rtd-tutorial.readthedocs.io/en/latest/sphinx-config.html#autodoc-configuration
-sys.path.insert(0, os.path.abspath(f"../../"))  # Required for autosummary + autodoc
+sys.path.insert(0, os.path.abspath(f"../../src"))  # Required for autosummary + autodoc
 sys.path.append(os.path.abspath("./_ext"))  # Required for custom extensions
 
 extensions = [
