@@ -18,8 +18,8 @@ from fhy import ir
 from fhy.error import FhYASTBuildError, FhYSyntaxError
 from fhy.lang import ast
 from fhy.lang.ast import Span
+from fhy.lang.ast.alias import Expressions
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
-from fhy.utils.alias import Expressions
 
 
 def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:

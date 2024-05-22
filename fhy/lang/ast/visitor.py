@@ -19,7 +19,7 @@ from fhy.ir.type import NumericalType as IRNumericalType
 from fhy.ir.type import PrimitiveDataType as IRPrimitiveDataType
 from fhy.ir.type import Type as IRType
 from fhy.ir.type import TypeQualifier as IRTypeQualifier
-from fhy.utils.alias import ASTObject
+from fhy.lang.ast.alias import ASTObject
 
 from .node import (
     Argument,
