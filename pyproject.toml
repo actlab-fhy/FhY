@@ -26,7 +26,7 @@ dynamic = ["version", "readme", "dependencies"]
 
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"], content-type = "text/markdown"}
-dependencies = {file = ["requirements.txt"]}
+dependencies = {file = ["requirements_build.txt", "requirements.txt"]}
 
 [tool.setuptools]
 package-dir = {"" = "src"}
