@@ -4,8 +4,8 @@ from typing import Set
 
 from fhy import ir
 from fhy.lang.ast import node as ast
+from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import Visitor
-from fhy.utils.alias import ASTObject
 
 
 class ImportedIdentifierCollector(Visitor):

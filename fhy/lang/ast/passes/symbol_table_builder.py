@@ -12,7 +12,7 @@ from typing import Any, Set
 
 from fhy import ir
 from fhy.error import FhYSemanticsError
-from fhy.lang import ast
+from fhy.lang.ast.node import core, expression, statement
 from fhy.lang.ast.visitor import Visitor
 from fhy.utils import Stack
 
@@ -85,12 +85,12 @@ class SymbolTableBuilder(Visitor):
             )
         self._table_stack.peek()[symbol] = frame
 
-    def __call__(self, node: ast.Module, *args: Any, **kwargs: Any) -> Any:
-        if not isinstance(node, ast.Module):
+    def __call__(self, node: core.Module, *args: Any, **kwargs: Any) -> Any:
+        if not isinstance(node, core.Module):
             raise TypeError(f"Expected a `Module` node. Received: {type(node)}")
         return super().__call__(node, *args, **kwargs)
 
-    def visit_Module(self, node: ast.Module) -> None:
+    def visit_Module(self, node: core.Module) -> None:
         self._push_namespace(node.name.name_hint)
         super().visit_Module(node)
         self._pop_namespace()
@@ -100,13 +100,13 @@ class SymbolTableBuilder(Visitor):
                 "Expected the table stack to be empty after visiting module node."
             )
 
-    def visit_Import(self, node: ast.Import) -> None:
+    def visit_Import(self, node: statement.Import) -> None:
         self._assert_symbol_not_defined(node.name)
         import_frame = ir.ImportSymbolTableFrame(name=node.name)
         self._add_symbol(node.name, import_frame)
         super().visit_Import(node)
 
-    def visit_Procedure(self, node: ast.Procedure) -> None:
+    def visit_Procedure(self, node: statement.Procedure) -> None:
         self._assert_symbol_not_defined(node.name)
         proc_frame = ir.FunctionSymbolTableFrame(
             name=node.name,
@@ -120,7 +120,7 @@ class SymbolTableBuilder(Visitor):
         super().visit_Procedure(node)
         self._pop_namespace()
 
-    def visit_Operation(self, node: ast.Operation) -> None:
+    def visit_Operation(self, node: statement.Operation) -> None:
         self._assert_symbol_not_defined(node.name)
         op_frame = ir.FunctionSymbolTableFrame(
             name=node.name,
@@ -135,7 +135,7 @@ class SymbolTableBuilder(Visitor):
         super().visit_Operation(node)
         self._pop_namespace()
 
-    def visit_Argument(self, node: ast.Argument) -> None:
+    def visit_Argument(self, node: statement.Argument) -> None:
         arg_frame = ir.VariableSymbolTableFrame(
             name=node.name,
             type=node.qualified_type.base_type,
@@ -159,7 +159,7 @@ class SymbolTableBuilder(Visitor):
 
         super().visit_Argument(node)
 
-    def visit_DeclarationStatement(self, node: ast.DeclarationStatement) -> None:
+    def visit_DeclarationStatement(self, node: statement.DeclarationStatement) -> None:
         self._assert_symbol_not_defined(node.variable_name)
         var_frame = ir.VariableSymbolTableFrame(
             name=node.variable_name,
@@ -169,12 +169,12 @@ class SymbolTableBuilder(Visitor):
         self._add_symbol(node.variable_name, var_frame)
         super().visit_DeclarationStatement(node)
 
-    def visit_IdentifierExpression(self, node: ast.IdentifierExpression) -> None:
+    def visit_IdentifierExpression(self, node: expression.IdentifierExpression) -> None:
         self._assert_symbol_defined(node.identifier)
         super().visit_IdentifierExpression(node)
 
 
-def build_symbol_table(node: ast.Module) -> ir.SymbolTable:
+def build_symbol_table(node: core.Module) -> ir.SymbolTable:
     """Build a symbol table from a module AST node.
 
     Argument:

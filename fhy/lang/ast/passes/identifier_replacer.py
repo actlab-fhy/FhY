@@ -4,8 +4,8 @@ from copy import copy
 from typing import Dict
 
 from fhy import ir
+from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import Transformer
-from fhy.utils.alias import ASTObject
 
 
 class IdentifierReplacer(Transformer):

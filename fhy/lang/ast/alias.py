@@ -3,17 +3,17 @@
 from typing import TypeVar, Union
 
 from fhy import ir as _ir
-from fhy.lang import ast as _ast
+from fhy.lang.ast.node import base, core
 from fhy.lang.ast.span import Source, Span
 
 # Define Commonly Used Aliases
-ASTTypeNodes = Union[_ast.ASTNode, _ir.Type]
+ASTTypeNodes = Union[base.ASTNode, _ir.Type]
 Nodes = TypeVar("Nodes", bound=ASTTypeNodes)
 
-Expressions = Union[_ir.Expression, _ast.Expression]
+Expressions = Union[_ir.Expression, core.Expression]
 ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
 
-CoreASTNodes = Union[_ast.Statement, _ast.Function, _ast.Expression]
+CoreASTNodes = Union[core.Statement, core.Function, core.Expression]
 Core = TypeVar("Core", bound=CoreASTNodes)
 
 OtherTypes = Union[
