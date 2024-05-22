@@ -71,9 +71,9 @@ def test_stack_iteration(text_stack):
         assert text_stack._iter_index == index, "Unexpected Index"
         assert element == value, "Unexpected Value."
 
-    # NOTE: Do we want the stack to be iterable multiple times?
-    #       Currently, the stack remains at the last index, which is 2 in this case.
-    # assert text_stack._iter_index == 0, "Should return to 0 after iteration"
+    assert (
+        len([i for i in text_stack]) == 2
+    ), "Should be able to iterate over stack again."
 
 
 def test_stack_next(text_stack):
