@@ -27,6 +27,12 @@ class SymbolTableBuilder(Visitor):
     The class will throw an exception if a variable is used before being declared or if
     a variable is declared more than once within the same namespace.
 
+    Note:
+        This builder pass for the symbol table only supports namespaces created by
+        a new module or new operation/procedure. Nested scopes created by ForAll
+        loop bodies and If/Else bodies are not supported and will be treated as
+        the same namespace as the parent operation/procedure.
+
     Raises:
         FhYSemanticsError: A variable is used before being declared (undefined), or
             the variable is defined again (redefined), within the current namespace.

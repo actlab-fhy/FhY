@@ -22,6 +22,10 @@ class PrimitiveDataType(StrEnum):
 class DataType(object):
     """Data type defines core type primitive, but of flexible Bit Width.
 
+    Note:
+        Currently, only supports primitive data types and does not support
+        template types.
+
     Args:
         primitive_data_type (PrimitiveType):
 
