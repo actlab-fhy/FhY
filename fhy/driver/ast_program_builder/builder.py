@@ -44,7 +44,7 @@ class ASTProgramBuilder(object):
 
     _workspace: Workspace
     _options: CompilationOptions
-    _log: logging.Logger
+    log: logging.Logger
 
     def __init__(
         self,
@@ -54,7 +54,7 @@ class ASTProgramBuilder(object):
     ):
         self._workspace = workspace
         self._options = options
-        self._log = log
+        self.log = log
 
     @property
     def root_dir(self) -> Path:
@@ -94,7 +94,7 @@ class ASTProgramBuilder(object):
 
         while source_file_queue:
             filepath: Path = source_file_queue.popleft()
-            self._log.debug(
+            self.log.debug(
                 "Building AST: %s", _get_relative_path(filepath, self.src_dir)
             )
             paths = map(lambda k: k.path, source_file_asts)
@@ -236,7 +236,7 @@ class ASTProgramBuilder(object):
 
         for source in source_file_asts:
             _rel_path = self._get_module_name_from_source_file_path(source.path)
-            self._log.debug("Resolving Imports: %s", _rel_path)
+            self.log.debug("Resolving Imports: %s", _rel_path)
 
             id_map: Dict[ir.Identifier, ir.Identifier] = {}
             import_ids: Set[ir.Identifier] = collect_imported_identifiers(source.ast)
@@ -245,7 +245,7 @@ class ASTProgramBuilder(object):
 
                 if relevant_module is None:
                     msg = f"Invalid Import Statement. Module Not Found: {iid}"
-                    self._log.error(msg)
+                    self.log.error(msg)
                     raise error.FhYImportError(msg)
 
                 # Find Source of Import
@@ -268,7 +268,7 @@ class ASTProgramBuilder(object):
                         f"Import symbol `{name}` Not Found within: "
                         f"{source_imported.path}"
                     )
-                    self._log.error(msg)
+                    self.log.error(msg)
                     raise error.FhYImportError(msg)
 
                 id_map[iid] = exists
@@ -276,14 +276,14 @@ class ASTProgramBuilder(object):
                 b = self._get_module_name_from_source_file_path(source_imported.path)
                 graph.add_edge(_rel_path, b)
 
-            self._log.debug("Completed Resolving Imports: %s", _rel_path)
+            self.log.debug("Completed Resolving Imports: %s", _rel_path)
             _ast = replace_identifiers(source.ast, id_map)
             resolved_sources.append(replace(source, ast=_ast))
 
         # Cycle Detection
         if result := self._is_cyclical(graph):
             msg = f"Circular Import Detected: {result}"
-            self._log.error(msg)
+            self.log.error(msg)
             raise error.FhYImportError(msg)
 
         return resolved_sources

@@ -9,10 +9,8 @@ Classes:
 """
 
 from abc import ABC
-from collections import deque
 from copy import copy
-from functools import partial
-from typing import Any, Callable, List, Sequence, Tuple, Union
+from typing import Any, Callable, List, Sequence, Union
 
 from fhy.ir.identifier import Identifier as IRIdentifier
 from fhy.ir.type import DataType as IRDataType
@@ -22,35 +20,34 @@ from fhy.ir.type import PrimitiveDataType as IRPrimitiveDataType
 from fhy.ir.type import Type as IRType
 from fhy.ir.type import TypeQualifier as IRTypeQualifier
 from fhy.utils.alias import ASTObject
-from fhy.utils import Stack
 
-from .span import Source, Span
 from .node import (
-    ASTNode,
-    Expression,
-    Module,
-    Statement,
+    Argument,
     ArrayAccessExpression,
+    ASTNode,
     BinaryExpression,
+    DeclarationStatement,
+    Expression,
+    ExpressionStatement,
     FloatLiteral,
+    ForAllStatement,
     FunctionExpression,
     IdentifierExpression,
+    Import,
     IntLiteral,
+    Module,
+    Operation,
+    Procedure,
+    QualifiedType,
+    ReturnStatement,
+    SelectionStatement,
+    Statement,
     TernaryExpression,
     TupleAccessExpression,
     TupleExpression,
     UnaryExpression,
-    QualifiedType,
-    Argument,
-    DeclarationStatement,
-    ExpressionStatement,
-    ForAllStatement,
-    Import,
-    Operation,
-    Procedure,
-    ReturnStatement,
-    SelectionStatement,
 )
+from .span import Source, Span
 
 # def iter_fields(node: ASTNode) -> Generator[Tuple[str, Any], None, None]:
 #     """Iterates through Relevant Attributes of a Node.
@@ -77,6 +74,7 @@ from .node import (
 
 
 def get_cls_name(obj: ASTObject) -> str:
+    """Retrieve the class name of an object."""
     if not hasattr(obj, "get_key_name"):
         return obj.__class__.__name__
 
@@ -416,7 +414,6 @@ class Visitor(BasePass):
             nodes (List[ASTObject]): Nodes or structures to visit.
 
         """
-
         for node in nodes:
             self.visit(node)
 
@@ -494,7 +491,8 @@ class Listener(BasePass):
     def default(self, node: Union[ASTObject, Sequence[ASTObject]]) -> None:
         if isinstance(node, list):
             return self.enter_sequence(node)
-        super().default(node)
+
+        return super().default(node)
 
     def enter_Module(self, node: Module) -> None: ...
     def exit_Module(self, node: Module) -> None: ...
