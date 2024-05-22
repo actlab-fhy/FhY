@@ -63,8 +63,8 @@ jobs:
 
       - name: Download Built Parser Files
         uses: actions/download-artifact@v4
-          with:
-            name: parser-files
+        with:
+          name: parser-files
 
       - name: Set up Python
         uses: actions/setup-python@v5
