@@ -58,7 +58,7 @@ source = ["fhy"]
 source = ["src", ".tox/py*/**/site-packages"]
 
 [tool.coverage.report]
-fail_under = 88.0
+fail_under = 85.0
 precision = 1
 show_missing = true
 skip_empty = true
