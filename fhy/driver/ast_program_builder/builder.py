@@ -106,13 +106,13 @@ class ASTProgramBuilder(object):
             imported_identifiers: Set[ir.Identifier] = collect_imported_identifiers(
                 ast_source.ast
             )
-            imported_symbols: Set[str] = {
+            qualname: Set[str] = {
                 import_identifier.name_hint
                 for import_identifier in imported_identifiers
             }
             import_paths: Set[Path] = set(
                 self._get_source_file_path_from_imported_symbol(imported_symbol)
-                for imported_symbol in imported_symbols
+                for imported_symbol in qualname
             )
             source_file_queue.extend(import_paths)
 
@@ -142,6 +142,8 @@ class ASTProgramBuilder(object):
                     current_tree.children.add(new_node)
                     current_tree = new_node
                 else:
+                    # TODO: Extract out helper function to retrieve next element in
+                    #       a set, meeting specific key condition (or map).
                     current_tree = next(
                         child
                         for child in current_tree.children
