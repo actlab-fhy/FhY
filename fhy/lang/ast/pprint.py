@@ -20,6 +20,9 @@ class ASTPrettyFormatter(BasePass):
         indent_char (str): character(s) used to indent the output text
         is_identifier_id_printed (bool): Includes assigned ID in output text if true
 
+    Raises:
+        RuntimeError: When class is improperly used and the indent becomes negative.
+
     """
 
     _is_identifier_id_printed: bool
@@ -42,7 +45,7 @@ class ASTPrettyFormatter(BasePass):
 
     def _decrement_indent(self) -> None:
         if self._current_indent <= 0:
-            raise ValueError("Indent cannot be negative")
+            raise RuntimeError("Indent cannot be negative")
         self._current_indent -= 1
 
     def _format_statements(self, statements: list[str]) -> str:
@@ -231,6 +234,9 @@ def pformat_ast(
         ast (ASTNode): a valid FhY AST Node
         indent_char (str): character(s) used to indent the output text
         is_identifier_id_printed (bool): Includes assigned ID in output text if true
+
+    Raises:
+        RuntimeError: When class is improperly used and the indent becomes negative.
 
     """
     pformatter = ASTPrettyFormatter(indent_char, is_identifier_id_printed)
