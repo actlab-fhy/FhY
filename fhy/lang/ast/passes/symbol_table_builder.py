@@ -87,7 +87,7 @@ class SymbolTableBuilder(Visitor):
 
     def __call__(self, node: core.Module, *args: Any, **kwargs: Any) -> Any:
         if not isinstance(node, core.Module):
-            raise TypeError(f"Expected a `Module` node. Received: {type(node)}")
+            raise TypeError(f'Expected a "Module" node. Received: {type(node)}')
         return super().__call__(node, *args, **kwargs)
 
     def visit_Module(self, node: core.Module) -> None:

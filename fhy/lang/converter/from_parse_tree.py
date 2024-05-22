@@ -164,7 +164,7 @@ class ParseTreeConverter(FhYVisitor):
 
         else:
             # NOTE: Defined Function Keywords are required by Antlr to parse the source
-            #       code to meet the classification of `Function_definition`. Meaning,
+            #       code to meet the classification of "Function_definition". Meaning,
             #       we have no way to reach this code. Out of an abundance of caution:
             text = _source_position(span)
             raise FhYSyntaxError(
@@ -453,7 +453,7 @@ class ParseTreeConverter(FhYVisitor):
                 r"^\.[0-9][0-9_]*$", index_text
             ):
                 lines = _source_position(span)
-                raise FhYSyntaxError(f"Invalid Tuple Accessor `{index_text}`: {lines}")
+                raise FhYSyntaxError(f'Invalid Tuple Accessor "{index_text}": {lines}')
 
             return ast.TupleAccessExpression(
                 span=span,

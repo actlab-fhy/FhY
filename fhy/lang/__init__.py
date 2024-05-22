@@ -1,10 +1,9 @@
-"""FhY Language Module.
+"""FhY language subpackage.
 
-Public SubModules:
-    ast: Define FhY AST Nodes, and visitors.
-    ast_builder: Tools to build AST nodes from CST.
-    passes: Visitors used to perform AST Node validations
-    printer: AST Serialization Tools
+Public Subpackages:
+    ast: Define FhY AST Nodes, visitors and transformers, serializers, and passes.
+    converter: Tools to build AST nodes from CST.
+    parser: Tools used to tokenize and parse FhY language into CST.
 
 """
 

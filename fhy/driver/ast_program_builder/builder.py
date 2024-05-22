@@ -228,7 +228,7 @@ class ASTProgramBuilder(object):
         #       We cannot import modules, but rather symbols from modules.
         #       All imports are absolute paths, not relative.
         #       Do not define yet a method to import outside of package (e.g. stdlib)
-        #       Aliasing not yet supported (e.g. `import x as y;`).
+        #       Aliasing not yet supported (e.g. \"import x as y;\").
         # Initialize a Directional Graph
         graph = nx.DiGraph()
         resolved_sources: List[SourceFileAST] = []
@@ -264,7 +264,7 @@ class ASTProgramBuilder(object):
                 exists = self._confirm_import_exists(name, module_context)
                 if not exists:
                     msg = (
-                        f"Import symbol `{name}` Not Found within: "
+                        f'Import symbol "{name}" Not Found within: '
                         f"{source_imported.path}"
                     )
                     self.log.error(msg)

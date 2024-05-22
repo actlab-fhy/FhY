@@ -583,7 +583,7 @@ class Transformer(BasePass):
         elif isinstance(node, ReturnStatement):
             return self.visit_ReturnStatement(node)
         else:
-            raise NotImplementedError(f"Node `{type(node)}` is not supported.")
+            raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
     def visit_Import(self, node: Import) -> Import:
         new_name = self.visit_Identifier(node.name)
