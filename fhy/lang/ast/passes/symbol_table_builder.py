@@ -1,10 +1,10 @@
-"""Methods to construct a Symbol Table from an AST Node.
+"""Methods to construct a symbol table from an AST node.
 
 Functions:
-    build_symbol_table: Primary Entry Point to construct a Symbol Table from an ASTnode.
+    build_symbol_table: Primary entry point to construct a symbol table from an ASTnode.
 
 Classes:
-    SymbolTableBuilder: The Workhorse behind building a symbol table from AST
+    SymbolTableBuilder: The workhorse behind building a symbol table from AST
 
 """
 
@@ -30,7 +30,7 @@ class SymbolTableBuilder(Visitor):
     Raises:
         FhYSemanticsError: A variable is used before being declared (undefined), or
             the variable is defined again (redefined), within the current namespace.
-        RuntimeError: Unexpected Behavior, indicating improper use.
+        RuntimeError: Unexpected behavior, indicating improper use.
         TypeError: Received wrong argument (node) type.
 
     """
@@ -178,7 +178,7 @@ def build_symbol_table(node: core.Module) -> ir.SymbolTable:
     """Build a symbol table from a module AST node.
 
     Argument:
-        node (ast.Module): FhY Module AST Node
+        node (ast.Module): FhY module AST node
 
     Returns:
         (ir.SymbolTable) Symbol table cataloging all variables from the provided module,
@@ -187,7 +187,7 @@ def build_symbol_table(node: core.Module) -> ir.SymbolTable:
     Raises:
         FhYSemanticsError: A variable is used before being declared (undefined), or
             the variable is defined again (redefined), within the current namespace.
-        RuntimeError: Unexpected Behavior, indicating improper use.
+        RuntimeError: Unexpected behavior, indicating improper use.
         TypeError: Received wrong argument (node) type.
 
     """

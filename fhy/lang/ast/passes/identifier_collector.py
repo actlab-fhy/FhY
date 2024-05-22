@@ -1,7 +1,7 @@
-"""Simple Visitor AST Pass to collect Symbol Identifiers.
+"""Simple visitor AST Pass to collect symbol identifiers.
 
 Functions:
-    collect_identifiers: Primary API Entry point to collect Identifiers from AST Node.
+    collect_identifiers: Primary API entry point to collect identifiers from AST node.
 
 Classes:
     IdentifierCollector: The workhorse driving the collection of identifiers.
@@ -35,7 +35,7 @@ class IdentifierCollector(Visitor):
 
 
 def collect_identifiers(node: ASTObject) -> Set[ir.Identifier]:
-    """Return a set of Identifier objects from a given AST Node object."""
+    """Return a set of identifier objects from a given AST node object."""
     collector = IdentifierCollector()
     collector(node)
     return collector.identifiers

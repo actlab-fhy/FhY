@@ -1,4 +1,4 @@
-"""Tools to Construct an AST from a FhY Concrete Syntax Tree using Visitors.
+"""Tools to construct an AST from a FhY concrete syntax tree using visitors.
 
 Classes:
     ParseTreeConverter: Handles the actual construction of the AST from CST
@@ -632,15 +632,15 @@ class ParseTreeConverter(FhYVisitor):
 
 
 def from_parse_tree(parse_tree: FhYParser.ModuleContext) -> ast.Module:
-    """Constructs an AST from a Concrete Syntax Tree.
+    """Constructs an AST from a concrete syntax tree.
 
     Args:
-        parse_tree (FhYParser.ModuleContext): FhY Concrete Syntax Tree, Module Context.
+        parse_tree (FhYParser.ModuleContext): FhY concrete syntax tree, module context.
 
     Raises:
-        NotImplementedError: Attempted use of Unsupported Features of FhY Language.
-        FhYSyntaxError: Syntax error(s) found in FhY Source code.
-        FhYASTBuildError: AST failed to build from CST. Exact Reason Unknown.
+        NotImplementedError: Attempted use of unsupported features of FhY language.
+        FhYSyntaxError: Syntax error(s) found in FhY source code.
+        FhYASTBuildError: AST failed to build from CST. Exact reason unknown.
 
     """
     converter = ParseTreeConverter()

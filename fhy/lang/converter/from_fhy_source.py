@@ -1,4 +1,4 @@
-"""FhY Source Code to AST Module Converter."""
+"""FhY source code to AST module converter."""
 
 from antlr4 import (  # type: ignore[import-untyped]
     BailErrorStrategy,
@@ -15,7 +15,7 @@ from .from_parse_tree import from_parse_tree
 
 
 class ThrowingErrorListener(ErrorListener):
-    """Custom Antlr Error Listener."""
+    """Custom Antlr error listener."""
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         message = f"Syntax error at {line}:{column} - {msg}"
@@ -25,7 +25,7 @@ class ThrowingErrorListener(ErrorListener):
 
 # TODO: Extract out Construction of CST to another module within fhy/lang...
 def create_lexer(input_str: str) -> FhYLexer:
-    """Constructs the FhyLexer from Input String Source Code."""
+    """Constructs the FhyLexer from input string source code."""
     input_stream = InputStream(input_str)
     lexer = FhYLexer(input_stream)
     lexer.removeErrorListeners()
@@ -35,7 +35,7 @@ def create_lexer(input_str: str) -> FhYLexer:
 
 
 def create_parser(input_str: str) -> FhYParser:
-    """Constructs the FhyParser from Input String Source Code."""
+    """Constructs the FhyParser from input string source code."""
     lexer = create_lexer(input_str)
     token_stream = CommonTokenStream(lexer)
     parser = FhYParser(token_stream)
@@ -54,7 +54,7 @@ def _fhy_source_to_parse_tree(fhy_source_content: str) -> FhYParser.ModuleContex
 
 
 def from_fhy_source(fhy_source_content: str) -> ast.Module:
-    """Convert FhY Source Code to an AST Module."""
+    """Convert FhY source code to an AST module."""
     tree = _fhy_source_to_parse_tree(fhy_source_content)
     _ast = from_parse_tree(tree)
 

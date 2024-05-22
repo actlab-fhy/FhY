@@ -1,10 +1,10 @@
-"""Pretty Print Serialization of ASTNodes into FhY Language.
+"""Pretty print serialization of ASTNodes into FhY language.
 
 Functions:
     pprint_ast: Helper function to serialize the ASTNode into text
 
 Classes:
-    ASTPrettyPrinter: Deconstructs ASTNodes into FhY Language text
+    ASTPrettyPrinter: Deconstructs ASTNodes into FhY language text
 
 """
 
@@ -14,7 +14,7 @@ from fhy.lang.ast.visitor import BasePass
 
 
 class ASTPrettyFormatter(BasePass):
-    """Deconstructs an AST node back into FhY Language text using a visitor pattern.
+    """Deconstructs an AST node back into FhY language text using a visitor pattern.
 
     Args:
         indent_char (str): character(s) used to indent the output text
@@ -37,7 +37,7 @@ class ASTPrettyFormatter(BasePass):
 
     @property
     def _spacer(self):
-        """Current Indentation Spacer."""
+        """Current indentation spacer."""
         return self._indent_char * self._current_indent
 
     def _increment_indent(self) -> None:
@@ -231,7 +231,7 @@ def pformat_ast(
     """Returns FhY text from a given an ASTNode.
 
     Args:
-        ast (ASTNode): a valid FhY AST Node
+        ast (ASTNode): a valid FhY AST node
         indent_char (str): character(s) used to indent the output text
         is_identifier_id_printed (bool): Includes assigned ID in output text if true
 

@@ -218,8 +218,7 @@ class FunctionExpression(Expression):
     Attributes:
         function (Expression): Expression defining the function to call.
         template_types (List[IRType]): Types for template arguments.
-        indices (List[Expression]): Reduced indices for a reduction
-            operation.
+        indices (List[Expression]): Reduced indices for a reduction operation.
         args (List[Expression]): Provided arguments to function call.
 
     """

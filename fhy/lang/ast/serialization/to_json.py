@@ -1,4 +1,4 @@
-"""Conversion (serialization) of AST Nodes to and from json format.
+"""Conversion (serialization) of AST nodes to and from json format.
 
 We construct an intermediate data format, called AlmostJson, which serves as a data
 container and node identifier to prepare conversion of AST nodes both to and from the
@@ -11,12 +11,12 @@ drivers behind the respective transformations. Each class has a function (mimick
 json library api) to dump and load, as the primary entry point of use.
 
 Primary API:
-    load: Convert json string into AST Nodes.
+    load: Convert json string into AST nodes.
     dump: Convert AST nodes into json string.
 
 Core Classes:
-    ASTtoJSON: ASTNode Visitor constructing AlmostJson Nodes.
-    JSONtoAST: AlmostJson Node Visitor constructing ASTNodes.
+    ASTtoJSON: ASTNode visitor constructing AlmostJson nodes.
+    JSONtoAST: AlmostJson node visitor constructing ASTNodes.
 
 """
 

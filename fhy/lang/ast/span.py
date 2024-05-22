@@ -1,7 +1,7 @@
-"""Container Classes to define source positions of an object.
+"""Container classes to define source positions of an object.
 
 Classes:
-    Slice: start and stop Positions
+    Slice: start and stop positions
     Source: source file or namespace definition
     Span: full context of an object (Source + Slice)
 
@@ -57,7 +57,7 @@ class Source(object):
 
 
 class Span(object):
-    """Context to describe Locations of an object.
+    """Context to describe locations of an object.
 
     Args:
         start_line (int): line start position

@@ -1,4 +1,4 @@
-"""Identifier Replacement Transformer."""
+"""Identifier replacement transformer."""
 
 from copy import copy
 from typing import Dict
@@ -9,13 +9,11 @@ from fhy.lang.ast.visitor import Transformer
 
 
 class IdentifierReplacer(Transformer):
-    """Replace Identifiers.
+    """Replace identifiers.
 
     Args:
-        identifier_map (Dict[ir.Identifier, ir.Identifier]): _description_
-
-    Returns:
-        _type_: _description_
+        identifier_map (Dict[ir.Identifier, ir.Identifier]): mapping describing
+            identifiers to change from and to.
 
     """
 
@@ -32,5 +30,15 @@ class IdentifierReplacer(Transformer):
 def replace_identifiers(
     node: ASTObject, identifier_map: Dict[ir.Identifier, ir.Identifier]
 ) -> ASTObject:
-    """Copy Identifiers."""
+    """Replace identifiers within AST.
+
+    Args:
+        node (ASTObject): AST object node.
+        identifier_map (Dict[ir.Identifier, ir.Identifier]): mapping describing
+            identifiers to change from and to.
+
+    Returns:
+        (ASTObject): node with identifiers replaced as prescribed by mapping.
+
+    """
     return IdentifierReplacer(identifier_map).visit(node)

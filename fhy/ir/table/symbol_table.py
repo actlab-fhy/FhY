@@ -74,6 +74,6 @@ class FunctionSymbolTableFrame(SymbolTableFrame):
 
 
 class SymbolTable(Table[Identifier, Table[Identifier, SymbolTableFrame]]):
-    """Core Symbol Table, comprised of various frames, mapping a symbol Identifier."""
+    """Core symbol table, comprised of various frames, mapping a symbol identifier."""
 
     ...
