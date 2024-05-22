@@ -1,6 +1,6 @@
-"""Custom FhY Exceptions and FhY Exception Registry.
+"""Custom FhY exceptions and FhY exception registry.
 
-All custom FhY Exceptions can be viewed at `Fhy.utils.errors.FHY_ERRORS`
+All custom FhY exceptions can be viewed at 'Fhy.utils.errors.FHY_ERRORS'
 
 """
 
@@ -39,29 +39,29 @@ _initialize_builtins()
 
 @register_fhy_error
 class UsageError(Exception):
-    """User Induced Error."""
+    """User induced error."""
 
     ...
 
 
 @register_fhy_error
 class FhYASTBuildError(RuntimeError):
-    """Failed to Build FhY AST nodes from Source."""
+    """Failed to build FhY AST nodes from source."""
 
 
 @register_fhy_error
 class FhYSyntaxError(SyntaxError):
-    """Syntax Error in FhY Source Code."""
+    """Syntax error in FhY source code."""
 
 
 @register_fhy_error
 class FhYSemanticsError(Exception):
-    """Error in FhY Program Semantics."""
+    """Error in FhY program semantics."""
 
 
 @register_fhy_error
 class FhYImportError(ImportError):
-    """Problematic Import Statement Detected from FhY Source Code."""
+    """Problematic import statement detected from FhY source code."""
 
 
 @register_fhy_error

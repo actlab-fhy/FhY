@@ -19,16 +19,16 @@ def get_logger(
     stream: Optional[logging.Handler] = None,
     formatter: logging.Formatter = _default_format,
 ) -> logging.Logger:
-    """Constructs a Logger given a name and level.
+    """Constructs a logger given a name and level.
 
     Args:
         name (str): logger name
-        level (int): Valid Logging Level
-        stream (logging.Handler): Output Stream of logging. Defaults to StreamHandler.
-        formatter (logging.Formatter): Format of Logging Message
+        level (int): Valid logging level
+        stream (logging.Handler): Output stream of logging. Defaults to streamHandler.
+        formatter (logging.Formatter): Format of logging message
 
     Raises:
-        TypeError: When an invalid Stream Type is provided.
+        TypeError: When an invalid stream type is provided.
 
     """
     log: logging.Logger = logging.getLogger(name)
@@ -55,7 +55,7 @@ def add_file_handler(
     Args:
         log (logging.Logger): Logger instance object
         path (str): valid file path to stream logs to
-        level (int, optional): Logging Level. Defaults to logging.DEBUG.
+        level (int, optional): Logging level. Defaults to logging.DEBUG.
 
     Note:
         This function may change the logging level of the log object itself. To emit
@@ -78,7 +78,7 @@ def add_file_handler(
         log.setLevel(level)
         log.addHandler(handler)
         current = logging.getLevelName(log.level)
-        log.debug(f"Modifying Log Level from `{previous}` to `{current}`")
+        log.debug(f'Modifying Log Level from "{previous}" to "{current}"')
 
     else:
         log.addHandler(handler)

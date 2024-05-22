@@ -986,6 +986,15 @@ def test_syntax_error_no_argument_name(construct_ast):
         _ast = construct_ast(source)
 
 
+def test_syntax_error_no_procedure_name(construct_ast):
+    """Raise Syntax Error when an Operation is defined without a Name."""
+    source: str = "proc () {}"
+    # NOTE: This raises the Antlr Syntax Error, not from our visitor class.
+    #       This means we do not gain coverage in parse tree converter for this case.
+    with pytest.raises(error.FhYSyntaxError):
+        _ast = construct_ast(source)
+
+
 def test_syntax_error_no_operation_name(construct_ast):
     """Raise Syntax Error when an Operation is defined without a Name."""
     source: str = "op (input int32[m,n] A) -> output int32 {}"

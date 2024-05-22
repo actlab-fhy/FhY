@@ -1,4 +1,4 @@
-"""Utility to control a Stack of a given Type.
+"""Utility to control a stack of a given type.
 
 Classes:
     Stack: Simple typed list interface
