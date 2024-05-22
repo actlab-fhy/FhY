@@ -786,17 +786,17 @@ class JSONtoAST(visitor.BasePass):
         else:
             stride = self.visit_IntLiteral(
                 AlmostJson(
-                    cls_name=visitor.get_cls_name(ast.IntLiteral),
+                    cls_name=ast.IntLiteral.get_key_name(),
                     attributes=dict(
                         span=AlmostJson(
-                            cls_name=visitor.get_cls_name(Span),
+                            cls_name=Span.__name__,
                             attributes=dict(
                                 start_column=0,
                                 end_column=0,
                                 start_line=0,
                                 end_line=0,
                                 source=AlmostJson(
-                                    cls_name=visitor.get_cls_name(Source),
+                                    cls_name=Source.__name__,
                                     attributes=dict(namespace="_null"),
                                 ),
                             ),
