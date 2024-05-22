@@ -164,6 +164,8 @@ class ASTProgramBuilder(object):
 
         """
         route, name = get_imported_symbol_module_components_and_name(imported_symbol)
+        # TODO: This is a bit of a flimsy hack, and should be made more robust, to
+        #       avoid any potential future problems that may arise from this.
         if route[0] == "root":
             route = route[1:]
         if no_symbol:
