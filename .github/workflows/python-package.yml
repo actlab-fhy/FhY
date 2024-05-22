@@ -83,16 +83,16 @@ jobs:
           python -m pip install setuptools wheel
           pip install tox
 
-    - name: Code Linting & Formatting
-      if: always()
-      run: tox -e lint
+      - name: Code Linting & Formatting
+        if: always()
+        run: tox -e lint
 
-    - name: Static Type Safety Check
-      if: always()
-      run: tox -e type
+      - name: Static Type Safety Check
+        if: always()
+        run: tox -e type
 
-    - name: Documentation Build
-      run: tox -e docs
+      - name: Documentation Build
+        run: tox -e docs
 
   tests:
     runs-on: "ubuntu-latest"
