@@ -7,9 +7,9 @@ from antlr4 import (  # type: ignore[import-untyped]
 )
 from antlr4.error.ErrorListener import ErrorListener  # type: ignore[import-untyped]
 
+from fhy import error
 from fhy.lang import ast
 from fhy.lang.parser import FhYLexer, FhYParser
-from fhy.utils import error
 
 from .from_parse_tree import from_parse_tree
 

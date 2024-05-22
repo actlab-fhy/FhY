@@ -8,10 +8,9 @@ from typing import Dict, List, Optional, Set
 
 import networkx as nx  # type: ignore[import-untyped]
 
-from fhy import ir
+from fhy import error, ir
 from fhy.lang import collect_imported_identifiers
 from fhy.lang.ast.passes import build_symbol_table, replace_identifiers
-from fhy.utils import error
 
 from ..compilation_options import CompilationOptions
 from ..utils import get_imported_symbol_module_components_and_name

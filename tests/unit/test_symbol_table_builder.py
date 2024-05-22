@@ -2,9 +2,8 @@
 
 import pytest
 
-from fhy import ir
+from fhy import error, ir
 from fhy.lang.ast.passes import build_symbol_table
-from fhy.utils import error
 
 
 def _get_symbol_table_string_keys(

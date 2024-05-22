@@ -4,9 +4,8 @@ from typing import List, Optional, Type
 
 import pytest
 
-from fhy import ir
+from fhy import error, ir
 from fhy.lang import ast
-from fhy.utils import error
 
 from ..utils import list_to_types
 

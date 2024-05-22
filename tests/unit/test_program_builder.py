@@ -6,7 +6,7 @@ from typing import List, Set, Tuple
 
 import pytest
 
-from fhy import ir
+from fhy import error, ir
 from fhy.driver import utils
 from fhy.driver.ast_program_builder.builder import ASTProgramBuilder
 from fhy.driver.ast_program_builder.module_tree import ModuleTree
@@ -15,7 +15,6 @@ from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.utils import get_imported_symbol_module_components_and_name
 from fhy.driver.workspace import Workspace
 from fhy.lang.ast.passes import collect_identifiers, collect_imported_identifiers
-from fhy.utils import error
 
 
 @pytest.fixture

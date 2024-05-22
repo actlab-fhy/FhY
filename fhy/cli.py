@@ -15,7 +15,7 @@ from fhy.driver.ast_program_builder.source_file_ast import (
 from fhy.driver.file_reader import standard_path
 from fhy.lang.ast.pprint import pformat_ast
 from fhy.lang.ast.serialization.to_json import dump
-from fhy.utils.logger import add_file_handler, get_logger
+from fhy.logger import add_file_handler, get_logger
 
 
 class Status(IntEnum):

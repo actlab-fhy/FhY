@@ -11,10 +11,10 @@ Classes:
 from typing import Any, Set
 
 from fhy import ir
+from fhy.error import FhYSemanticsError
 from fhy.lang import ast
 from fhy.lang.ast.visitor import Visitor
 from fhy.utils import Stack
-from fhy.utils.error import FhYSemanticsError
 
 from .identifier_collector import collect_identifiers
 

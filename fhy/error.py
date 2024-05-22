@@ -1,4 +1,4 @@
-"""Module Containing all Custom FhY Exceptions.
+"""Custom FhY Exceptions and FhY Exception Registry.
 
 All custom FhY Exceptions can be viewed at `Fhy.utils.errors.FHY_ERRORS`
 
@@ -62,8 +62,6 @@ class FhYSemanticsError(Exception):
 @register_fhy_error
 class FhYImportError(ImportError):
     """Problematic Import Statement Detected from FhY Source Code."""
-
-    ...
 
 
 @register_fhy_error

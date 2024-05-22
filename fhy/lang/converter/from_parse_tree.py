@@ -15,11 +15,11 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 from antlr4 import ParserRuleContext  # type: ignore[import-untyped]
 
 from fhy import ir
+from fhy.error import FhYASTBuildError, FhYSyntaxError
 from fhy.lang import ast
 from fhy.lang.ast import Span
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
 from fhy.utils.alias import Expressions
-from fhy.utils.error import FhYASTBuildError, FhYSyntaxError
 
 
 def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:
