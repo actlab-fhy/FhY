@@ -1,0 +1,3 @@
+import circular_import.a.A;
+
+temp int32 B = 7 + circular_import.a.A;

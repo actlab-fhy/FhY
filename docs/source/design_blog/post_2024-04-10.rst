@@ -14,7 +14,6 @@ We met on Wednesday, 10th April 2024, and had the following discussions:
 
 Current Progress:
 -----------------
-
 Today we reviewed our current progress on development of *FhY*, as follows:
 
     1. Full Initial Implementation of the AST Nodes
@@ -48,7 +47,6 @@ For this reason, we will define our supported type qualifiers in our code.
 
 TODO (immediate):
 -----------------
-
     1. Finish AST conversion strategy to support all AST nodes
     2. Setup GitHub Actions for automated testing on the remote repository
     3. Type & label checking (AST Node Passes)
