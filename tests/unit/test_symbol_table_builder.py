@@ -1,7 +1,6 @@
 """Unit Test Symbol Table Builder Module."""
 
 import pytest
-
 from fhy import error, ir
 from fhy.lang.ast.passes import build_symbol_table
 

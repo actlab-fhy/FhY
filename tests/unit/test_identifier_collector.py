@@ -3,7 +3,6 @@
 from typing import Callable, Generator
 
 import pytest
-
 from fhy.ir import Identifier, NumericalType, PrimitiveDataType, TypeQualifier
 from fhy.lang.ast import (
     DeclarationStatement,

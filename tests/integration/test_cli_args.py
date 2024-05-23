@@ -3,7 +3,6 @@
 import os
 
 import pytest
-
 from fhy import __version__
 from fhy.cli import Status
 

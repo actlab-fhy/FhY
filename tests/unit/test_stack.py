@@ -1,7 +1,6 @@
 """Unit Test the stack module for basic expected behavior."""
 
 import pytest
-
 from fhy.utils.stack import Stack
 
 

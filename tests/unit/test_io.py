@@ -4,7 +4,6 @@ import os
 import pathlib
 
 import pytest
-
 from fhy.driver import file_reader
 
 HERE = os.path.abspath(os.path.join(__file__, os.pardir))

@@ -12,7 +12,6 @@ import json
 from typing import Callable, List, Tuple, TypeVar, Union
 
 import pytest
-
 from fhy.ir import (
     DataType,
     Identifier,

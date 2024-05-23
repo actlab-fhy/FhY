@@ -13,7 +13,6 @@ from antlr4 import DFA, CommonTokenStream, InputStream, ParserRuleContext
 from antlr4.atn.ATNConfigSet import ATNConfigSet
 from antlr4.atn.ATNState import DecisionState
 from antlr4.error.ErrorListener import ErrorListener
-
 from fhy import error as fhy_error
 from fhy.lang.ast import ASTNode
 from fhy.lang.converter.from_parse_tree import from_parse_tree

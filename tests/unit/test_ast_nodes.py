@@ -3,7 +3,6 @@
 from typing import List, Type
 
 import pytest
-
 from fhy.lang import ast
 
 

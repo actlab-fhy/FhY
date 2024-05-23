@@ -5,7 +5,6 @@ import re
 from glob import glob
 
 import pytest
-
 from fhy.cli import Status
 
 from .utils import access_cli, get_diff
