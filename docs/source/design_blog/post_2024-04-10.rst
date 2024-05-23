@@ -13,7 +13,7 @@ We met on Wednesday, April 10th, 2024, and had the following discussions:
 
 Current Progress:
 -----------------
-Today we reviewed our current progress on developement of *FhY*, as follows:
+Today we reviewed our current progress on development of *FhY*, as follows:
 
     1. Full Initial Implementation of the AST Nodes
         A. Core AST Structures
@@ -44,7 +44,7 @@ For this reason, we will define our supported type qualifiers in our code.
 
 
 TODO (immediate):
-_________________
+-----------------
     1. Finish AST conversion strategy to support all AST nodes
     2. Setup GitHub Actions for automated testing on the remote repository
     3. Type & label checking
@@ -53,10 +53,11 @@ _________________
     6. Multiple file compilation strategy
 
 TODO (Back Logged):
-___________________
+-------------------
     1. Design and implementation of new type (and type qualifier) registration by users
     2. Design of IR
 
-- **Release Date**: April 11th, 2024
-- **Last Updated**: April 11th, 2024
+
+- **Release Date**: Thursday 11th April 2024
+- **Last Updated**: Friday 3rd May 2024
 - **Post Author(s)**: Jason C Del Rio
