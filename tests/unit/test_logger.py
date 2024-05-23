@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Callable, Generator, Optional
 
 import pytest
-
 from fhy import logger
 
 
@@ -17,6 +16,7 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
     def _inner(*args, **kwargs) -> logging.Logger:
         nonlocal log
         log = logger.get_logger(*args, **kwargs)
+
         return log
 
     yield _inner
@@ -40,6 +40,7 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
     for hand in log.handlers:
         if not _test(hand):
             continue
+        hand.close()  # NOTE: Required on Windows Platform
         os.remove(hand.baseFilename)
         assert not os.path.exists(
             hand.baseFilename
