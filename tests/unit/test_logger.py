@@ -3,7 +3,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import Callable, Generator, Optional
+from typing import Callable, Generator, Optional, cast
 
 import pytest
 from fhy import logger
@@ -22,6 +22,8 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
     yield _inner
 
     # Teardown Sequence Accounting for intentionally Failed Tests
+    # https://github.com/microsoft/pylance-release/issues/1355
+    log = cast(logging.Logger, log) if log is not None else None
     if log is None:
         return None
 
@@ -40,8 +42,12 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
     for hand in log.handlers:
         if not _test(hand):
             continue
-        hand.close()  # NOTE: Required on Windows Platform
+
+        # NOTE: Required to close Handler Stream on Windows Platform before removing log
+        hand.flush()
+        hand.close()
         os.remove(hand.baseFilename)
+
         assert not os.path.exists(
             hand.baseFilename
         ), "Expected to Remove Temporary Logging Filepath."
