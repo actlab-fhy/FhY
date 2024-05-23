@@ -46,7 +46,8 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
         # NOTE: Required to close Handler Stream on Windows Platform before removing log
         hand.flush()
         hand.close()
-        os.remove(hand.baseFilename)
+        if os.path.exists(hand.baseFilename):
+            os.remove(hand.baseFilename)
 
         assert not os.path.exists(
             hand.baseFilename
@@ -60,7 +61,7 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
         ("foo", logging.INFO, None),
         ("bar", logging.CRITICAL, None),
         ("baz", logging.WARNING, logging.StreamHandler()),
-        ("bun", logging.WARNING, logging.FileHandler("test.log")),
+        ("bun", logging.WARNING, logging.FileHandler("test_build_logger.log")),
     ],
 )
 def test_build_logger(get_log, name, level, stream):
