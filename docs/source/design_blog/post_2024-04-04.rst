@@ -605,7 +605,7 @@ Tabled Issues
 -------------
 
 - Are *FhY* Einstein notation assignment statements blocking or non-blocking?
-- How do we define a construct for adding new reductions to *FhY* in source files while still mantaining a high-level implementation of the operation's semantics (i.e., no explicit definition of parrallelism)?
+- How do we define a construct for adding new reductions to *FhY* in source files while still maintaining a high-level implementation of the operation's semantics (i.e., no explicit definition of parallelism)?
 
 Conclusion
 ----------
