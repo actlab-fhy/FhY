@@ -73,7 +73,7 @@ testing to confirm we raise errors (specifically syntax errors) when incorrect F
 is tested. Finding corner cases is inevitable throughout this process. For example,
 forgetting the argument variable name can slip though parsing by ANTLR:
 
-.. code:: FhY
+.. code-block:: FhY
 
    op foo(input int32[m, n]) {
 
@@ -89,7 +89,7 @@ wrong keyword, we would expect to raise an error. However, because this does not
 the syntax of a function definition, this code segment is bypassed. In the snippet
 below, we construct an empty module node:
 
-.. code:: FhY
+.. code-block:: FhY
 
    def foo(input int32[m, n] A) {
 
@@ -105,7 +105,7 @@ We will discuss this issue and solution in much greater detail in a future blog 
 After our discussion earlier this week, we have created a unified CLI entry point to our
 FhY package. After installation, it can be called through the command line like so:
 
-.. code:: bash
+.. code-block:: bash
 
    fhy --module <filepath>
    fhy --library <filepath>
@@ -119,7 +119,7 @@ the expected output, our tests will tell you as much.
 
 We also can serialize our AST Nodes to JSON format, using the subparser `serialize`:
 
-.. code:: bash
+.. code-block:: bash
 
    fhy -m <filepath> serialize --format json
 

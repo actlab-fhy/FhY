@@ -130,7 +130,7 @@ a formula (below) given two input matrices :math:`\pmb{A} \in \mathbb{R}^{m \tim
 Now, you want to implement your algorithm in a programming language. An implementation
 of this algorithm in Python might look like this:
 
-.. code:: python
+.. code-block:: python
 
    def matmul(A, B, m, n, p):
        C = [[0 for j in range(p)] for i in range(m)]
@@ -157,7 +157,7 @@ nature of mathematical notation, opportunities for parallelism are not explicitl
 defined and can be explored by the compiler. Here is an example of how you might write
 the matrix-matrix multiplication algorithm in *FhY*:
 
-.. code:: FhY
+.. code-block:: FhY
 
    proc matmul(input int32[m, n] A, input int32[n, p] B, output int32[m, p] C){
       temp index[1:m] i;
@@ -272,7 +272,7 @@ additional simplifications:
 
 An implementation of this algorithm in Python using NumPy might look like this:
 
-.. code:: python
+.. code-block:: python
 
    import numpy as np
 
@@ -326,7 +326,7 @@ used in more complex procedures.
 
 Using these constructs, we can implement this training loop in *FhY* as follows:
 
-.. code:: FhY
+.. code-block:: FhY
 
    // --- Declared in another file ---
 
@@ -509,7 +509,7 @@ once we have settled on a syntax and begun implementing the *FhY* front-end, we 
 include the full grammar. Below, we have included the current version of the parsing
 rules for *FhY* (other than the ``literal`` rule for brevity).
 
-.. code:: ANTLR
+.. code-block:: ANTLR
 
    grammar FhY;
 

@@ -16,7 +16,7 @@ procedure would affect how it was mapped to a hardware target. In the current st
 as ``op`` or ``proc`` definitions with a definite type signature. For example, a simple
 ``op`` definition for a matrix-matrix multiplication might look like this:
 
-.. code:: FhY
+.. code-block:: FhY
 
    op matmul(input int32[m, n], input int32[n, p] B) -> output int32[m, p] {
        temp index[1:m] i;
@@ -78,7 +78,7 @@ efficiently in a certain precision.
 
 Here is the same matrix-matrix multiplication operation defined with template types:
 
-.. code:: FhY
+.. code-block:: FhY
 
    op matmul<T>(input T[m, n], input T[n, p] B) -> output T[m, p] {
        temp index[1:m] i;

@@ -100,7 +100,7 @@ guidance below:
    expectation, then provide the object received after a colon `:`. See the example
    below for raising a TypeError:
 
-   .. code:: python
+   .. code-block:: python
 
       if not isinstance(value, str):
           raise TypeError(f"Expected 'value' argument type 'str'. Received: {type(value)}")
@@ -108,7 +108,7 @@ guidance below:
 #. When describing errors derived from input source code, the error message should
    define the location the problem occurred to make it easier for the client to debug.
 
-   .. code:: python
+   .. code-block:: python
 
       if problematic_syntax:
          raise SyntaxError(f"<Concise Reason Syntax is wrong>. Line {line_no}:{column_no}")
