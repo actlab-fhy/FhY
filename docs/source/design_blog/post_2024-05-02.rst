@@ -7,36 +7,34 @@ Handling Custom FhY Exceptions: Error Policy
 Hi! Welcome to our sixth *FhY* design blog post.
 You may view our previous blog post :doc:`here <post_2024-04-25>`.
 
-#CustomExceptions #ErrorPolicy #FhY #Debugging #ErrorMessage
-
 
 *Preface*: Rationale for defining a Custom FhY Error Policy
 ===========================================================
 
 Soon, we will have non-developers use our software. Standardizing error reporting is
-therefore important to facilitate easier debugging. Ultimately what we want, is
+therefore important to facilitate easier debugging. Ultimately what we want is
 accessible documentation for users (and developers) to be able to quickly identify,
-diagnose, and handle what exceptions may be raised when using FhY Software. Furthermore,
+diagnose, and handle what exceptions may be raised when using FhY software. Furthermore,
 exceptions should be raised with clear and helpful diagnostic messages. At the same
 time, we need a policy to tightly control overzealous use of custom errors, which if
 unchecked, could grow untenable as the project develops. To meet these requirements, we
 could employ two different strategies:
 
-1. Define all Custom exceptions in a single module (e.g. fhy/utils/error.py).
+1. Define all custom exceptions in a single module.
     a. This makes it really easy to observe what custom errors are available. If there
        is any reasonable overlap in intended use, we can easily identify the issue and
        replace with an appropriate existing error.
-    b. One minor downside of this approach, is that we don't know exactly where each
+    b. One minor downside of this approach is that we don't know exactly where each
        custom exception is being used (by looking at the error module alone). This may
        make it difficult to discern if errors are too specific in use.
 
 2. Create a wrapper to register custom errors.
-    a. Custom errors are defined closer to where they are used throughout the fhy
+    a. Custom errors are defined closer to where they are used throughout the FhY
        package. Inevitably, some custom errors need to be specific to submodules. This
        may make it easier to review where such errors are being used, making it easier
        to discern if an error is too limited in scope.
     b. Creates a mapping to define all custom FhY exceptions. Furthermore, it also
-       allows us to register builtin python Exceptions (especially if not all are used).
+       allows us to register builtin Python exceptions (especially if not all are used).
 
 What does TVM do?
 =================
@@ -62,17 +60,17 @@ describe the usage with an example. The proposed error should both differ from c
 defined errors, and have decent scope of usage. On acceptance of a new custom error we
 have a sequence of events:
 
-    1. Add the new error to the `tvm.error` module, with clear documents (example).
-    2. Update (or register) the new custom Exception type.
-    3. Extrapolate the usage of the new exception to the existing code base.
+   1. Add the new error to the `tvm.error` module, with clear documents (example).
+   2. Update (or register) the new custom Exception type.
+   3. Extrapolate the usage of the new exception to the existing code base.
 
 
 FhY Custom Error Policy: Decision made
 ======================================
 
 FhY will also employ this dual strategy. All custom errors will be centralized and
-defined within a single module (fhy/utils/error.py). Docstrings of the errors must
-provide a succinct description of the intended use, followed by an example message
+defined within a single module (fhy/error.py). Docstrings of the errors must
+provide a succinct description of the intended use followed by an example message
 composition to maintain consistency between developers.
 
 All custom errors will be registered using a simple wrapper, `register_error`,
@@ -87,8 +85,8 @@ FhY Error Messaging Formatting Guidance
 
 Creating custom error types is just one way to make raised errors more clear to the
 client. The message accompanying the exception is just as important. For now, the 
-documentation of each custom exception will provide an example message, to define
-its usage. Multiple Examples may be provided. We also provide general exception message
+documentation of each custom exception will provide an example message to define its
+usage. Multiple examples may be provided. We also provide general exception message
 guidance below:
 
 1. Where possible and relevant, provide a description between expected and received
@@ -99,10 +97,10 @@ guidance below:
 .. code-block:: python
 
    if not isinstance(value, str):
-      raise TypeError(f"Expected `value` argument type `str`. Received: {type(value)}")
+      raise TypeError(f"Expected 'value' argument type 'str'. Received: {type(value)}")
 
 
-2. When describing Errors derived from input source code, the error message should
+2. When describing errors derived from input source code, the error message should
    define the location the problem occurred to make it easier for the client to debug. 
 
 .. code-block:: python
@@ -114,6 +112,6 @@ guidance below:
 We will be providing more general guidance on constructing an error message soon.
 
 
-- **Release Date**: Thursday 2nd May 2024
-- **Last Updated**: Thursday 2nd May 2024
+- **Release Date**: Thursday May 2nd, 2024
+- **Last Updated**: Thursday May 24th, 2024
 - **Post Author(s)**: Jason C Del Rio
