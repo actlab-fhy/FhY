@@ -20,21 +20,23 @@ time, we need a policy to tightly control overzealous use of custom errors, whic
 unchecked, could grow untenable as the project develops. To meet these requirements, we
 could employ two different strategies:
 
-1. Define all custom exceptions in a single module.
-    a. This makes it really easy to observe what custom errors are available. If there
-       is any reasonable overlap in intended use, we can easily identify the issue and
-       replace with an appropriate existing error.
-    b. One minor downside of this approach is that we don't know exactly where each
-       custom exception is being used (by looking at the error module alone). This may
-       make it difficult to discern if errors are too specific in use.
+#. Define all custom exceptions in a single module.
 
-2. Create a wrapper to register custom errors.
-    a. Custom errors are defined closer to where they are used throughout the FhY
-       package. Inevitably, some custom errors need to be specific to submodules. This
-       may make it easier to review where such errors are being used, making it easier
-       to discern if an error is too limited in scope.
-    b. Creates a mapping to define all custom FhY exceptions. Furthermore, it also
-       allows us to register builtin Python exceptions (especially if not all are used).
+   #. This makes it really easy to observe what custom errors are available. If there
+      is any reasonable overlap in intended use, we can easily identify the issue and
+      replace with an appropriate existing error.
+   #. One minor downside of this approach is that we don't know exactly where each
+      custom exception is being used (by looking at the error module alone). This may
+      make it difficult to discern if errors are too specific in use.
+
+#. Create a wrapper to register custom errors.
+
+   #. Custom errors are defined closer to where they are used throughout the FhY
+      package. Inevitably, some custom errors need to be specific to submodules. This
+      may make it easier to review where such errors are being used, making it easier
+      to discern if an error is too limited in scope.
+   #. Creates a mapping to define all custom FhY exceptions. Furthermore, it also
+      allows us to register builtin Python exceptions (especially if not all are used).
 
 What does TVM do?
 =================
@@ -60,9 +62,9 @@ describe the usage with an example. The proposed error should both differ from c
 defined errors, and have decent scope of usage. On acceptance of a new custom error we
 have a sequence of events:
 
-   1. Add the new error to the `tvm.error` module, with clear documents (example).
-   2. Update (or register) the new custom Exception type.
-   3. Extrapolate the usage of the new exception to the existing code base.
+   #. Add the new error to the `tvm.error` module, with clear documents (example).
+   #. Update (or register) the new custom Exception type.
+   #. Extrapolate the usage of the new exception to the existing code base.
 
 
 FhY Custom Error Policy: Decision made
@@ -89,24 +91,24 @@ documentation of each custom exception will provide an example message to define
 usage. Multiple examples may be provided. We also provide general exception message
 guidance below:
 
-1. Where possible and relevant, provide a description between expected and received
+#. Where possible and relevant, provide a description between expected and received
    values. General format of the message in this case should first describe the
    expectation, then provide the object received after a colon `:`. See the example
    below for raising a TypeError:
 
-.. code-block:: python
+   .. code-block:: python
 
-   if not isinstance(value, str):
-      raise TypeError(f"Expected 'value' argument type 'str'. Received: {type(value)}")
+      if not isinstance(value, str):
+         raise TypeError(f"Expected 'value' argument type 'str'. Received: {type(value)}")
 
 
-2. When describing errors derived from input source code, the error message should
+#. When describing errors derived from input source code, the error message should
    define the location the problem occurred to make it easier for the client to debug. 
 
-.. code-block:: python
+   .. code-block:: python
 
-   if <problematic syntax>:
-      raise SyntaxError(f"<Concise Reason Syntax is wrong>. Line {line_no}:{column_no}")
+      if <problematic syntax>:
+         raise SyntaxError(f"<Concise Reason Syntax is wrong>. Line {line_no}:{column_no}")
 
 
 We will be providing more general guidance on constructing an error message soon.
