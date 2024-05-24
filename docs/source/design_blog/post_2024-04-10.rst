@@ -10,7 +10,7 @@ You may view our previous blog post :doc:`here <post_2024-04-05>`.
 Meeting Minutes
 ===============
 
-We met on Wednesday, 10th April 2024, and had the following discussions:
+We met on Wednesday April 10th, 2024 and had the following discussions:
 
 Current Progress:
 -----------------
@@ -60,6 +60,6 @@ TODO (Back Logged):
     1. Design and implementation of new type (and type qualifier) registration by users
     2. Design of IR
 
-- **Release Date**: Thursday 11th April 2024
-- **Last Updated**: Thursday 11th April 2024
+- **Release Date**: Thursday April 11th 2024
+- **Last Updated**: Thursday May 24th 2024
 - **Post Author(s)**: Jason C Del Rio
