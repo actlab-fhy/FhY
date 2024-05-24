@@ -1,13 +1,13 @@
-======================================
-Bringing Typing Back to the Programmer
-======================================
+########################################
+ Bringing Typing Back to the Programmer
+########################################
 
-.. contents:: :local:
+.. contents::
+   :local:
 
-Hello!
-This is the second *FhY* design blog post.
-If you haven't read our first post and are interested in what this project is all about,
-you can find it :doc:`here <post_2024-04-04>`.
+Hello! This is the second *FhY* design blog post. If you haven't read our first post and
+are interested in what this project is all about, you can find it :doc:`here
+<post_2024-04-04>`.
 
 On Wednesday (that would be the day before the first design blog post was released), the
 team had a discussion about types and how the type signature of an operation or
@@ -16,7 +16,7 @@ procedure would affect how it was mapped to a hardware target. In the current st
 as ``op`` or ``proc`` definitions with a definite type signature. For example, a simple
 ``op`` definition for a matrix-matrix multiplication might look like this:
 
-.. code-block:: FhY
+.. code:: FhY
 
    op matmul(input int32[m, n], input int32[n, p] B) -> output int32[m, p] {
        temp index[1:m] i;
@@ -34,7 +34,6 @@ cause problems when trying to perform operation scheduling that will yield the b
 performance.
 
 Why?
-
 
 Let's say you have at your disposal a CPU on your current machine and an FPGA with a
 custom domain-specific accelerator realized on the FPGA. For the sake of this example,
@@ -69,17 +68,17 @@ problem where the programmer has access to a hardware target that can handle an
 operation efficiently at a certain precision, but hasn't designed their program around
 that precision and has now lost the opportunity to use that hardware target.
 
-Instead, we propose to leverage template types like those found in C++ and Rust
-(called Generics). This solution provides the best of both worlds, as the programmer
-can define the operation with a weak type signature and the programmer can specify
-exactly what base data type they want to use. This allows the programmer to design their
-program around the precision they want to use and be notified by the compiler if they
-are missing out on an opportunity to use a hardware target that can handle the operation
+Instead, we propose to leverage template types like those found in C++ and Rust (called
+Generics). This solution provides the best of both worlds, as the programmer can define
+the operation with a weak type signature and the programmer can specify exactly what
+base data type they want to use. This allows the programmer to design their program
+around the precision they want to use and be notified by the compiler if they are
+missing out on an opportunity to use a hardware target that can handle the operation
 efficiently in a certain precision.
 
 Here is the same matrix-matrix multiplication operation defined with template types:
 
-.. code-block:: FhY
+.. code:: FhY
 
    op matmul<T>(input T[m, n], input T[n, p] B) -> output T[m, p] {
        temp index[1:m] i;
@@ -107,6 +106,6 @@ ensuring that the programmer can tailor their program to the precision they desi
 
 If you have any thoughts on this solution or have a better solution, please let us know!
 
-- **Release Date**: April 5th, 2024
-- **Last Updated**: April 5th, 2024
-- **Post Author(s)**: Christopher Priebe
+-  **Release Date**: April 5th, 2024
+-  **Last Updated**: April 5th, 2024
+-  **Post Author(s)**: Christopher Priebe
