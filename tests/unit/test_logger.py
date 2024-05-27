@@ -36,21 +36,18 @@ def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
     def _test(x) -> bool:
         return isinstance(x, logging.FileHandler)
 
-    if not any(map(_test, log.handlers)):
-        return None
+    for handler in filter(_test, log.handlers):
+        # Remove the handler to prevent reopening the file
+        log.removeHandler(handler)
 
-    for hand in log.handlers:
-        if not _test(hand):
-            continue
+        # Flush to stream to ensure all messages have been processed and closed.
+        handler.flush()
+        handler.close()
 
-        # NOTE: Required to close Handler Stream on Windows Platform before removing log
-        hand.flush()
-        hand.close()
-        if os.path.exists(hand.baseFilename):
-            os.remove(hand.baseFilename)
-
+        # Remove the created log file
+        os.remove(handler.baseFilename)
         assert not os.path.exists(
-            hand.baseFilename
+            handler.baseFilename
         ), "Expected to Remove Temporary Logging Filepath."
 
 
