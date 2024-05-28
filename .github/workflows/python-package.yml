@@ -132,13 +132,13 @@ jobs:
           pip install tox
 
       - name: PyTest Unit Testing (${{ matrix.os }})
-        if: matrix.os != "windows-latest"
+        if: matrix.os != 'windows-latest'
         run: |
             TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests
             tox -e $TOX_VERSION
 
       - name: PyTest Unit Testing (${{ matrix.os }})
-        if: matrix.os == "windows-latest"
+        if: matrix.os == 'windows-latest'
         run: |
           export TOX_VERSION="py$(echo ${{ matrix.python-version }} | tr -d .)-tests"
           tox -e %TOX_VERSION%
