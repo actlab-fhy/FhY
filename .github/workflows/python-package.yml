@@ -133,9 +133,8 @@ jobs:
 
       - name: PyTest Unit Testing
         run: |
-          Version=py$(echo ${{ matrix.python-version }} | tr -d .)
-          echo TOX_PYTHON=$Version >> $GITHUB_ENV
-          tox -e ${{ env.TOX_PYTHON }}-tests
+          Version=py$(echo ${{ matrix.python-version }} | tr -d .)-tests
+          tox -e $Version
 
       - name: Save Coverage Data Temporarily
         uses: actions/upload-artifact@v4
