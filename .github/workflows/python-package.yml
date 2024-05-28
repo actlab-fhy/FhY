@@ -133,7 +133,7 @@ jobs:
 
       - name: PyTest Unit Testing
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ];
+          if [[ "${{ matrix.os }}" == "windows-latest" ]];
           then
             export TOX_VERSION="py$(echo ${{ matrix.python-version }} | tr -d .)-tests"
             tox -e %TOX_VERSION%
