@@ -140,8 +140,7 @@ jobs:
       - name: PyTest Unit Testing (${{ matrix.os }})
         if: matrix.os == 'windows-latest'
         run: |
-          set TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests
-          tox -e ${env:TOX_VERSION}
+          echo "py$(echo ${{ matrix.python-version }} | tr -d .)-tests" | tox -e
 
       - name: Save Coverage Data Temporarily
         uses: actions/upload-artifact@v4
