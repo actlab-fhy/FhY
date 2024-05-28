@@ -131,18 +131,17 @@ jobs:
           python -m pip install setuptools wheel
           pip install tox
 
-      - name: PyTest Unit Testing
+      - name: PyTest Unit Testing (${{ matrix.os }})
+        if: matrix.os != "windows-latest"
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]];
-          then
-            export TOX_VERSION="py$(echo ${{ matrix.python-version }} | tr -d .)-tests"
-            tox -e %TOX_VERSION%
-
-          else
             TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests
             tox -e $TOX_VERSION
 
-          fi
+      - name: PyTest Unit Testing (${{ matrix.os }})
+        if: matrix.os == "windows-latest"
+        run: |
+          export TOX_VERSION="py$(echo ${{ matrix.python-version }} | tr -d .)-tests"
+          tox -e %TOX_VERSION%
 
       - name: Save Coverage Data Temporarily
         uses: actions/upload-artifact@v4
