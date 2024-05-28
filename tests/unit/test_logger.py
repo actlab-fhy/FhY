@@ -83,6 +83,10 @@ def test_build_logger(get_log, name, level, stream):
 
 
 def test_build_logger_with_file_handler(get_log):
+    # NOTE: We separate this test, because teardown is not compatible on windows systems
+    #       when it is parametrized, due to use of pytest-xdist, where multiple
+    #       processes maintain an open stream to the file. This causes a PermissionError
+    #       to occur, when we attempt to remove the created log file.
     name, level, stream = (
         "bun",
         logging.WARNING,
