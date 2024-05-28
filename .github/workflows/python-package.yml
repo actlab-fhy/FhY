@@ -131,16 +131,20 @@ jobs:
           python -m pip install setuptools wheel
           pip install tox
 
-      - name: PyTest Unit Testing (${{ matrix.os }})
+      - name: Setup Tox Python Version (${{ matrix.os }})
         if: matrix.os != 'windows-latest'
         run: |
-            TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests
-            tox -e $TOX_VERSION
+            echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $GITHUB_ENV
 
-      - name: PyTest Unit Testing (${{ matrix.os }})
+      - name: Setup Tox Python Version (${{ matrix.os }})
         if: matrix.os == 'windows-latest'
         run: |
-          echo "py$(echo ${{ matrix.python-version }} | tr -d .)-tests" | tox -e
+          "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
+
+      - name: PyTest
+        run:
+          echo ${{ env.TOX_VERSION }}
+          tox -e ${{ env.TOX_VERSION }}
 
       - name: Save Coverage Data Temporarily
         uses: actions/upload-artifact@v4
