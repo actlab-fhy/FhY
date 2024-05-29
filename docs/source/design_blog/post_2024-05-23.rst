@@ -54,7 +54,7 @@ through the litany of performed tests just to see why we failed coverage.
 
 Every package I had previously developed or managed didn't have a script or entry point
 where I needed to use and monitor a subprocess for the purpose of integration testing to
-capture coding coverage. Up until this point, I had exclusively used the PyTest plugin,
+capture coding coverage. Up until this point, I had exclusively used the pytest plugin,
 `pytest-cov`, because it was easy and it just worked... until now.
 
 Because pytest-cov is just coverage.py with extra steps, and I also wanted to separate
@@ -145,7 +145,7 @@ practices, creating a more flat layout directory tree:
    ├── tox.ini
    └── .readthedocs.yaml
 
-If the the answer isn't obvious yet, we are calling PyTest from the project root
+If the the answer isn't obvious yet, we are calling pytest from the project root
 directory, which means the project is importable from both the root and the
 site-packages because both are on path. The easiest solution is to change that by
 creating a single layer of indirection, imbedding the project within a src folder:
@@ -162,7 +162,7 @@ creating a single layer of indirection, imbedding the project within a src folde
    │       └── subpackage/
    │           └── submodule.py
 
-Now, when we call PyTest and perform unit tests and coverage, we are only testing
+Now, when we call pytest and perform unit tests and coverage, we are only testing
 against the installed site-packages within the tox virtualenv.
 
 To wrap up our coverage woes, several other configurations need to be updated to assist
@@ -218,7 +218,7 @@ Key Take Away Points
    testing. This src layout project structure is most compatible with tox to ensure all
    testing is performed on the source code installed within the tox virtual environment.
 
-#. Use `coverage.py` directly when monitoring code coverage forgoing the PyTest plugin,
+#. Use `coverage.py` directly when monitoring code coverage forgoing the pytest plugin,
    pytest-cov, to separate unit testing and coverage reporting.
 
 #. Update your pyproject.toml if using setuptools to correctly find your Python package,
@@ -237,7 +237,7 @@ Key Take Away Points
       [project.optional-dependencies]
       test = ["pytest", "coverage", "pytest-xdist"]
 
-      # PyTest config
+      # pytest config
       [tool.pytest.ini_options]
       testpaths = ["tests"]
       addopts = "-n auto -rA"  # only use `-n auto` when using pytest-xdist plugin too.
@@ -298,7 +298,7 @@ realized and scalable CI workflow:
 
 #. Perform "style" checks, confirming code linting, formatting, static typing, and
    documentation build all performed on a single OS and Python version. In a parallel
-   environment we matrix Python versions and host OS platforms to perform PyTest
+   environment we matrix Python versions and host OS platforms to perform pytest
    testing and capture coding coverage.
 
 #. Finally, when tests are completed, we can collate and report coverage.
