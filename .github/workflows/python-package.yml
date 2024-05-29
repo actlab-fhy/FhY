@@ -142,7 +142,7 @@ jobs:
           "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
 
       - name: PyTest
-        run:
+        run: |
           echo ${{ env.TOX_VERSION }}
           tox -e ${{ env.TOX_VERSION }}
 
