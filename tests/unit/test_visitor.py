@@ -1,5 +1,4 @@
 import pytest
-
 from fhy.lang.ast import Module, visitor
 
 

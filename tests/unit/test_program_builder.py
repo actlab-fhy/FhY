@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List, Set, Tuple
 
 import pytest
-
 from fhy import error, ir
 from fhy.driver import utils
 from fhy.driver.ast_program_builder.builder import ASTProgramBuilder

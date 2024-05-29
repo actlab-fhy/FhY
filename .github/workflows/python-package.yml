@@ -96,12 +96,13 @@ jobs:
         run: tox -e docs
 
   tests:
-    runs-on: "ubuntu-latest"
+    runs-on: ${{ matrix.os }}
     needs: [build]
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.11", "3.12"]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
       - name: Checkout
@@ -116,7 +117,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version-file: .python-version-default
+          python-version: ${{ matrix.python-version }}
 
       - name: Set up JDK 11 x64
         uses: actions/setup-java@v4
@@ -130,14 +131,25 @@ jobs:
           python -m pip install setuptools wheel
           pip install tox
 
-      - name: PyTest Unit Testing
+      - name: Setup Tox Python Version (${{ matrix.os }})
+        if: matrix.os != 'windows-latest'
         run: |
-          tox -e py
+            echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $GITHUB_ENV
+
+      - name: Setup Tox Python Version (${{ matrix.os }})
+        if: matrix.os == 'windows-latest'
+        run: |
+          "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
+
+      - name: PyTest
+        run: |
+          echo ${{ env.TOX_VERSION }}
+          tox -e ${{ env.TOX_VERSION }}
 
       - name: Save Coverage Data Temporarily
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-${{ matrix.python-version }}
+          name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
           path: .coverage.*
           retention-days: 1
           if-no-files-found: ignore
@@ -169,12 +181,6 @@ jobs:
         with:
           python-version-file: .python-version-default
 
-      - name: Set up JDK 11 x64
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: 11
-
       - name: Install tox
         run: |
           python -m pip install -U pip
@@ -183,4 +189,4 @@ jobs:
 
       - name: Report Testing Coverage
         run: |
-          tox -e coverage
+          tox -e coverage | tee $GITHUB_STEP_SUMMARY
