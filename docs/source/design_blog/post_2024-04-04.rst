@@ -750,6 +750,6 @@ motivating and introducing our project, we intend for further posts to be more b
 highlight specific design decisions and challenges. We are excited to receive feedback
 from the community and see how the project evolves as we receive feedback.
 
--  **Release Date**: April 4th, 2024
--  **Last Updated**: May 24th, 2024
+-  **Release Date**: Thursday April 4th, 2024
+-  **Last Updated**: Friday May 24th, 2024
 -  **Post Author(s)**: Christopher Priebe

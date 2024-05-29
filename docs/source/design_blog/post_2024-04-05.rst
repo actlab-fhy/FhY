@@ -106,6 +106,6 @@ ensuring that the programmer can tailor their program to the precision they desi
 
 If you have any thoughts on this solution or have a better solution, please let us know!
 
--  **Release Date**: April 5th, 2024
--  **Last Updated**: April 5th, 2024
+-  **Release Date**: Friday April 5th, 2024
+-  **Last Updated**: Friday May 24th, 2024
 -  **Post Author(s)**: Christopher Priebe

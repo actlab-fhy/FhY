@@ -131,6 +131,6 @@ package) using subprocess against input FhY source code files and comparing agai
 expected output files to confirm we get expected results, in the same manner as we
 expect clients to use our FhY Frontend.
 
--  **Release Date**: April 25th, 2024
--  **Last Updated**: May 23rd, 2024
+-  **Release Date**: Thursday April 25th, 2024
+-  **Last Updated**: Thursday May 23rd, 2024
 -  **Post Author(s)**: Jason C Del Rio
