@@ -19,8 +19,8 @@ of  our developer tools. However, there was one thing that really bothered me...
 I had noticed during the previous implementation that coding coverage reported locally
 in a virtual environment compared to coverage reported during a tox run were different.
 Specifically, in our tox environment, we were not capturing coverage of our integration
-tests that use subprocess against our fhy entry point. Initially, the only way i was
-able to solve this was to use a development environment, configured in the tox.ini file
+tests that use subprocess against our FhY entry point. Initially, the only way I was
+able to solve this was to use a development environment configured in the tox.ini file
 as shown:
 
 .. code-block:: text
@@ -30,22 +30,21 @@ as shown:
    use_develop = true
 
 Now, this flag `use_develop` tells tox to install your package in editable mode (i.e.
-`pip install -e <package>`). And because this isn't how clients will use your package, I
-separated unit testing only (in normal installed environment), and a separate coverage
-environment using the pytest-cov plugin in development mode. But this setup is less
-than ideal, because it means we are running pytest twice.
+`pip install -e <package>`). Because this isn't how clients will normally use your
+package, I created a separate environment to perform unit testing in standard install.
+But this setup is less than ideal because it means we are running our unit tests twice.
 
-This initially worked fine, because we are only testing a single python version.
-However, we would like to scale to support both multiple python versions and host OS's
+This initially worked fine because we are only testing a single Python version.
+However, we would like to scale to support both multiple Python versions and host OS's
 in a matrix. Duplicating this testing process unnecessarily consumes our available
 action hours and is fundamentally not scalable.
 
-Furthermore, because we plan to matrix both OS and python versions, we do not need to
+Furthermore, because we plan to matrix both OS and Python versions, we do not need to
 analyze coding coverage for every permutation, but instead collate and report separately
 after all testing has completed. This has an additional advantage of separating testing
 and coverage reporting as two independent steps to more quickly determine where a
 failure might occur. As a side benefit, this also makes it easier to review the coverage
-report both in github actions and locally. We no longer would need to endlessly scroll
+report both in GitHub Actions and locally. We no longer would need to endlessly scroll
 through the litany of performed tests just to see why we failed coverage.
 
 
@@ -53,9 +52,9 @@ through the litany of performed tests just to see why we failed coverage.
  The Big Strange World of Coding Coverage Ennui
 ************************************************
 
-Every package I had previously developed or managed didn't have a script, or entry point
+Every package I had previously developed or managed didn't have a script or entry point
 where I needed to use and monitor a subprocess for the purpose of integration testing to
-capture coding coverage. Up until this point, I had exclusively used the pytest plugin,
+capture coding coverage. Up until this point, I had exclusively used the PyTest plugin,
 `pytest-cov`, because it was easy and it just worked... until now.
 
 Because pytest-cov is just coverage.py with extra steps, and I also wanted to separate
@@ -98,7 +97,7 @@ Now we have a tox.ini file that looks like this:
 
 Now, you might think to yourself, this should work!... and unfortunately it likely will
 not. The real problem lies between our unit and integration tests. In our unit tests, we
-are testing against the local copy (within the project root). But our Integration tests
+are testing against the local copy (within the project root). But our integration tests
 are using subprocess to access the entry point. To test this, we have to install our
 package, which means coverage is occurring not on our local copy, but within our
 `.tox/py/**/site-packages/*`. In development mode, where our package is installed in
@@ -114,16 +113,16 @@ coding coverage. Mock Example Coding Report:
    .tox/py/**/site-packages/package/example.py      23%
    package/example.py                               77%
 
-It's easy to forget when using tox, that the local copy of your source code is visible
-to it, because everything is happening "behind the scenes". What we really want while
-using tox, is to perform all of our testing against our installed package (within the
+It is easy to forget when using tox that the local copy of your source code is visible
+to it because everything is happening "behind the scenes." What we really want while
+using tox is to perform all of our testing against our installed package (within the
 tox virtualenv). This is why we are using tox in the first place.
 
 After finding this `interesting read <https://hynek.me/articles/testing-packaging/>`_,
 written by the developer of `attrs` open source project, `Hynek Schlawack
 <https://github.com/hynek>`_, the real problem is with our project packaging structure.
 
-This was the general structure which followed standard python packaging convention
+This was the general structure which followed standard Python packaging convention
 practices, creating a more flat layout directory tree:
 
 .. code-block:: text
@@ -146,9 +145,9 @@ practices, creating a more flat layout directory tree:
    ├── tox.ini
    └── .readthedocs.yaml
 
-If the the answer isn't obvious yet, we are calling pytest from the project root
+If the the answer isn't obvious yet, we are calling PyTest from the project root
 directory, which means the project is importable from both the root and the
-site-packages because both are on path. The easiest solution is to change that, by
+site-packages because both are on path. The easiest solution is to change that by
 creating a single layer of indirection, imbedding the project within a src folder:
 
 .. code-block:: text
@@ -163,11 +162,11 @@ creating a single layer of indirection, imbedding the project within a src folde
    │       └── subpackage/
    │           └── submodule.py
 
-Now, when we call pytest and perform unit tests and coverage, we are only testing
+Now, when we call PyTest and perform unit tests and coverage, we are only testing
 against the installed site-packages within the tox virtualenv.
 
-To wrap up our coverage woes, several other configurations need to change to package
-correctly using setuptools, and the coverage tool. In our pyproject.toml:
+To wrap up our coverage woes, several other configurations need to be updated to assist
+both setuptools and coverage tools. In our pyproject.toml:
 
 .. code-block:: toml
 
@@ -204,9 +203,9 @@ and our tox.ini:
       coverage combine
       coverage report
 
-Now at this point, your whole configuration should accomplish and correctly capture
-coding coverage of your project, using tox virtual environments, even if you need to
-also capture subprocess, or multiple parallel processes.
+At this point, your whole configuration should accomplish and correctly capture
+coding coverage of your project using tox virtual environments, even if you need to
+also capture subprocess or multiple processes performed in parallel.
 
 
 Key Take Away Points
@@ -219,12 +218,12 @@ Key Take Away Points
    testing. This src layout project structure is most compatible with tox, to ensure all
    testing is performed on the source code installed within the tox virtual environment.
 
-#. Use `coverage.py` directly when monitoring code coverage, forgoing the pytest plugin,
+#. Use `coverage.py` directly when monitoring code coverage forgoing the PyTest plugin
    to separate unit testing and coverage reporting.
 
-#. Update your pyproject.toml if using setuptools to correctly find your python package,
+#. Update your pyproject.toml if using setuptools to correctly find your Python package,
    and tool.coverage{.paths} sections to correctly capture code coverage. Showing the
-   relevant sections in completion, below:
+   relevant sections in completion below:
 
    .. code-block:: toml
 
@@ -238,7 +237,7 @@ Key Take Away Points
       [project.optional-dependencies]
       test = ["pytest", "coverage", "pytest-xdist"]
 
-      # Pytest config
+      # PyTest config
       [tool.pytest.ini_options]
       testpaths = ["tests"]
       addopts = "-n auto -rA"  # only use `-n auto` when using pytest-xdist plugin too.
@@ -299,8 +298,8 @@ realized and scalable CI workflow:
    FhY grammar without issue in our remote repository.
 
 #. Perform "style" checks, confirming code linting, formatting, static typing, and
-   documentation build all performed on a single os and python version. In a parallel
-   environment, we can matrix python versions and Host OS platforms, to perform pytest
+   documentation build all performed on a single OS and Python version. In a parallel
+   environment we matrix Python versions and host OS platforms to perform PyTest
    testing and capture coding coverage.
 
 #. Finally, when tests are completed, we can collate and report coverage.
