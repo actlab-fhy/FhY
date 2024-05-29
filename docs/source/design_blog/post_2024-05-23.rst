@@ -211,15 +211,15 @@ also capture subprocess or multiple processes performed in parallel.
 Key Take Away Points
 ====================
 
-#. Guidance on best practices to setup your python project is currently `evolving
+#. Guidance on best practices to setup your Python project is currently `evolving
    <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/>`_
    away from the previously recommended flat layout. Use a `src` directory layout when
-   setting up your (next) python project to make certain it is not importable during
-   testing. This src layout project structure is most compatible with tox, to ensure all
+   setting up your (next) Python project to make certain it is not importable during
+   testing. This src layout project structure is most compatible with tox to ensure all
    testing is performed on the source code installed within the tox virtual environment.
 
-#. Use `coverage.py` directly when monitoring code coverage forgoing the PyTest plugin
-   to separate unit testing and coverage reporting.
+#. Use `coverage.py` directly when monitoring code coverage forgoing the PyTest plugin,
+   pytest-cov, to separate unit testing and coverage reporting.
 
 #. Update your pyproject.toml if using setuptools to correctly find your Python package,
    and tool.coverage{.paths} sections to correctly capture code coverage. Showing the
@@ -267,8 +267,7 @@ Key Take Away Points
       set_env =
          COVERAGE_PROCESS_START={toxinidir}/pyproject.toml
       commands_pre =
-         python -c 'import pathlib; pathlib.Path("{env_site_packages_dir}/cov.pth")\
-            .write_text("import coverage; coverage.process_startup()")'
+         python -c 'import pathlib; pathlib.Path("{env_site_packages_dir}/cov.pth").write_text("import coverage; coverage.process_startup()")'
       commands =
          coverage run -m pytest {posargs}
 
