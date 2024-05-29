@@ -55,7 +55,7 @@ branch = true
 source = ["fhy"]
 
 [tool.coverage.paths]
-source = ["src", ".tox/py*/**/site-packages"]
+source = ["src", "*/.tox/py*/**/site-packages"]
 
 [tool.coverage.report]
 format = "markdown"
