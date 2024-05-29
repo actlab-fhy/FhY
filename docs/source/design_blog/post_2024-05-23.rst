@@ -186,7 +186,7 @@ both setuptools and coverage tools. In our pyproject.toml:
    [tool.coverage.paths]
    # Informs coverage that these two paths are identical
    # Preventing duplicated coverage reporting (see above)
-   source = ["src", ".tox/py*/**/site-packages"]
+   source = ["src", "*/.tox/py*/**/site-packages"]
 
 and our tox.ini:
 
@@ -249,7 +249,7 @@ Key Take Away Points
       source = ["fhy"]
 
       [tool.coverage.paths]
-      source = ["src", ".tox/py*/**/site-packages"]
+      source = ["src", "*/.tox/py*/**/site-packages"]
 
       [tool.coverage.report]
       fail_under = 85.0  # Decide what coverage is right for your project
