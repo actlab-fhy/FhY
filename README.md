@@ -14,6 +14,25 @@
 *FhY* is a cross-domain language with mathematical foundations that moves beyond the
 current paradigm of domain-specific languages to enable cross-domain multi-acceleration.
 
+## Table of Contents
+- [Table of Contents](#table-of-contents)
+- [FhY Developers Blog](#fhy-developers-blog)
+- [Installing FhY](#installing-fhy)
+  - [FhY from pip](#fhy-from-pip)
+  - [FhY from Source Code](#fhy-from-source-code)
+- [Using FhY from the Command Line](#using-fhy-from-the-command-line)
+- [FhY License](#fhy-license)
+- [Dependencies](#dependencies)
+
+
+## FhY Developers Blog
+
+The *FhY developers* provide a transparent "***Glass House***" software design blog
+regarding current implementation details to describe design decisions and discuss
+various development issues and solutions on our readthedocs page,
+found [here](https://fhy.readthedocs.io/en/latest/design_blog/index.html). We encourage
+new contributors and users to review the blog for more information regarding *FhY* and
+get involved.
 
 ## Installing FhY
 
