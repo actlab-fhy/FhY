@@ -10,9 +10,9 @@ from fhy.cli import Status
 from .utils import access_cli, get_diff
 
 HERE = os.path.abspath(os.path.join(__file__, os.pardir))
-SAMPLES = os.path.join(HERE, "Samples")
-OUTPUT = os.path.join(SAMPLES, "Output")
-INPUT = os.path.join(SAMPLES, "Input", "*.fhy")
+SAMPLES = os.path.join(HERE, "data")
+OUTPUT = os.path.join(SAMPLES, "output")
+INPUT = os.path.join(SAMPLES, "input", "*.fhy")
 
 examples = glob(INPUT)
 
