@@ -102,6 +102,12 @@ JSONObject = Union[AlmostJson, Sequence[AlmostJson]]
 class ASTtoJSON(visitor.BasePass):
     """Convert an AST Node into a json object."""
 
+    def default(self, node):
+        if isinstance(node, list):
+            return self.visit_sequence(node)
+
+        return super().default(node)
+
     def visit_Module(self, node: ast.Module) -> AlmostJson:
         statements: List[AlmostJson] = self.visit_sequence(node.statements)
 
@@ -897,12 +903,16 @@ class JSONtoAST(visitor.BasePass):
         return Source(namespace=source.attributes.get("namespace") or "_null")
 
 
-def dump(node: ast.ASTNode, indent: Optional[str] = "  ") -> str:
+def dump(
+    node: Union[ASTObject, Sequence[ASTObject]],
+    indent: Optional[Union[int, str]] = "  ",
+) -> str:
     """Serialize an AST Node to json string, with a given indent."""
     to_json = ASTtoJSON()
-    obj: AlmostJson = to_json.visit(node)
+    obj: Union[AlmostJson, List[AlmostJson]] = to_json.visit(node)
+    data = [j.data() for j in obj] if isinstance(obj, list) else obj.data()
 
-    return json.dumps(obj.data(), indent=indent)
+    return json.dumps(data, indent=indent)
 
 
 def to_almost_json(obj: Any):
@@ -916,7 +926,7 @@ def to_almost_json(obj: Any):
     return obj
 
 
-def load(json_string: str, **kwargs) -> Union[ast.ASTNode, List[ast.ASTNode]]:
+def load(json_string: str, **kwargs) -> Union[ASTObject, Sequence[ASTObject]]:
     """Loads a Json string to construct an ASTNode."""
     node_almost: AlmostJson = json.loads(
         json_string, object_hook=to_almost_json, **kwargs
