@@ -24,14 +24,13 @@ def file_log():
 def test_version():
     code, response, _ = access_cli("--version")
     assert __version__ in response, "Expected Version to be Reported."
-    assert "fhy" in response.lower(), "Expected Program Name to be Reported."
-
+    assert "FhY" in response, "Expected Program Name to be Reported."
     assert code == Status.OK, "Expected Successful Response."
 
 
 def test_no_file_error():
     """Test Cli without Arguments raises errors and reports correctly to stderr."""
-    code, _, error = access_cli()
+    code, _, error = access_cli("--verbose")
 
     assert code == Status.USAGE_ERROR, "Expected to report User Error Status Code."
     assert "ERROR" in error, "Expected error message logged to stderr."
@@ -52,8 +51,9 @@ def test_log_file(file_log):
     code, _, error = access_cli("--log-file", file_log)
 
     assert os.path.exists(file_log), "Expected Log File to be created."
+    assert "ERROR" in error, "Expected error message logged to stderr."
 
     with open(file_log, "r") as f:
         text = f.read()
 
-    assert "DEBUG" in text, "Expected Debugging Message within file."
+    assert "ERROR" in text, "Expected Error Message within file."

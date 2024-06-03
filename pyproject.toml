@@ -36,7 +36,7 @@ where = ["src"]
 exclude = ["grammar", "docs", "tests"]
 
 [project.scripts]
-fhy = "fhy.cli:main"
+fhy = "fhy.cli:app"
 
 [project.optional-dependencies]
 dev = ["fhy[test,lint,type,docs]", "tox"]
@@ -73,6 +73,7 @@ exclude_also = [
 ]
 
 [tool.mypy]
+mypy_path = "src"
 pretty = false
 
 [[tool.mypy.overrides]]
