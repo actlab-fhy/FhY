@@ -32,7 +32,7 @@
 """FhY source code to AST module converter."""
 
 import logging
-from typing import List, Set
+from typing import List, Optional, Set
 
 from antlr4 import (  # type: ignore[import-untyped]  # type: ignore[import-untyped]
     DFA,
@@ -161,7 +161,12 @@ class ThrowingErrorListener(ErrorListener):
 
         return message
 
-    def get_text(self, recognizer: FhYParser, start: int, stop: int) -> str:
+    def get_text(
+        self,
+        recognizer: FhYParser,
+        start: Optional[int] = None,
+        stop: Optional[int] = None,
+    ) -> str:
         stream = recognizer.getTokenStream()
         text = stream.getText(start, stop)
 
