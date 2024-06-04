@@ -40,6 +40,7 @@ fhy = "fhy.cli:main"
 
 [project.optional-dependencies]
 dev = ["fhy[test,lint,type,docs]", "tox"]
+visualize = ["matplotlib", "pygraphviz"]
 test = ["pytest", "coverage", "pytest-xdist"]
 lint = ["ruff", "pylint"]
 type = ["mypy"]
@@ -102,7 +103,7 @@ disable = [
    "C0103",  # invalid-name
    "C0116",  # missing-function-docstring
    "C1804",  # "use-implicit-booleaness-not-comparison-to-string",
-   "C1805",  # use-implicit-booleaness-not-comparison-to-zero 
+   "C1805",  # use-implicit-booleaness-not-comparison-to-zero
    "I0001",  # raw-checker-failed
    "I0010",  # bad-inline-option
    "I0011",  # locally-disabled
