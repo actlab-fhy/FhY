@@ -32,9 +32,9 @@ current paradigm of domain-specific languages to enable cross-domain multi-accel
 ### *FhY* Design Blog
 The *FhY developers* provide a transparent "***Glass-House***" design blog to openly
 describe current implementation details and software design decisions. We also discuss
-various issues encountered during development and solutions on our [*Read the Docs* page](https://fhy.readthedocs.io/en/latest/design_blog/index.html). We encourage new contributors and
-users to review the design blog for more information regarding *FhY* and as a starting
-point to get involved with *FhY* development.
+various issues encountered during development and their solutions. Visit our
+[*Read the Docs* page](https://fhy.readthedocs.io/en/latest/design_blog/index.html) to
+gain familiarity with or to become involved with *FhY* language and development.
 
 ## Installing *FhY*
 
