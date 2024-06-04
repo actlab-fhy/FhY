@@ -155,6 +155,12 @@ def main(  # noqa: PLR0912
     ] = False,
 ):
     """Welcome to FhY!"""
+    # NOTE: Because we are using a callback, it will always be called before any
+    #       subcommands. To make it possible to receive the help menu on any
+    #       subcommands, we must check for a help call and shunt this callback.
+    if "--help" in sys.argv:
+        return
+
     status = Status.OK
     where: Path = standard_path(os.getcwd())
     hidden: Path = where / DefaultPaths.hidden_directory
@@ -172,7 +178,7 @@ def main(  # noqa: PLR0912
     if log_file is not None:
         add_file_handler(log, log_file)
 
-    # Inform client we have not currently set this portion up, but providing / scoping
+    # NOTE: Inform client we have not currently set this portion up, but scoping
     # here for future backward compatibility.
     if config is not None:
         log.info(
