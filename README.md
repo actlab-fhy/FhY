@@ -20,7 +20,7 @@ current paradigm of domain-specific languages to enable cross-domain multi-accel
 - [*FhY* Documentation](#fhy-documentation)
   - [*FhY* Design Blog](#fhy-design-blog)
 - [Installing *FhY*](#installing-fhy)
-  - [*FhY* from pip](#fhy-from-pip)
+  - [Install from PyPi](#install-from-pypi)
   - [Building *FhY* from Source Code](#building-fhy-from-source-code)
 - [Using *FhY* from the Command Line](#using-fhy-from-the-command-line)
 - [FhY License](#fhy-license)
@@ -40,7 +40,7 @@ gain familiarity with or to become involved with *FhY* language and development.
 
 If not already available on your system, [Install Java 11 JDK](https://www.azul.com/downloads/?version=java-11-lts&package=jdk#zulu) specific for your host OS and architecture.
 
-### *FhY* from pip
+### Install from PyPi
 **Coming Soon**
 
 ### Building *FhY* from Source Code
