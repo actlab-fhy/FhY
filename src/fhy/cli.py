@@ -126,7 +126,7 @@ def report_version(value: bool):
     invoke_without_command=True,
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
-def main(  # noqa: PLR0912
+def main(
     ctx: typer.Context,
     module: Annotated[
         Optional[Path],
@@ -277,10 +277,10 @@ def serialize(
 
     elif format.value in (SerializationOptions.PRETTY, SerializationOptions.PRETTYID):
         space: str = (indent or 2) * " "
-        with_id: bool = format == SerializationOptions.PRETTYID
+        ids: bool = format == SerializationOptions.PRETTYID
         sys.stdout.write("\n\n")
         for key, value in program._components.items():
-            text = pformat_ast(value, space, with_id)
+            text = pformat_ast(value, space, ids)
             name = key.name_hint
             sys.stdout.write(f"\\\\ {name}\n{'=' * (len(name) + 3)}\n")
             sys.stdout.write(text)
