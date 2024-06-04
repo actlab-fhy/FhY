@@ -40,6 +40,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 import typer
+import typer.core
 from typing_extensions import Annotated
 
 from fhy import __version__, ir
@@ -55,6 +56,8 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+# Make it possible to use environment variable to control help menu display
+typer.core.rich = os.environ.get("FHY_HELPMENU", None)  # type: ignore
 _cli_log: logging.Logger = get_logger(__name__)
 
 
@@ -228,16 +231,13 @@ def main(  # noqa: PLR0912
     else:
         log.info("FhY compilation completed successfully.")
 
-    # Pass the program within context
+    # Pass the program within context, using obj variable to avoid typing problems
     if ctx.invoked_subcommand:
         ctx.obj = Namespace(program=program, logger=log, status=status)
 
     return status
 
 
-# TODO: We introduced a Problem here using a callback. We cannot call "--help" on
-#       subcommand, because the callback runs first and exits since we are missing
-#       required arguments.
 @app.command(
     name="serialize",
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
