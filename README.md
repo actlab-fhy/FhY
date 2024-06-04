@@ -21,7 +21,7 @@ current paradigm of domain-specific languages to enable cross-domain multi-accel
   - [*FhY* Design Blog](#fhy-design-blog)
 - [Installing *FhY*](#installing-fhy)
   - [Install from PyPi](#install-from-pypi)
-  - [Building *FhY* from Source Code](#building-fhy-from-source-code)
+  - [Build *FhY* from Source Code](#build-fhy-from-source-code)
 - [Using *FhY* from the Command Line](#using-fhy-from-the-command-line)
 - [FhY License](#fhy-license)
 - [Dependencies](#dependencies)
@@ -43,7 +43,7 @@ If not already available on your system, [Install Java 11 JDK](https://www.azul.
 ### Install from PyPi
 **Coming Soon**
 
-### Building *FhY* from Source Code
+### Build *FhY* from Source Code
 
 1. Clone the repository from GitHub.
 
