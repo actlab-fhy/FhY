@@ -107,4 +107,4 @@ FhY is distributed under the [BSD-3](LICENSE) license.
 | [Typer](https://typer.tiangolo.com/) | [MIT](https://github.com/tiangolo/typer/blob/master/LICENSE) | 2019 | Sebastián Ramírez |
 
 
-**DISCLAIMER**: the table above does **NOT** represent endorsement of *FhY* software, *FhY* Developers or *FhY* contributors by any of the listed copyright holders, contributors, and respective software or organizations.
+**DISCLAIMER**: the table above does **NOT** represent endorsement of *FhY* software, *FhY* copyright holders, or *FhY* contributors by any of the listed copyright holders, contributors, and respective softwares or organizations.
