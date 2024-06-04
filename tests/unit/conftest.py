@@ -21,6 +21,6 @@ def construct_ast() -> Callable[[str], ASTNode]:
     """Construct an Abstract Syntax Tree (AST) from a raw text file source."""
 
     def _inner(source: str) -> ASTNode:
-        return fhy_source(source, log)
+        return fhy_source(source, log=log)
 
     return _inner

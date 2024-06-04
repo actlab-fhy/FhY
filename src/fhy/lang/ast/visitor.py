@@ -431,7 +431,8 @@ class Visitor(BasePass):
             span (Span): Span to visit.
 
         """
-        self.visit(span.source)
+        if span.source is not None:
+            self.visit(span.source)
 
     def visit_Source(self, source: Source) -> None:
         """Visit a source.

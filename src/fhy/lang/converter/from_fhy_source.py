@@ -224,11 +224,16 @@ def _fhy_source_to_parse_tree(
     return tree
 
 
-def from_fhy_source(fhy_source_content: str, log: logging.Logger = _log) -> ast.Module:
+def from_fhy_source(
+    fhy_source_content: str,
+    source: Optional[ast.Source] = None,
+    log: logging.Logger = _log,
+) -> ast.Module:
     """Convert FhY source code into corresponding AST module representation.
 
     Args:
         fhy_source_content (str): FhY source code text.
+        source (optional, Source): Define code module source path or namespace.
         log (logging.Logger): Inject a logger to control debugging information during
             parsing.
 
@@ -237,6 +242,6 @@ def from_fhy_source(fhy_source_content: str, log: logging.Logger = _log) -> ast.
 
     """
     tree = _fhy_source_to_parse_tree(fhy_source_content, log)
-    _ast = from_parse_tree(tree)
+    _ast = from_parse_tree(tree, source)
 
     return _ast

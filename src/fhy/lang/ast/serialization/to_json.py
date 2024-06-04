@@ -450,7 +450,7 @@ class ASTtoJSON(visitor.BasePass):
 
     def visit_Span(self, span: Span) -> AlmostJson:
         if span.source is not None:
-            source: AlmostJson = self.visit_Source(span.source)
+            source: Optional[AlmostJson] = self.visit_Source(span.source)
         else:
             source = span.source
 
@@ -468,7 +468,7 @@ class ASTtoJSON(visitor.BasePass):
     def visit_Source(self, source: Source) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(source),
-            attributes=dict(namespace=source.namespace),
+            attributes=dict(namespace=str(source.namespace)),
         )
 
 
