@@ -105,3 +105,6 @@ FhY is distributed under the [BSD-3](LICENSE) license.
 | [ANTLR](https://github.com/antlr/antlr4) | [BSD-3](https://www.antlr.org/license.html) | 2012 | Terence Parr and Sam Harwell |
 | [NetworkX](https://github.com/networkx/networkx) | [BSD-3](https://networkx.org/documentation/stable/#license) | 2004-2024 | NetworkX Developers<br>Aric Hagberg <hagberg@lanl.gov><br>Dan Schult <dschult@colgate.edu><br>Pieter Swart <swart@lanl.gov> |
 | [Typer](https://typer.tiangolo.com/) | [MIT](https://github.com/tiangolo/typer/blob/master/LICENSE) | 2019 | Sebastián Ramírez |
+
+
+**DISCLAIMER**: the table above does **NOT** represent endorsement of *FhY* software, *FhY* Developers or *FhY* contributors by any of the listed copyright holders, contributors, and respective software or organizations.
