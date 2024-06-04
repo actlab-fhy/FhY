@@ -155,7 +155,6 @@ def main(  # noqa: PLR0912
     ] = False,
 ):
     """Welcome to FhY!"""
-    # Make it possible to pass subcommand context
     status = Status.OK
     where: Path = standard_path(os.getcwd())
     hidden: Path = where / DefaultPaths.hidden_directory
@@ -230,6 +229,9 @@ def main(  # noqa: PLR0912
     return status
 
 
+# TODO: We introduced a Problem here using a callback. We cannot call "--help" on
+#       subcommand, because the callback runs first and exits since we are missing
+#       required arguments.
 @app.command(
     name="serialize",
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
