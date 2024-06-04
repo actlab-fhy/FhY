@@ -20,7 +20,7 @@ current paradigm of domain-specific languages to enable cross-domain multi-accel
 - [*FhY* Documentation](#fhy-documentation)
   - [*FhY* Design Blog](#fhy-design-blog)
 - [Installing *FhY*](#installing-fhy)
-  - [Install from PyPi](#install-from-pypi)
+  - [Install *FhY* from PyPi](#install-fhy-from-pypi)
   - [Build *FhY* from Source Code](#build-fhy-from-source-code)
 - [Using *FhY* from the Command Line](#using-fhy-from-the-command-line)
 - [FhY License](#fhy-license)
@@ -40,7 +40,7 @@ gain familiarity with or to become involved with *FhY* language and development.
 
 If not already available on your system, [Install Java 11 JDK](https://www.azul.com/downloads/?version=java-11-lts&package=jdk#zulu) specific for your host OS and architecture.
 
-### Install from PyPi
+### Install *FhY* from PyPi
 **Coming Soon**
 
 ### Build *FhY* from Source Code
@@ -104,3 +104,4 @@ FhY is distributed under the [BSD-3](LICENSE) license.
 |:--------:|:-------:|:---------:|:----------------------------------------------------|
 | [ANTLR](https://github.com/antlr/antlr4) | [BSD-3](https://www.antlr.org/license.html) | 2012 | Terence Parr and Sam Harwell |
 | [NetworkX](https://github.com/networkx/networkx) | [BSD-3](https://networkx.org/documentation/stable/#license) | 2004-2024 | NetworkX Developers<br>Aric Hagberg <hagberg@lanl.gov><br>Dan Schult <dschult@colgate.edu><br>Pieter Swart <swart@lanl.gov> |
+| [Typer](https://typer.tiangolo.com/) | [MIT](https://github.com/tiangolo/typer/blob/master/LICENSE) | 2019 | Sebastián Ramírez |
