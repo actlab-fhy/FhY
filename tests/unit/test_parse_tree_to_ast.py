@@ -23,60 +23,53 @@ def wrong_node_babe(node_a, node_b) -> str:
 
 
 def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) -> bool:
-    """Confirm Equality Between Two Primitive Expression Types."""
+    """Confirm equality between two primitive expression types."""
     primitive_expression_types = (
         ast.IntLiteral,
         ast.FloatLiteral,
+        ast.ComplexLiteral,
         ast.IdentifierExpression,
         ast.TupleExpression,
         ast.TupleAccessExpression,
         ast.ArrayAccessExpression,
     )
-    if not isinstance(expr1, primitive_expression_types) or not isinstance(
-        expr2, primitive_expression_types
+    if (
+        not isinstance(expr1, primitive_expression_types)
+        or not isinstance(expr2, primitive_expression_types)
+        or not isinstance(expr1, expr2.__class__)
+        or not isinstance(expr2, expr1.__class__)
     ):
-        raise ValueError(
-            "Both expressions must be primitive expressions: "
+        raise TypeError(
+            "Both expressions must be primitive expressions of the same type: "
             f"{type(expr1)}, {type(expr2)}"
         )
 
-    if isinstance(expr1, ast.IntLiteral) and isinstance(expr2, ast.IntLiteral):
+    if isinstance(expr1, (ast.IntLiteral, ast.FloatLiteral, ast.ComplexLiteral)):
         return expr1.value == expr2.value
 
-    elif isinstance(expr1, ast.FloatLiteral) and isinstance(expr2, ast.FloatLiteral):
-        return expr1.value == expr2.value
-
-    elif isinstance(expr1, ast.IdentifierExpression) and isinstance(
-        expr2, ast.IdentifierExpression
-    ):
+    elif isinstance(expr1, ast.IdentifierExpression):
         # TODO: remove the name hint portion once a more robust table for pulling
         #       identifiers in the same scope is created
         return expr1.identifier.name_hint == expr2.identifier.name_hint
 
-    elif isinstance(expr1, ast.TupleExpression) and isinstance(
-        expr2, ast.TupleExpression
-    ):
+    elif isinstance(expr1, ast.TupleExpression):
         raise NotImplementedError()
 
-    elif isinstance(expr1, ast.TupleAccessExpression) and isinstance(
-        expr2, ast.TupleAccessExpression
-    ):
+    elif isinstance(expr1, ast.TupleAccessExpression):
         return (
             is_primitive_expression_equal(
-                expr1.tuple_expression, expr2.tuple_expression
+                expr1.tuple_expression,
+                expr2.tuple_expression,
             )
             and expr1.element_index == expr2.element_index
         )
 
-    elif isinstance(expr1, ast.ArrayAccessExpression) and isinstance(
-        expr2, ast.ArrayAccessExpression
-    ):
-        if len(expr1.indices) != len(expr2.indices):
-            return False
-        for expr1_index, expr2_index in zip(expr1.indices, expr2.indices):
-            if not is_primitive_expression_equal(expr1_index, expr2_index):
-                return False
-        return True
+    elif isinstance(expr1, ast.ArrayAccessExpression):
+        return len(expr1.indices) == len(expr2.indices) and all(
+            is_primitive_expression_equal(i1, i2)
+            for i1, i2 in zip(expr1.indices, expr2.indices)
+        )
+
     else:
         return False
 
@@ -879,7 +872,6 @@ def test_index_type(construct_ast):
 )
 def test_tuple_type(construct_ast, source: str):
     """Test construction of Tuple Type."""
-    # source: str = "output tuple[int32[m, n], int32] i;"  # Semantically Invalid
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -908,7 +900,7 @@ def test_tuple_type(construct_ast, source: str):
 
 
 @pytest.mark.parametrize(
-    "source, value",
+    ["source", "value"],
     [
         ("1;", 1),
         ("0b0101;", 5),
@@ -932,8 +924,14 @@ def test_int_literal(construct_ast, source: str, value: int):
 
 
 @pytest.mark.parametrize(
-    "source, value",
-    [("1.0;", 1.0), (".2;", 0.2), (" 1.;", 1.0), (" 1e2;", 100.0), ("1.2e3;", 1200.0)],
+    ["source", "value"],
+    [
+        ("1.0;", 1.0),
+        (".2;", 0.2),
+        (" 1.;", 1.0),
+        (" 1e2;", 100.0),
+        ("1.2e3;", 1200.0),
+    ],
 )
 def test_float_literal(construct_ast, source: str, value: float):
     """Test FloatLiteral Construction of different Format Representations."""
@@ -945,6 +943,29 @@ def test_float_literal(construct_ast, source: str, value: float):
         ast.ExpressionStatement, statement
     )
     assert is_primitive_expression_equal(statement.right, ast.FloatLiteral(value=value))
+
+
+@pytest.mark.parametrize(
+    ["source", "value"],
+    [
+        ("1.0j;", 1.0j),
+        ("1j;", 1j),
+        ("1e10j;", 1e10j),
+        ("0.2j;", 0.2j),
+        (".2j;", 0.2j),
+    ],
+)
+def test_complex_literal(construct_ast, source: str, value: complex):
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
+        ast.ExpressionStatement, statement
+    )
+    assert is_primitive_expression_equal(
+        statement.right, ast.ComplexLiteral(value=value)
+    )
 
 
 # =============
