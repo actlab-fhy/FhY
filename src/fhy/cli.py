@@ -56,9 +56,14 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
-# Make it possible to use environment variable to control help menu display
-typer.core.rich = os.environ.get("FHY_HELPMENU", None)  # type: ignore
+
 _cli_log: logging.Logger = get_logger(__name__)
+
+# Make it possible to use environment variable to control help menu display
+# NOTE: Typer imports rich module, and on import error sets to None, ignoring typing
+#       We will also support not having rich as a dependency of typer
+if typer.core.rich is not None:
+    typer.core.rich = os.environ.get("FHY_HELPMENU", "rich") or None  # type: ignore
 
 
 def make_logger(
