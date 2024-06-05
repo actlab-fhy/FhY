@@ -77,8 +77,9 @@ def test_single_file_examples_through_cli_pretty(file: str):
 @pytest.mark.parametrize("file", examples)
 def test_serialization_to_json(file: str):
     # First Compare Output by use of Flags are successful and invariant
-    code, output, _ = access_cli("-m", file, "serialize", "-f", "json")
-    code2, output2, _ = access_cli("-m", file, "serialize", "--format", "json")
+    args = ("serialize", "--format", "json", "--include_span")
+    code, output, _ = access_cli("-m", file, *args)
+    code2, output2, _ = access_cli("-m", file, *args)
 
     assert output == output2, "Expected Output to be invariant of flag used."
     assert code == code2 == Status.OK, "Expected Successful Status Code."

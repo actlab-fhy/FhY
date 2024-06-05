@@ -147,7 +147,10 @@ def main(
     ] = None,
     verbose: Annotated[bool, typer.Option(help="Enable debugging.")] = False,
     version: Annotated[
-        bool, typer.Option(help="Show FhY version and exit.", callback=report_version)
+        bool,
+        typer.Option(
+            "--version", help="Show FhY version and exit.", callback=report_version
+        ),
     ] = False,
     log_file: Annotated[
         Optional[Path], typer.Option(help="Provide a filepath to write logs to.")
@@ -156,10 +159,10 @@ def main(
         Optional[Path], typer.Option(help="FhY compilation configuration option file.")
     ] = None,
     clean: Annotated[
-        bool, typer.Option(help="Clean FhY hidden directory and exit.")
+        bool, typer.Option("--clean", help="Clean FhY hidden directory and exit.")
     ] = False,
     force_rebuild: Annotated[
-        bool, typer.Option(help="Clear FhY cache before compiling.")
+        bool, typer.Option("--force-rebuild", help="Clear FhY cache before compiling.")
     ] = False,
 ):
     """Welcome to FhY!"""
@@ -264,6 +267,13 @@ def serialize(
             help="Indentation to apply to serialization for human readability.",
         ),
     ] = None,
+    include_span: Annotated[
+        bool,
+        typer.Option(
+            "--include-span",
+            help="Include source information in JSON output.",
+        ),
+    ] = False,
 ):
     """Serialize FhY AST nodes into alternative text representations."""
     log: logging.Logger = ctx.obj.logger
@@ -276,7 +286,7 @@ def serialize(
 
     if format.value == SerializationOptions.JSON:
         sys.stdout.write("\n\n")
-        text: str = dump(list(program._components.values()), indent)
+        text: str = dump(list(program._components.values()), indent, include_span)
         sys.stdout.write(text)
         sys.stdout.write("\n\n")
 
