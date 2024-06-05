@@ -745,7 +745,6 @@ def test_empty_module(construct_ast):
                     end_line=0,
                     start_column=0,
                     end_column=0,
-                    source=None,  # NOTE: Upcoming json output Changes will remove this
                 ),
             ),
         ),
