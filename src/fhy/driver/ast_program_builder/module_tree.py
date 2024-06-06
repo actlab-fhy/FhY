@@ -52,7 +52,7 @@ class ModuleTree(object):
 
     @property
     def name(self) -> str:
-        """Full project filepath import name."""
+        """Full project filepath import name, or qualified name."""
         current_node: Optional[ModuleTree] = self
         name_components = []
         while current_node:

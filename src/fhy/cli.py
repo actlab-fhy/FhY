@@ -292,10 +292,10 @@ def serialize(
 
     elif format.value in (SerializationOptions.PRETTY, SerializationOptions.PRETTYID):
         space: str = (indent or 2) * " "
-        ids: bool = format == SerializationOptions.PRETTYID
+        report_id: bool = format == SerializationOptions.PRETTYID
         sys.stdout.write("\n\n")
         for key, value in program._components.items():
-            text = pformat_ast(value, space, ids)
+            text = pformat_ast(value, space, report_id)
             name = key.name_hint
             sys.stdout.write(f"\\\\ {name}\n{'=' * (len(name) + 3)}\n")
             sys.stdout.write(text)
