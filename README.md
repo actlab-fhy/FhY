@@ -4,9 +4,19 @@
         alt="FhYLogo"
         height=100ex
     >
+    <br>
+    <em><b>A Language for Modeling Physical Things</b></em>
+    <br><br>
+    <a href="https://github.com/actlab-fhy/FhY/actions?query=branch%3Amain+workflow%3AFhY%20CI" target="_blank">
+        <img src="https://github.com/actlab-fhy/FhY/actions/workflows/python-package.yml/badge.svg?branch=main" alt="FhY CI">
+    </a>
+    <a href="https://github.com/actlab-fhy/FhY/blob/main/LICENSE">
+        <img alt="FhY License" src="https://img.shields.io/badge/License-BSD_3--Clause-blue.svg">
+    </a>
 </div>
 
 <h1>
+    <br>
     FhY
 </h1>
 
@@ -74,7 +84,7 @@ If not already available on your system, [Install Java 11 JDK](https://www.azul.
     # Standard Installation
     pip install .
 
-    # For Developers
+    # For contributors
     pip install ".[dev]"
     ```
 
@@ -95,7 +105,7 @@ fhy --help
 
 ## FhY License
 
-FhY is distributed under the [BSD-3](LICENSE) license.
+FhY software is distributed under the [3-Clause BSD](LICENSE) open source license.
 
 
 ## Dependencies
