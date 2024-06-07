@@ -203,6 +203,18 @@ class ASTPrettyFormatter(BasePass):
         func = self.visit(function_expression.function)
         return f"{func}<{template_types}>[{indices}]({args})"
 
+    def _tuple(self, nodes: list) -> str:
+        return "( " + ", ".join([self.visit(i) for i in nodes]) + " )"
+
+    def visit_TupleExpression(self, node: ast.TupleExpression) -> str:
+        return self._tuple(node.expressions)
+
+    def visit_TupleAccessExpression(self, node: ast.TupleAccessExpression) -> str:
+        _tuple: str = self.visit(node.tuple_expression)
+        element: str = self.visit_IntLiteral(node.element_index)
+
+        return f"{_tuple}.{element}"
+
     def visit_ArrayAccessExpression(
         self, array_access_expression: ast.ArrayAccessExpression
     ) -> str:
@@ -245,6 +257,9 @@ class ASTPrettyFormatter(BasePass):
             index_range += "1"
 
         return f"index[{index_range}]"
+
+    def visit_TupleType(self, tuple_type: ir.TupleType) -> str:
+        return "tuple " + self._tuple(tuple_type._types)
 
     def visit_Identifier(self, identifier: ir.Identifier) -> str:
         if self._is_identifier_id_printed:
