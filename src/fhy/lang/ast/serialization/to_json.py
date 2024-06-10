@@ -448,7 +448,10 @@ class ASTtoJSON(visitor.BasePass):
     def visit_sequence(self, nodes: Sequence[ASTObject]) -> List[AlmostJson]:
         return [self.visit(node) for node in nodes]
 
-    def visit_Span(self, span: Span) -> AlmostJson:
+    def visit_Span(self, span: Optional[Span]) -> Optional[AlmostJson]:
+        if span is None:
+            return None
+
         if span.source is not None:
             source: Optional[AlmostJson] = self.visit_Source(span.source)
         else:
@@ -493,7 +496,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid Module")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         statements: List[ast.Statement] = self.visit_sequence(values.get("statements"))
 
         return ast.Module(span=span, statements=statements)
@@ -503,7 +506,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid Operation")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         templates: List[ir.Identifier] = self.visit_sequence(values.get("templates"))
         args: List[ast.Argument] = self.visit_sequence(values.get("args"))
         body: List[ast.Statement] = self.visit_sequence(values.get("body"))
@@ -526,7 +529,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid Procedure")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         templates: List[ir.Identifier] = self.visit_sequence(values.get("templates"))
         args: List[ast.Argument] = self.visit_sequence(values.get("args"))
         body: List[ast.Statement] = self.visit_sequence(values.get("body"))
@@ -541,7 +544,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid Argument")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         qtype: ast.QualifiedType = self.visit_QualifiedType(
             values.get("qualified_type")
         )
@@ -556,7 +559,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid DeclarationStatement")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         varname: ir.Identifier = self.visit_Identifier(values.get("variable_name"))
         vartype: ast.QualifiedType = self.visit_QualifiedType(
             values.get("variable_type")
@@ -576,7 +579,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid ExpressionStatement")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         if (_left := values.get("left")) is not None:
             values["left"] = self.visit(_left)
         left: Optional[ast.Expression] = values.get("left")
@@ -591,7 +594,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid SelectionStatement")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         condition: ast.Expression = self.visit(values.get("condition"))
         tbody: List[ast.Statement] = self.visit_sequence(values.get("true_body"))
         fbody: List[ast.Statement] = self.visit_sequence(values.get("false_body"))
@@ -605,7 +608,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid ForAllStatement")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         index: ast.Expression = self.visit(values.get("index"))
         body: List[ast.Statement] = self.visit_sequence(values.get("body"))
 
@@ -616,7 +619,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid ReturnStatement")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         express: ast.Expression = self.visit(values.get("expression"))
 
         return ast.ReturnStatement(span=span, expression=express)
@@ -626,7 +629,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid UnaryExpression")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         express: ast.Expression = self.visit(values.get("expression"))
         operator: ast.UnaryOperation = ast.UnaryOperation(str(values.get("operation")))
 
@@ -639,7 +642,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid BinaryExpression")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         left: ast.Expression = self.visit(values.get("left"))
         right: ast.Expression = self.visit(values.get("right"))
         operator = ast.BinaryOperation(str(values.get("operation")))
@@ -655,7 +658,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid TernaryExpression")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         condition: ast.Expression = self.visit(values.get("condition"))
         true: ast.Expression = self.visit(values.get("true"))
         false: ast.Expression = self.visit(values.get("false"))
@@ -671,7 +674,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid FunctionExpression")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         function: ast.Expression = self.visit(values.get("function"))
         template: List[ir.Type] = self.visit_sequence(values.get("template_types"))
         index: List[ast.Expression] = self.visit_sequence(values.get("indices"))
@@ -692,7 +695,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid ArrayAccessExpression")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         array: ast.Expression = self.visit(values.get("array_expression"))
         index: List[ast.Expression] = self.visit_sequence(values.get("indices"))
 
@@ -707,7 +710,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid TupleExpression")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         express: List[ast.Expression] = self.visit_sequence(values.get("expressions"))
 
         return ast.TupleExpression(span=span, expressions=express)
@@ -719,7 +722,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid TupleAccessExpression")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         _tuple: ast.Expression = self.visit(values.get("tuple_expression"))
         element: ast.IntLiteral = self.visit_IntLiteral(values.get("element_index"))
 
@@ -735,7 +738,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         identifier: ir.Identifier = self.visit_Identifier(values.get("identifier"))
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
 
         return ast.IdentifierExpression(span=span, identifier=identifier)
 
@@ -744,7 +747,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid IntLiteral")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         if (value := values.get("value")) is None:
             raise ValueError("Invalid IntLiteral Value")
 
@@ -754,7 +757,7 @@ class JSONtoAST(visitor.BasePass):
         if node is None:
             raise ValueError("Invalid FloatLiteral")
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         if (value := values.get("value")) is None:
             raise ValueError("Invalid FloatLiteral Value")
 
@@ -765,7 +768,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid ComplexLiteral")
 
         values: dict = node.attributes
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         if (value := values.get("value")) is None:
             raise ValueError("Invalid ComplexLiteral Value")
 
@@ -790,7 +793,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         base: ir.Type = self.visit(values.get("base_type"))
-        span: Span = self.visit_Span(values.get("span"))
+        span: Optional[Span] = self.visit_Span(values.get("span"))
         qtype = ir.TypeQualifier(str(values.get("type_qualifier")))
 
         return ast.QualifiedType(
@@ -881,9 +884,9 @@ class JSONtoAST(visitor.BasePass):
 
         return [self.visit(node) for node in nodes]
 
-    def visit_Span(self, span: Optional[AlmostJson]) -> Span:
+    def visit_Span(self, span: Optional[AlmostJson]) -> Optional[Span]:
         if span is None:
-            return Span(0, 0, 0, 0)
+            return None
 
         values: dict = span.attributes
 
