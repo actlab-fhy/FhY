@@ -38,6 +38,9 @@ Classes:
 
 """
 
+from pathlib import Path
+from typing import Optional, Union
+
 
 class Slice:
     """General definition of start and stop positions.
@@ -75,16 +78,16 @@ class Source(object):
 
     """
 
-    namespace: str
+    namespace: Union[str, Path]
 
-    def __init__(self, namespace: str) -> None:
+    def __init__(self, namespace: Union[str, Path]) -> None:
         self.namespace = namespace
 
     def __eq__(self, value: object) -> bool:
         return isinstance(value, Source) and self.namespace == value.namespace
 
     def __repr__(self) -> str:
-        return self.namespace
+        return str(self.namespace)
 
 
 class Span(object):
@@ -104,7 +107,7 @@ class Span(object):
 
     """
 
-    source: Source
+    source: Optional[Source]
     line: Slice
     column: Slice
 
@@ -114,7 +117,7 @@ class Span(object):
         end_line: int,
         start_column: int,
         end_column: int,
-        source: Source = Source("_null"),
+        source: Optional[Source] = None,
     ) -> None:
         self.source = source
         self.line = Slice(start_line, end_line)

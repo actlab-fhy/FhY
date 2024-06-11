@@ -37,7 +37,8 @@ Functions:
 """
 
 import logging
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Union
 
 _default_format = logging.Formatter(
     "%(asctime)s | %(levelname)s | %(funcName)s():%(lineno)d | %(message)s"
@@ -79,7 +80,7 @@ def get_logger(
 
 
 def add_file_handler(
-    log: logging.Logger, path: str, level: int = logging.DEBUG
+    log: logging.Logger, path: Union[str, Path], level: int = logging.DEBUG
 ) -> None:
     """Append a FileHandler object to an existing logger object.
 

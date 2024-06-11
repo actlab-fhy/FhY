@@ -43,7 +43,7 @@ Typical Usage:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from ..span import Span
 
@@ -60,8 +60,7 @@ class ASTNode(ABC):
 
     """
 
-    # TODO: Make span optional? A default span of (0,0,0,0) doesn't make sense
-    span: Span = field(default_factory=lambda: Span(0, 0, 0, 0))
+    span: Optional[Span] = field(default=None)
 
     @classmethod
     def get_key_name(cls) -> str:

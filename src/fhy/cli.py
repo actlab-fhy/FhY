@@ -31,25 +31,68 @@
 
 """FhY Command Line Interface (CLI) Compiler Utility."""
 
-import argparse
+import enum
 import logging
+import os
+import shutil
 import sys
-from enum import IntEnum
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional, TypeVar, Union
 
-from fhy import __version__
+import typer
+import typer.core
+from typing_extensions import Annotated
+
+from fhy import __version__, ir
 from fhy.driver import CompilationOptions, Workspace, compile_fhy
-from fhy.driver.ast_program_builder.source_file_ast import (
-    SourceFileAST,
-    build_source_file_ast,
-)
 from fhy.driver.file_reader import standard_path
 from fhy.lang.ast.pprint import pformat_ast
+from fhy.lang.ast.serialization import SerializationOptions
 from fhy.lang.ast.serialization.to_json import dump
 from fhy.logger import add_file_handler, get_logger
 
+T = TypeVar("T")
 
-class Status(IntEnum):
+app = typer.Typer(
+    name="FhY",
+    no_args_is_help=True,
+    add_completion=False,
+)
+
+_cli_log: logging.Logger = get_logger(__name__)
+
+# Make it possible to use environment variable to control help menu display
+# NOTE: Typer imports rich module, and on import error sets to None, ignoring typing
+#       We will also support not having rich as a dependency of typer
+if typer.core.rich is not None:
+    typer.core.rich = os.environ.get("FHY_HELPMENU", "rich") or None  # type: ignore
+
+
+def make_logger(
+    verbose: bool = False, file: Optional[Union[str, Path]] = None
+) -> logging.Logger:
+    """Construct a simple logger."""
+    level: int = logging.DEBUG if verbose else logging.INFO
+    log: logging.Logger = get_logger("FhY", level=level)
+    if file is not None:
+        add_file_handler(log, file)
+
+    return log
+
+
+class DefaultPaths:
+    """Centralized definitions of path assumptions."""
+
+    hidden_directory: str = ".fhy"
+    _log_file: str = "fhy.log"
+
+    @classmethod
+    def log_file(cls) -> str:
+        return os.path.join(cls.hidden_directory, cls._log_file)
+
+
+class Status(int, enum.Enum):
     """Exit Codes describing the Status of CLI Request."""
 
     OK = 0
@@ -58,135 +101,211 @@ class Status(IntEnum):
     USAGE_ERROR = 3
 
 
-def make_logger(verbose: bool = False) -> logging.Logger:
-    """Constructs a Simple Logger."""
-    level: int = logging.DEBUG if verbose else logging.INFO
-    log: logging.Logger = get_logger("FhY", level=level)
+@dataclass
+class CompilationResult:
+    """Results of compilation."""
 
-    return log
-
-
-def arguments() -> argparse.ArgumentParser:
-    """Defines FhY cli arguments."""
-    parser = argparse.ArgumentParser("FhY")
-    subparser = parser.add_subparsers(help="FhY subparser")
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Provide more verbose logging"
-    )
-    parser.add_argument("--log-file", help="filepath to stream (save) log messages to.")
-    parser.add_argument("--version", action="store_true", help="Display FhY Version")
-    parser.add_argument(
-        "-m", "--module", help="Filepath to a single module (file).", type=str
-    )
-    parser.add_argument(
-        "--library", help="Source directory path to a project.", type=str
-    )
-
-    serialize = subparser.add_parser("serialize", help="Serialize AST Nodes")
-    serialize.add_argument("-f", "--format", choices=["json", "pretty"], default=None)
-
-    # parser.add_argument(
-    #     "-o",
-    #     "--output",
-    #     required=False,
-    #     help="Defines Output Directory. Otherwise defaults to \"{filepath}_out.ast\"",
-    # )
-
-    return parser
+    program: ir.Program
+    logger: logging.Logger
+    status: Status
 
 
-# TODO: Define More Exacting Rules on Expectations of user override.
-#       Since we plan on creating a temporary directory, this will be on hold.
-# def output_path(filepath: str, override_dir: Optional[str]) -> str:
-#     """Construct an output path for a given file."""
-#     if override_dir is None:
-#         parent_relative = os.path.join(filepath, os.pardir)
-#         parent_dir = os.path.abspath(parent_relative)
-
-#     else:
-#         if not os.path.exists(override_dir):
-#             raise FileNotFoundError(
-#                 f"Output Filepath Directory Not Found: {override_dir}"
-#             )
-#         parent_dir = os.path.abspath(override_dir)
-
-#     basename = os.path.basename(filepath).split(".")[0]
-#     new_path = os.path.join(parent_dir, f"{basename}_out.ast")
-
-#     return new_path
+def create_hidden_directory(hidden: Path):
+    """Create hidden directory."""
+    if not hidden.exists():
+        os.mkdir(hidden)
 
 
-def main() -> int:  # noqa: PLR0912
-    """Primary entry point for compilation of FhY files."""
-    arg_parser: argparse.ArgumentParser = arguments()
-    args: argparse.Namespace = arg_parser.parse_args()
+def clear_hidden_directory(hidden: Path):
+    """Clear hidden directory cache."""
+    if hidden.exists():
+        shutil.rmtree(hidden)
+        _cli_log.info("FhY cache has been cleared")
 
-    # Check Arguments that Shunt Compilation First
-    if args.version:
+
+def _clean_dir(value: bool):
+    if not value:
+        return
+    where: Path = standard_path(os.getcwd())
+    hidden: Path = where / DefaultPaths.hidden_directory
+    clear_hidden_directory(hidden)
+    sys.exit(Status.OK)
+
+
+def report_version(value: bool):
+    """Report version to stdout and exit if true."""
+    if value:
         sys.stdout.write(f"FhY v{__version__}\n")
-        return Status.OK
+        sys.exit(Status.OK)
 
-    log: logging.Logger = make_logger(args.verbose)
 
-    # TODO: If not specified, we should have a default log location within private
-    #       directory. Or in addition to client handler.
-    if args.log_file:
-        add_file_handler(log, args.log_file)
-        log.debug("Added File Handler to log instance: %s", args.log_file)
+def _confirm_arg(value: bool, check: str) -> bool:
+    return value or check in sys.argv
 
-    if file := (args.module or args.library):
-        try:
-            filepath: Path = standard_path(file)
 
-        except (TypeError, FileExistsError) as e:
-            log.error(str(e), exc_info=e)
-            return Status.USAGE_ERROR
+def compile_fhy_source(
+    main_file: Optional[Path] = None,
+    verbose: bool = False,
+    log_file: Optional[Path] = None,
+    config: Optional[Path] = None,
+    force_rebuild: bool = False,
+) -> CompilationResult:
+    """Parse a source file, convert into high level IR Program."""
+    status = Status.OK
+    where: Path = standard_path(os.getcwd())
+    hidden: Path = where / DefaultPaths.hidden_directory
+
+    # Clear hidden directory if client toggled
+    if force_rebuild:
+        clear_hidden_directory(hidden)
+
+    # Setup log debugging and hidden directory
+    create_hidden_directory(hidden)
+    log: logging.Logger = make_logger(verbose, where / DefaultPaths.log_file())
+    if log_file is not None:
+        add_file_handler(log, log_file, logging.DEBUG if verbose else logging.INFO)
+
+    # NOTE: Inform client we have not currently set this portion up, but scoping
+    # here for future backward compatibility.
+    if config is not None:
+        log.info(
+            "Client set configuration file, but this option is NOT yet currently used."
+        )
+
+    # Now we start Compiling
+    try:
+        filepath: Path = standard_path(main_file)
+
+    except (TypeError, FileExistsError) as e:
+        log.error(str(e), exc_info=e)
+        status = Status.USAGE_ERROR
+        sys.exit(status)
 
     else:
+        log.debug(f"Filepath(s) Collected: {filepath}")
+
+    workspace = Workspace(root=filepath)
+    options = CompilationOptions(verbose=verbose)
+
+    try:
+        program: ir.Program = compile_fhy(workspace, options, log)
+
+    except KeyboardInterrupt as e:
+        status = Status.INTERRUPTED
         log.error(
-            "No Filepath(s) were defined. Provide a path either through "
-            '"--module" or "--library" command line arguments.'
+            f"FhY Compilation has been Interrupted by client. Exit {status}.",
+            exc_info=e,
         )
-        return Status.USAGE_ERROR
+        sys.exit(status)
 
-    log.debug(f"Filepath(s) Collected: {filepath}")
+    except Exception as e:
+        status = Status.FAILED
+        log.error(f"FhY Compilation has Failed. Exit {status}.", exc_info=e)
+        sys.exit(status)
 
-    options = CompilationOptions(
-        verbose=args.verbose,
+    else:
+        log.info("FhY compilation completed successfully.")
+
+    return CompilationResult(program=program, logger=log, status=status)
+
+
+@app.callback(
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def main(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version", help="Show FhY version and exit.", callback=report_version
+        ),
+    ] = False,
+    clean: Annotated[
+        bool,
+        typer.Option(
+            "--clean", help="Clean FhY hidden directory and exit.", callback=_clean_dir
+        ),
+    ] = False,
+):
+    """Welcome to FhY!"""
+    # NOTE: We check sys.argv to make it possible to place arguments in subcommands
+    #       and respond equivalently.
+    if _confirm_arg(version, "--version"):
+        report_version(True)
+
+    if _confirm_arg(clean, "--clean"):
+        _clean_dir(True)
+
+
+@app.command(
+    name="serialize",
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def serialize(
+    main_file: Annotated[
+        Optional[Path],
+        typer.Argument(help="Valid filepath to main FhY module source code."),
+    ] = None,
+    verbose: Annotated[
+        bool, typer.Option("--verbose", help="Enable debugging.")
+    ] = False,
+    log_file: Annotated[
+        Optional[Path], typer.Option(help="Provide a filepath to write logs to.")
+    ] = None,
+    config: Annotated[
+        Optional[Path], typer.Option(help="FhY compilation configuration option file.")
+    ] = None,
+    force_rebuild: Annotated[
+        bool, typer.Option("--force-rebuild", help="Clear FhY cache before compiling.")
+    ] = False,
+    format: Annotated[
+        Optional[SerializationOptions],
+        typer.Option(
+            "--format", "-f", case_sensitive=False, help="Format to serialize to."
+        ),
+    ] = None,
+    indent: Annotated[
+        Optional[int],
+        typer.Option(
+            "--indent",
+            "-i",
+            case_sensitive=False,
+            help="Indentation to apply to serialization for human readability.",
+        ),
+    ] = None,
+):
+    """Serialize FhY AST nodes into alternative text representations."""
+    compiled: CompilationResult = compile_fhy_source(
+        main_file, verbose, log_file, config, force_rebuild
     )
 
-    if args.library:
-        workspace = Workspace(root=filepath)
+    log: logging.Logger = compiled.logger
 
-        try:
-            compile_fhy(workspace, options, log)
+    if (program := compiled.program) is None:
+        log.error("IR Program not built.")
+        sys.exit(Status.FAILED)
 
-        except KeyboardInterrupt as e:
-            log.error("FhY Compilation has been Interrupted by client.", exc_info=e)
-            return Status.INTERRUPTED
+    if format is None:
+        return compiled.status
 
-        except Exception as e:
-            log.error("FhY Compilation has Failed.", exc_info=e)
-            return Status.FAILED
+    elif format.value == SerializationOptions.JSON:
+        sys.stdout.write("\n\n")
+        text: str = dump(list(program._components.values()), indent)
+        sys.stdout.write(text)
+        sys.stdout.write("\n\n")
 
-    elif args.module:
-        result: SourceFileAST = build_source_file_ast(filepath)
+    elif format.value in (SerializationOptions.PRETTY, SerializationOptions.PRETTYID):
+        space: str = (indent or 2) * " "
+        show_id: bool = format == SerializationOptions.PRETTYID
+        sys.stdout.write("\n\n")
+        for key, value in program._components.items():
+            text = pformat_ast(value, space, show_id)
+            name = key.name_hint
+            sys.stdout.write(f"\\\\ {name}\n{'=' * (len(name) + 3)}\n")
+            sys.stdout.write(text)
+            sys.stdout.write("\n\n")
 
-        # NOTE: Currently only supporting Serialization for Single Module
-        #       Roadmap should include expansion to library compilation as well
-        if args.format:
-            if args.format == "json":
-                sys.stdout.write(dump(result.ast, None))
-                sys.stdout.write("\n")
+    else:
+        log.error(f"Unsupported or Invalid Serialization Format: {format.value}")
+        compiled.status = Status.USAGE_ERROR
 
-            elif args.format == "pretty":
-                header = f"// {result.path}\n"
-                header += "=" * (len(header) - 1)
-                sys.stdout.write(f"\n\n{header}\n")
-                sys.stdout.write(f"{pformat_ast(result.ast)}\n\n")
-
-    return Status.OK
-
-
-if __name__ == "__main__":
-    main()
+    return compiled.status

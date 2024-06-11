@@ -36,14 +36,15 @@ where = ["src"]
 exclude = ["grammar", "docs", "tests"]
 
 [project.scripts]
-fhy = "fhy.cli:main"
+fhy = "fhy.cli:app"
 
 [project.optional-dependencies]
-dev = ["fhy[test,lint,type,docs]", "tox"]
+dev = ["fhy[test,lint,type,docs,rich]", "tox"]
 test = ["pytest", "coverage", "pytest-xdist"]
 lint = ["ruff", "pylint"]
 type = ["mypy"]
 docs = ["sphinx>=5.0.2"]
+rich = ["typer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -73,6 +74,7 @@ exclude_also = [
 ]
 
 [tool.mypy]
+mypy_path = "src"
 pretty = false
 
 [[tool.mypy.overrides]]

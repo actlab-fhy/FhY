@@ -83,6 +83,7 @@ def span() -> Tuple[dict, Span]:
         ),
     )
     sp = Span(a, b, c, d, Source(e))
+
     return obj, sp
 
 
@@ -738,19 +739,12 @@ def test_empty_module(construct_ast):
         cls_name="Module",
         attributes=dict(
             statements=[],
-            span=dict(
-                cls_name="Span",
-                attributes=dict(
-                    start_line=0,
-                    end_line=0,
-                    start_column=0,
-                    end_column=0,
-                    source=dict(cls_name="Source", attributes=dict(namespace="_null")),
-                ),
-            ),
+            span=None,
         ),
     )
 
     result: AlmostJson = ASTtoJSON().visit(ast)
+    data = result.data()
+    print(data)
 
-    assert result.data() == expected, "Unexpected Object."
+    assert data == expected, "Unexpected Object."
