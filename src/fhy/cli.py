@@ -151,9 +151,6 @@ def compiles(
     force_rebuild: bool = False,
 ) -> CompilationResult:
     """Parse a source file, convert into high level IR Program."""
-    if "--help" in sys.argv:
-        return
-
     status = Status.OK
     where: Path = standard_path(os.getcwd())
     hidden: Path = where / DefaultPaths.hidden_directory
