@@ -143,7 +143,7 @@ def _confirm_arg(value: bool, check: str) -> bool:
     return value or check in sys.argv
 
 
-def compiles(
+def compile_fhy_source(
     main_file: Optional[Path] = None,
     verbose: bool = False,
     log_file: Optional[Path] = None,
@@ -274,7 +274,7 @@ def serialize(
     ] = None,
 ):
     """Serialize FhY AST nodes into alternative text representations."""
-    compiled: CompilationResult = compiles(
+    compiled: CompilationResult = compile_fhy_source(
         main_file, verbose, log_file, config, force_rebuild
     )
 
