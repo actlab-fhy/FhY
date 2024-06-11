@@ -4,115 +4,67 @@ import networkx as nx
 from typing import Optional
 from fhy.ir.identifier import Identifier
 from fhy.ir.type import Type
+from .node.base import Node
+from .node.io import SourceNode, SinkNode
 
 
-
-class Node(ABC):
-    ...
-
-
-
-
-
+# TODO: need to add an ordering for the input and output nodes for calls
 class FDFG(object):
     _graph: nx.MultiDiGraph
 
     def __init__(self) -> None:
         self._graph = nx.MultiDiGraph()
 
+    @property
+    def graph(self) -> nx.MultiDiGraph:
+        return self._graph
 
+    @graph.setter
+    def graph(self, graph: nx.MultiDiGraph) -> None:
+        self._graph = graph
 
+    # def merge_fdfg(self, fdfg: "FDFG") -> None:
+    #     self._graph = nx.compose(self._graph, fdfg.graph)
 
+    def add_node(self, node_name: Identifier, node: Node) -> None:
+        self._graph.add_node(node_name, data=node)
 
-class Op(object):
-    _name: Identifier
-    # _input_signature: list[Type]
-    # _output_signature: list[Type]
-    # _template_types: list[Type]
+    def remove_node(self, node_name: Identifier) -> None:
+        self._graph.remove_node(node_name)
 
-    def __init__(
-        self,
-        name: Identifier,
-        # input_signature: list[Type],
-        # output_signature: list[Type],
-        # template_types: Optional[list[Type]] = None,
+    def add_edge(
+        self, source_node_name: Identifier, sink_node_name: Identifier
     ) -> None:
-        self._name = name
-        # self._input_signature = input_signature
-        # self._output_signature = output_signature
-        # self._template_types = template_types or []
+        self._graph.add_edge(source_node_name, sink_node_name)
 
-    @property
-    def name(self) -> Identifier:
-        return self._name
-
-    # @property
-    # def input_signature(self) -> list[Type]:
-    #     return self._input_signature
-
-    # @property
-    # def output_signature(self) -> list[Type]:
-    #     return self._output_signature
-
-    # @property
-    # def template_types(self) -> list[Type]:
-    #     return self._template_types
-
-
-
-class IONode(Node, ABC):
-    _symbol_name: Identifier
-
-    def __init__(self, symbol_name: Identifier) -> None:
-        super().__init__()
-        self._symbol_name = symbol_name
-
-    @property
-    def symbol_name(self) -> Identifier:
-        return self._symbol_name
-
-
-class SourceNode(IONode):
-    pass
-
-
-class SinkNode(IONode):
-    pass
-
-
-class FractalizedNode(Node):
-    _input_node_names: list[Identifier]
-    _output_node_names: list[Identifier]
-    _sub_graph: FDFG
-
-    def __init__(
-        self,
-        input_node_names: list[Identifier],
-        output_node_names: list[Identifier],
-        sub_graph: FDFG,
+    def remove_edge(
+        self, source_node_name: Identifier, sink_node_name: Identifier
     ) -> None:
-        super().__init__()
-        self._input_node_names = input_node_names
-        self._output_node_names = output_node_names
-        self._sub_graph = sub_graph
+        self._graph.remove_edge(source_node_name, sink_node_name)
 
+    def predecessors(self, node_name: Identifier) -> list[Identifier]:
+        return list(self._graph.predecessors(node_name))
 
-class ForLoopNode(FractalizedNode):
-    _index_symbol_name: Identifier
+    def successors(self, node_name: Identifier) -> list[Identifier]:
+        return list(self._graph.successors(node_name))
 
+    def get_input_node_names(self) -> list[Identifier]:
+        return [tup[0] for tup in self._get_nodes_and_data(SourceNode)]
 
-class PrimitiveNode(Node):
-    _op: Op
+    def get_input_nodes(self) -> list["SourceNode"]:
+        return [tup[1] for tup in self._get_nodes_and_data(SourceNode)]
 
-    def __init__(self, op: Op) -> None:
-        super().__init__()
-        self._op = op
+    def get_output_node_names(self) -> list[Identifier]:
+        return [tup[0] for tup in self._get_nodes_and_data(SinkNode)]
 
-    @property
-    def op(self) -> Op:
-        return self._op
+    def get_output_nodes(self) -> list["SinkNode"]:
+        return [tup[1] for tup in self._get_nodes_and_data(SinkNode)]
 
-
-class Edge(object):
-    _name: Identifier
-    _passed_arg_index: int
+    def _get_nodes_and_data(
+        self, node_type: type[Node]
+    ) -> list[tuple[Identifier, Node]]:
+        nodes_and_attrs = filter(
+            lambda tup: isinstance(tup[1]["data"], node_type),
+            self._graph.nodes(data=True),
+        )
+        return [(tup[0], tup[1]["data"]) for tup in nodes_and_attrs]
