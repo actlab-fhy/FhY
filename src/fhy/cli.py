@@ -34,10 +34,11 @@
 import enum
 import logging
 import os
+import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, TypeVar, Union
 
 import typer
 import typer.core
@@ -51,14 +52,21 @@ from fhy.lang.ast.serialization import SerializationOptions
 from fhy.lang.ast.serialization.to_json import dump
 from fhy.logger import add_file_handler, get_logger
 
+T = TypeVar("T")
+
 app = typer.Typer(
     name="FhY",
     no_args_is_help=True,
     add_completion=False,
 )
-# Make it possible to use environment variable to control help menu display
-typer.core.rich = os.environ.get("FHY_HELPMENU", None)  # type: ignore
+
 _cli_log: logging.Logger = get_logger(__name__)
+
+# Make it possible to use environment variable to control help menu display
+# NOTE: Typer imports rich module, and on import error sets to None, ignoring typing
+#       We will also support not having rich as a dependency of typer
+if typer.core.rich is not None:
+    typer.core.rich = os.environ.get("FHY_HELPMENU", "rich") or None  # type: ignore
 
 
 def make_logger(
@@ -94,8 +102,8 @@ class Status(int, enum.Enum):
 
 
 @dataclass
-class Namespace:
-    """Namespace object container."""
+class CompilationResult:
+    """Results of compilation."""
 
     program: ir.Program
     logger: logging.Logger
@@ -111,8 +119,17 @@ def create_hidden_directory(hidden: Path):
 def clear_hidden_directory(hidden: Path):
     """Clear hidden directory cache."""
     if hidden.exists():
-        os.remove(hidden)
+        shutil.rmtree(hidden)
         _cli_log.info("FhY cache has been cleared")
+
+
+def _clean_dir(value: bool):
+    if not value:
+        return
+    where: Path = standard_path(os.getcwd())
+    hidden: Path = where / DefaultPaths.hidden_directory
+    clear_hidden_directory(hidden)
+    sys.exit(Status.OK)
 
 
 def report_version(value: bool):
@@ -122,64 +139,31 @@ def report_version(value: bool):
         sys.exit(Status.OK)
 
 
-@app.callback(
-    invoke_without_command=True,
-    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
-)
-def main(
-    ctx: typer.Context,
-    module: Annotated[
-        Optional[Path],
-        typer.Option(
-            "--module", "-m", help="Valid filepath to main FhY module source code."
-        ),
-    ] = None,
-    library: Annotated[
-        Optional[Path],
-        typer.Option(
-            "--library", "-l", help="Valid filepath to FhY library source code."
-        ),
-    ] = None,
-    verbose: Annotated[bool, typer.Option(help="Enable debugging.")] = False,
-    version: Annotated[
-        bool, typer.Option(help="Show FhY version and exit.", callback=report_version)
-    ] = False,
-    log_file: Annotated[
-        Optional[Path], typer.Option(help="Provide a filepath to write logs to.")
-    ] = None,
-    config: Annotated[
-        Optional[Path], typer.Option(help="FhY compilation configuration option file.")
-    ] = None,
-    clean: Annotated[
-        bool, typer.Option(help="Clean FhY hidden directory and exit.")
-    ] = False,
-    force_rebuild: Annotated[
-        bool, typer.Option(help="Clear FhY cache before compiling.")
-    ] = False,
-):
-    """Welcome to FhY!"""
-    # NOTE: Because we are using a callback, it will always be called before any
-    #       subcommands. To make it possible to receive the help menu on any
-    #       subcommands, we must check for a help call and shunt this callback.
-    if "--help" in sys.argv:
-        return
+def _confirm_arg(value: bool, check: str) -> bool:
+    return value or check in sys.argv
 
+
+def compile_fhy_source(
+    main_file: Optional[Path] = None,
+    verbose: bool = False,
+    log_file: Optional[Path] = None,
+    config: Optional[Path] = None,
+    force_rebuild: bool = False,
+) -> CompilationResult:
+    """Parse a source file, convert into high level IR Program."""
     status = Status.OK
     where: Path = standard_path(os.getcwd())
     hidden: Path = where / DefaultPaths.hidden_directory
 
     # Clear hidden directory if client toggled
-    if clean or force_rebuild:
+    if force_rebuild:
         clear_hidden_directory(hidden)
-
-        if clean:
-            sys.exit(status)
 
     # Setup log debugging and hidden directory
     create_hidden_directory(hidden)
     log: logging.Logger = make_logger(verbose, where / DefaultPaths.log_file())
     if log_file is not None:
-        add_file_handler(log, log_file)
+        add_file_handler(log, log_file, logging.DEBUG if verbose else logging.INFO)
 
     # NOTE: Inform client we have not currently set this portion up, but scoping
     # here for future backward compatibility.
@@ -189,26 +173,17 @@ def main(
         )
 
     # Now we start Compiling
-    if file := (module or library):
-        try:
-            filepath: Path = standard_path(file)
+    try:
+        filepath: Path = standard_path(main_file)
 
-        except (TypeError, FileExistsError) as e:
-            log.error(str(e), exc_info=e)
-            status = Status.USAGE_ERROR
-            sys.exit(status)
-
-    else:
+    except (TypeError, FileExistsError) as e:
+        log.error(str(e), exc_info=e)
         status = Status.USAGE_ERROR
-        log.error(
-            "No Filepath(s) were defined. Provide a path either through "
-            f'"--module" or "--library" command line arguments. Exit {status}.'
-        )
         sys.exit(status)
 
-    log.debug(f"Filepath(s) Collected: {filepath}")
+    else:
+        log.debug(f"Filepath(s) Collected: {filepath}")
 
-    # NOTE: Right now, module and library are treated identically...
     workspace = Workspace(root=filepath)
     options = CompilationOptions(verbose=verbose)
 
@@ -231,11 +206,34 @@ def main(
     else:
         log.info("FhY compilation completed successfully.")
 
-    # Pass the program within context, using obj variable to avoid typing problems
-    if ctx.invoked_subcommand:
-        ctx.obj = Namespace(program=program, logger=log, status=status)
+    return CompilationResult(program=program, logger=log, status=status)
 
-    return status
+
+@app.callback(
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def main(
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version", help="Show FhY version and exit.", callback=report_version
+        ),
+    ] = False,
+    clean: Annotated[
+        bool,
+        typer.Option(
+            "--clean", help="Clean FhY hidden directory and exit.", callback=_clean_dir
+        ),
+    ] = False,
+):
+    """Welcome to FhY!"""
+    # NOTE: We check sys.argv to make it possible to place arguments in subcommands
+    #       and respond equivalently.
+    if _confirm_arg(version, "--version"):
+        report_version(True)
+
+    if _confirm_arg(clean, "--clean"):
+        _clean_dir(True)
 
 
 @app.command(
@@ -243,13 +241,28 @@ def main(
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
 def serialize(
-    ctx: typer.Context,
+    main_file: Annotated[
+        Optional[Path],
+        typer.Argument(help="Valid filepath to main FhY module source code."),
+    ] = None,
+    verbose: Annotated[
+        bool, typer.Option("--verbose", help="Enable debugging.")
+    ] = False,
+    log_file: Annotated[
+        Optional[Path], typer.Option(help="Provide a filepath to write logs to.")
+    ] = None,
+    config: Annotated[
+        Optional[Path], typer.Option(help="FhY compilation configuration option file.")
+    ] = None,
+    force_rebuild: Annotated[
+        bool, typer.Option("--force-rebuild", help="Clear FhY cache before compiling.")
+    ] = False,
     format: Annotated[
-        SerializationOptions,
+        Optional[SerializationOptions],
         typer.Option(
             "--format", "-f", case_sensitive=False, help="Format to serialize to."
         ),
-    ],
+    ] = None,
     indent: Annotated[
         Optional[int],
         typer.Option(
@@ -261,15 +274,20 @@ def serialize(
     ] = None,
 ):
     """Serialize FhY AST nodes into alternative text representations."""
-    log: logging.Logger = ctx.obj.logger
+    compiled: CompilationResult = compile_fhy_source(
+        main_file, verbose, log_file, config, force_rebuild
+    )
 
-    if ctx.obj.program is None:
+    log: logging.Logger = compiled.logger
+
+    if (program := compiled.program) is None:
         log.error("IR Program not built.")
         sys.exit(Status.FAILED)
-    else:
-        program: ir.Program = ctx.obj.program
 
-    if format.value == SerializationOptions.JSON:
+    if format is None:
+        return compiled.status
+
+    elif format.value == SerializationOptions.JSON:
         sys.stdout.write("\n\n")
         text: str = dump(list(program._components.values()), indent)
         sys.stdout.write(text)
@@ -277,10 +295,10 @@ def serialize(
 
     elif format.value in (SerializationOptions.PRETTY, SerializationOptions.PRETTYID):
         space: str = (indent or 2) * " "
-        ids: bool = format == SerializationOptions.PRETTYID
+        show_id: bool = format == SerializationOptions.PRETTYID
         sys.stdout.write("\n\n")
         for key, value in program._components.items():
-            text = pformat_ast(value, space, ids)
+            text = pformat_ast(value, space, show_id)
             name = key.name_hint
             sys.stdout.write(f"\\\\ {name}\n{'=' * (len(name) + 3)}\n")
             sys.stdout.write(text)
@@ -288,6 +306,6 @@ def serialize(
 
     else:
         log.error(f"Unsupported or Invalid Serialization Format: {format.value}")
-        sys.exit(Status.USAGE_ERROR)
+        compiled.status = Status.USAGE_ERROR
 
-    return Status.OK
+    return compiled.status
