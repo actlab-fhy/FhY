@@ -60,7 +60,7 @@ def cleanup_pretty_print_output(output: str) -> str:
 @pytest.mark.parametrize("file", examples)
 def test_single_file_examples_through_cli_pretty(file: str):
     """Tests FhY Entry Point using Pretty Print on a collection of Example Files."""
-    code, output, _ = access_cli("-m", file, "serialize", "-f", "pretty")
+    code, output, _ = access_cli("serialize", file, "-f", "pretty")
     result = cleanup_pretty_print_output(output)
 
     out_path = grab_expected_output_file(file)
@@ -77,8 +77,8 @@ def test_single_file_examples_through_cli_pretty(file: str):
 @pytest.mark.parametrize("file", examples)
 def test_serialization_to_json(file: str):
     # First Compare Output by use of Flags are successful and invariant
-    code, output, _ = access_cli("-m", file, "serialize", "-f", "json")
-    code2, output2, _ = access_cli("-m", file, "serialize", "--format", "json")
+    code, output, _ = access_cli("serialize", file, "-f", "json")
+    code2, output2, _ = access_cli("serialize", file, "--format", "json")
 
     assert output == output2, "Expected Output to be invariant of flag used."
     assert code == code2 == Status.OK, "Expected Successful Status Code."

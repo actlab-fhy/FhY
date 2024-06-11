@@ -34,3 +34,13 @@
 We currently support serializing to json formats.
 
 """
+
+import enum
+
+
+class SerializationOptions(str, enum.Enum):
+    """Supported serialization options."""
+
+    JSON = "json"
+    PRETTY = "pretty"
+    PRETTYID = "pretty-id"

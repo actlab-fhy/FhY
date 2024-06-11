@@ -19,7 +19,10 @@ def get_diff(a, b):
 def access_cli(*args) -> Tuple[int, str, str]:
     """Access FhY Entry Point using subprocess and return the decoded stdout"""
     result = subprocess.run(
-        ["fhy", *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+        ["fhy", *args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
     )
     output = result.stdout.decode()
     errors = result.stderr.decode()

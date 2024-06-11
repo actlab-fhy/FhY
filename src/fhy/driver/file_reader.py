@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Generator, Optional, Tuple, Union
 
 
-def standard_path(value: Union[str, Path]) -> Path:
+def standard_path(value: Optional[Union[str, Path]]) -> Path:
     """Standardize and resolve a file path.
 
     Raises:

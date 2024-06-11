@@ -135,7 +135,7 @@ class ASTProgramBuilder(object):
             self.log.debug(
                 "Building AST: %s", _get_relative_path(filepath, self.src_dir)
             )
-            ast_source: SourceFileAST = build_source_file_ast(filepath)
+            ast_source: SourceFileAST = build_source_file_ast(filepath, self.log)
             source_file_asts.append(ast_source)
 
             imported_identifiers: Set[ir.Identifier] = collect_imported_identifiers(
