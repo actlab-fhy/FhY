@@ -29,8 +29,8 @@ def test_version():
 
 
 def test_no_file_error():
-    """Test Cli without Arguments raises errors and reports correctly to stderr."""
-    code, _, error = access_cli("--verbose")
+    """Test CLI without file argument raises errors and reports correctly to stderr."""
+    code, _, error = access_cli("serialize", "--verbose")
 
     assert code == Status.USAGE_ERROR, "Expected to report User Error Status Code."
     assert "ERROR" in error, "Expected error message logged to stderr."
@@ -38,7 +38,7 @@ def test_no_file_error():
 
 def test_file_exists_error():
     """Test that an invalid filepath raises errors as expected."""
-    code, _, error = access_cli("-m", "cthulhu.fhy")
+    code, _, error = access_cli("serialize", "cthulhu.fhy")
 
     assert code == Status.USAGE_ERROR, "Expected to report User Error Status Code."
     assert "ERROR" in error, "Expected error message logged to stderr."
@@ -48,7 +48,7 @@ def test_file_exists_error():
 def test_log_file(file_log):
     """Test that a logging file is created on user request."""
     # NOTE: This request will fail, but not before we create the log
-    code, _, error = access_cli("--log-file", file_log)
+    code, _, error = access_cli("serialize", "--log-file", file_log)
 
     assert os.path.exists(file_log), "Expected Log File to be created."
     assert "ERROR" in error, "Expected error message logged to stderr."
