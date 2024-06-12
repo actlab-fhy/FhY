@@ -1,3 +1,2 @@
 networkx>=3.3
 typer-slim
-typing-extensions
