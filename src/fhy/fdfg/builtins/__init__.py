@@ -1,0 +1,8 @@
+from .reductions import BUILTIN_REDUCTION_FUNCTION_IDENTIFIERS, generate_reduction_fdfg
+
+
+BUILTIN_LANG_IDENTIFIERS = {
+    **BUILTIN_REDUCTION_FUNCTION_IDENTIFIERS,
+}
+
+from .namespace import BUILTINS_NAMESPACE_NAME

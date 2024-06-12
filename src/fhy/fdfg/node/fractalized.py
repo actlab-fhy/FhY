@@ -29,8 +29,8 @@ class FractalizedNode(Node, ABC):
 class FunctionNode(FractalizedNode):
     _symbol_name: Identifier
 
-    def __init__(self, symbol_name: Identifier) -> None:
-        super().__init__()
+    def __init__(self, symbol_name: Identifier, fdfg: Optional[FDFG] = None) -> None:
+        super().__init__(fdfg=fdfg)
         self._symbol_name = symbol_name
 
     @property

@@ -583,6 +583,9 @@ class Visitor(BasePass):
 #     def exit_Source(self, source: Source) -> None: ...
 
 
+Statements = Union[Statement, List[Statement]]
+
+
 class Transformer(BasePass):
     """AST node transformer."""
 
@@ -594,9 +597,16 @@ class Transformer(BasePass):
         return Module(span=span, name=new_name, statements=new_statements)
 
     def visit_Statements(self, nodes: List[Statement]) -> List[Statement]:
-        return [self.visit_Statement(node) for node in nodes]
+        new_statements: List[Statement] = []
+        for node in nodes:
+            node_new_statements = self.visit_Statement(node)
+            if isinstance(node_new_statements, list):
+                new_statements.extend(node_new_statements)
+            else:
+                new_statements.append(node_new_statements)
+        return new_statements
 
-    def visit_Statement(self, node: Statement) -> Statement:
+    def visit_Statement(self, node: Statement) -> Statements:
         if isinstance(node, Import):
             return self.visit_Import(node)
         elif isinstance(node, Operation):
@@ -616,13 +626,13 @@ class Transformer(BasePass):
         else:
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
-    def visit_Import(self, node: Import) -> Import:
+    def visit_Import(self, node: Import) -> Statements:
         new_name = self.visit_Identifier(node.name)
         span: Span = self.visit_Span(node.span)
 
         return Import(span=span, name=new_name)
 
-    def visit_Operation(self, node: Operation) -> Operation:
+    def visit_Operation(self, node: Operation) -> Statements:
         span: Span = self.visit_Span(node.span)
         new_name = self.visit_Identifier(node.name)
         new_args = self.visit_Arguments(node.args)
@@ -637,7 +647,7 @@ class Transformer(BasePass):
             body=new_body,
         )
 
-    def visit_Procedure(self, node: Procedure) -> Procedure:
+    def visit_Procedure(self, node: Procedure) -> Statements:
         span: Span = self.visit_Span(node.span)
         new_name = self.visit_Identifier(node.name)
         new_args = self.visit_Arguments(node.args)
@@ -658,9 +668,7 @@ class Transformer(BasePass):
 
         return Argument(span=span, qualified_type=new_qualified_type, name=new_name)
 
-    def visit_DeclarationStatement(
-        self, node: DeclarationStatement
-    ) -> DeclarationStatement:
+    def visit_DeclarationStatement(self, node: DeclarationStatement) -> Statements:
         span: Span = self.visit_Span(node.span)
         new_variable_name = self.visit_Identifier(node.variable_name)
         new_variable_type = self.visit_QualifiedType(node.variable_type)
@@ -676,9 +684,7 @@ class Transformer(BasePass):
             expression=new_expression,
         )
 
-    def visit_ExpressionStatement(
-        self, node: ExpressionStatement
-    ) -> ExpressionStatement:
+    def visit_ExpressionStatement(self, node: ExpressionStatement) -> Statements:
         span: Span = self.visit_Span(node.span)
         if node.left is not None:
             new_left = self.visit_Expression(node.left)
@@ -688,7 +694,7 @@ class Transformer(BasePass):
 
         return ExpressionStatement(span=span, left=new_left, right=new_right)
 
-    def visit_SelectionStatement(self, node: SelectionStatement) -> SelectionStatement:
+    def visit_SelectionStatement(self, node: SelectionStatement) -> Statements:
         span: Span = self.visit_Span(node.span)
         new_condition = self.visit_Expression(node.condition)
         new_true_body = self.visit_Statements(node.true_body)
@@ -701,14 +707,14 @@ class Transformer(BasePass):
             false_body=new_false_body,
         )
 
-    def visit_ForAllStatement(self, node: ForAllStatement) -> ForAllStatement:
+    def visit_ForAllStatement(self, node: ForAllStatement) -> Statements:
         span: Span = self.visit_Span(node.span)
         new_index = self.visit_Expression(node.index)
         new_body = self.visit_Statements(node.body)
 
         return ForAllStatement(span=span, index=new_index, body=new_body)
 
-    def visit_ReturnStatement(self, node: ReturnStatement) -> ReturnStatement:
+    def visit_ReturnStatement(self, node: ReturnStatement) -> Statements:
         span: Span = self.visit_Span(node.span)
         new_expression = self.visit(node.expression)
 
@@ -741,7 +747,7 @@ class Transformer(BasePass):
         else:
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
-    def visit_UnaryExpression(self, node: UnaryExpression) -> UnaryExpression:
+    def visit_UnaryExpression(self, node: UnaryExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_expression = self.visit_Expression(node.expression)
 
@@ -749,7 +755,7 @@ class Transformer(BasePass):
             span=span, operation=node.operation, expression=new_expression
         )
 
-    def visit_BinaryExpression(self, node: BinaryExpression) -> BinaryExpression:
+    def visit_BinaryExpression(self, node: BinaryExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_left = self.visit_Expression(node.left)
         new_right = self.visit_Expression(node.right)
@@ -758,7 +764,7 @@ class Transformer(BasePass):
             span=span, operation=node.operation, left=new_left, right=new_right
         )
 
-    def visit_TernaryExpression(self, node: TernaryExpression) -> TernaryExpression:
+    def visit_TernaryExpression(self, node: TernaryExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_condition = self.visit_Expression(node.condition)
         new_true = self.visit_Expression(node.true)
@@ -768,7 +774,7 @@ class Transformer(BasePass):
             span=span, condition=new_condition, true=new_true, false=new_false
         )
 
-    def visit_FunctionExpression(self, node: FunctionExpression) -> FunctionExpression:
+    def visit_FunctionExpression(self, node: FunctionExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_function = self.visit_Expression(node.function)
         new_template_types = self.visit_Types(node.template_types)
@@ -783,9 +789,7 @@ class Transformer(BasePass):
             args=list(new_args),
         )
 
-    def visit_ArrayAccessExpression(
-        self, node: ArrayAccessExpression
-    ) -> ArrayAccessExpression:
+    def visit_ArrayAccessExpression(self, node: ArrayAccessExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_array_expresssion = self.visit_Expression(node.array_expression)
         new_indices = list(self.visit_Expressions(node.indices))
@@ -794,15 +798,13 @@ class Transformer(BasePass):
             span=span, array_expression=new_array_expresssion, indices=new_indices
         )
 
-    def visit_TupleExpression(self, node: TupleExpression) -> TupleExpression:
+    def visit_TupleExpression(self, node: TupleExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_expressions = self.visit_Expressions(node.expressions)
 
         return TupleExpression(span=span, expressions=list(new_expressions))
 
-    def visit_TupleAccessExpression(
-        self, node: TupleAccessExpression
-    ) -> TupleAccessExpression:
+    def visit_TupleAccessExpression(self, node: TupleAccessExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_tuple_expression = self.visit(node.tuple_expression)
         new_element_index = self.visit_IntLiteral(node.element_index)
@@ -813,18 +815,16 @@ class Transformer(BasePass):
             element_index=new_element_index,
         )
 
-    def visit_IdentifierExpression(
-        self, node: IdentifierExpression
-    ) -> IdentifierExpression:
+    def visit_IdentifierExpression(self, node: IdentifierExpression) -> Expression:
         span: Span = self.visit_Span(node.span)
         new_identifier = self.visit_Identifier(node.identifier)
 
         return IdentifierExpression(span=span, identifier=new_identifier)
 
-    def visit_IntLiteral(self, node: IntLiteral) -> IntLiteral:
+    def visit_IntLiteral(self, node: IntLiteral) -> Expression:
         return copy(node)
 
-    def visit_FloatLiteral(self, node: FloatLiteral) -> FloatLiteral:
+    def visit_FloatLiteral(self, node: FloatLiteral) -> Expression:
         return copy(node)
 
     def visit_QualifiedType(self, node: QualifiedType) -> QualifiedType:

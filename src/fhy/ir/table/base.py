@@ -69,5 +69,9 @@ class Table(Generic[K, V]):
         """Table key, value pairs."""
         return list(self._table.items())
 
+    def update(self, other: "Table[K, V]") -> None:
+        """Update the table with the contents of another table."""
+        self._table.update(other._table)
+
     def __repr__(self) -> str:
         return f"Table({self._table})"

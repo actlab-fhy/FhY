@@ -33,6 +33,12 @@
 
 # from fhy.lang.ast.core import Module as ASTModule
 from .table import SymbolTable
+from collections import deque
+from fhy.fdfg.core import FDFG
+from fhy.fdfg.node.fractalized import FractalizedNode, FunctionNode
+from fhy.fdfg.converter.from_fhy_ast import _convert_fhy_ast_function_to_fdfg
+from fhy.lang.ast.pprint import pformat_ast
+from fhy.lang.ast.passes.expression_decomposer import decompose_expressions
 
 
 class Program(object):
@@ -44,3 +50,57 @@ class Program(object):
     def __init__(self) -> None:
         self._components = {}
         self._symbol_table = SymbolTable()
+
+    def convert_to_fdfg(self) -> None:
+        """Convert the program to an f-DFG program."""
+        print(f"\nBefore conversion:\n")
+        for component in self._components.values():
+            print(pformat_ast(component, is_identifier_id_printed=True))
+
+        self._components = {
+            k: decompose_expressions(v, self._symbol_table)
+            for k, v in self._components.items()
+        }
+
+        print(f"\nAfter conversion:\n")
+        for component in self._components.values():
+            print(pformat_ast(component, is_identifier_id_printed=True))
+
+        for name, component in self._components.items():
+            # Check that the components are AST modules
+            pass
+
+        function_fdfgs = {}
+
+        return
+
+        # Convert each function to an f-DFG
+        for name, component in self._components.items():
+            print(pformat_ast(component, is_identifier_id_printed=True))
+            for function in component.statements:
+                function_fdfg = _convert_fhy_ast_function_to_fdfg(
+                    function, self._symbol_table
+                )
+                function_fdfgs[function.name] = function_fdfg
+
+        # Link the functions together
+        fdfg_queue: deque[FDFG] = deque(function_fdfgs.values())
+        while fdfg_queue:
+            fdfg = fdfg_queue.popleft()
+            for node_name, node_attrs in fdfg.graph.nodes(data=True):
+                if "data" not in node_attrs:
+                    continue
+                node = node_attrs["data"]
+                if isinstance(node, FunctionNode) and not node.is_fdfg_set():
+                    node.fdfg = function_fdfgs[node.symbol_name]
+                if isinstance(node, FractalizedNode):
+                    fdfg_queue.append(node.fdfg)
+
+        self._components = function_fdfgs
+
+        from fhy.fdfg.visualize import plot_fdfg
+
+        _, main_component = next(
+            filter(lambda x: x[0].name_hint == "main", self._components.items())
+        )
+        plot_fdfg(main_component)

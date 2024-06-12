@@ -33,7 +33,9 @@
 
 from .expression import Expression
 from .identifier import Identifier
-from .program import Program
+
+# TODO: this is causing import errors so resolve
+# from .program import Program
 from .table import (
     FunctionSymbolTableFrame,
     ImportSymbolTableFrame,

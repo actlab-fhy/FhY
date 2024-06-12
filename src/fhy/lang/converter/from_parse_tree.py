@@ -49,8 +49,8 @@ from fhy import ir
 from fhy.error import FhYASTBuildError, FhYSyntaxError
 from fhy.lang import ast
 from fhy.lang.ast import Span
-from fhy.lang.ast.alias import Expressions
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
+from fhy.fdfg.builtins import BUILTIN_LANG_IDENTIFIERS
 
 
 def _get_source_info(ctx: ParserRuleContext, parent: bool = False) -> Span:
@@ -75,9 +75,7 @@ def _source_position(span: Span) -> str:
 
 
 def _initialize_builtin_identifiers() -> Dict[str, ir.Identifier]:
-    return {
-        "sum": ir.Identifier("sum"),
-    }
+    return BUILTIN_LANG_IDENTIFIERS.copy()
 
 
 class ParseTreeConverter(FhYVisitor):
@@ -375,8 +373,8 @@ class ParseTreeConverter(FhYVisitor):
     # =====================
     def visitExpression_list(
         self, ctx: FhYParser.Expression_listContext
-    ) -> Sequence[Expressions]:
-        expressions: List[Expressions] = []
+    ) -> Sequence[ast.Expression]:
+        expressions: List[ast.Expression] = []
         if ctx.expression() is not None:
             for expression_ctx in ctx.expression():
                 expressions.append(self.visitExpression(expression_ctx))
@@ -621,7 +619,7 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Numerical_typeContext
     ) -> ir.NumericalType:
         data_type: ir.DataType = self.visitDtype(ctx.dtype())
-        shape: Sequence[Expressions] = []
+        shape: Sequence[ast.Expression] = []
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
 

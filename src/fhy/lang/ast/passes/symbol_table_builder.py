@@ -42,9 +42,11 @@ Classes:
 from typing import Any, Set
 
 from fhy import ir
+from fhy.ir.table import ImportSymbolTableFrame
 from fhy.error import FhYSemanticsError
 from fhy.lang.ast.node import core, expression, statement
 from fhy.lang.ast.visitor import Visitor
+from fhy.fdfg.builtins import BUILTIN_LANG_IDENTIFIERS, BUILTINS_NAMESPACE_NAME
 from fhy.utils import Stack
 
 from .identifier_collector import collect_identifiers
@@ -74,14 +76,22 @@ class SymbolTableBuilder(Visitor):
 
     _symbol_table: ir.SymbolTable
 
-    _table_stack: Stack[ir.Table[ir.Identifier, ir.SymbolTableFrame]]
+    _namespace_stack: Stack[ir.Identifier]
 
     def __init__(self) -> None:
         super().__init__()
 
         self._symbol_table = ir.SymbolTable()
+        self._symbol_table.add_namespace(BUILTINS_NAMESPACE_NAME, None)
+        for identifier in BUILTIN_LANG_IDENTIFIERS.values():
+            self._symbol_table.add_symbol(
+                BUILTINS_NAMESPACE_NAME,
+                identifier,
+                ImportSymbolTableFrame(name=identifier),
+            )
 
-        self._table_stack = Stack[ir.Table[ir.Identifier, ir.SymbolTableFrame]]()
+        self._namespace_stack = Stack[ir.SymbolTableFrame]()
+        self._namespace_stack.push(BUILTINS_NAMESPACE_NAME)
 
     @property
     def symbol_table(
@@ -89,15 +99,17 @@ class SymbolTableBuilder(Visitor):
     ) -> ir.SymbolTable:
         return self._symbol_table
 
-    def _push_namespace(self, namespace_name_hint: str) -> None:
-        namespace_name = ir.Identifier(namespace_name_hint)
-        self._symbol_table[namespace_name] = ir.Table[
-            ir.Identifier, ir.SymbolTableFrame
-        ]()
-        self._table_stack.push(self._symbol_table[namespace_name])
+    def _push_namespace(self, namespace_name: ir.Identifier) -> None:
+        if len(self._namespace_stack) == 0:
+            parent_namespace_name = None
+        else:
+            parent_namespace_name = self._namespace_stack.peek()
+
+        self._symbol_table.add_namespace(namespace_name, parent_namespace_name)
+        self._namespace_stack.push(namespace_name)
 
     def _pop_namespace(self) -> None:
-        self._table_stack.pop()
+        self._namespace_stack.pop()
 
     def _assert_symbol_not_defined(self, symbol: ir.Identifier) -> None:
         if self._is_symbol_defined(symbol):
@@ -110,17 +122,16 @@ class SymbolTableBuilder(Visitor):
             raise FhYSemanticsError(f"{msg}: {symbol.name_hint}")
 
     def _is_symbol_defined(self, symbol: ir.Identifier) -> bool:
-        for table in self._table_stack:
-            if symbol in table.keys():
-                return True
-        return False
+        return self._symbol_table.is_symbol_defined(
+            self._namespace_stack.peek(), symbol
+        )
 
     def _add_symbol(self, symbol: ir.Identifier, frame: ir.SymbolTableFrame) -> None:
-        if len(self._table_stack) == 0:
+        if len(self._namespace_stack) == 0:
             raise RuntimeError(
-                "Expected current table to be set before adding a symbol to it"
+                "Expected current namespace to be set before adding a symbol to it."
             )
-        self._table_stack.peek()[symbol] = frame
+        self._symbol_table.add_symbol(self._namespace_stack.peek(), symbol, frame)
 
     def __call__(self, node: core.Module, *args: Any, **kwargs: Any) -> Any:
         if not isinstance(node, core.Module):
@@ -128,13 +139,13 @@ class SymbolTableBuilder(Visitor):
         return super().__call__(node, *args, **kwargs)
 
     def visit_Module(self, node: core.Module) -> None:
-        self._push_namespace(node.name.name_hint)
+        self._push_namespace(node.name)
         super().visit_Module(node)
         self._pop_namespace()
 
-        if len(self._table_stack) != 0:
+        if len(self._namespace_stack) != 1:
             raise RuntimeError(
-                "Expected the table stack to be empty after visiting module node."
+                f"Expected the namespace stack to only contain {BUILTINS_NAMESPACE_NAME} after visiting module node."
             )
 
     def visit_Import(self, node: statement.Import) -> None:
@@ -153,7 +164,7 @@ class SymbolTableBuilder(Visitor):
             ],
         )
         self._add_symbol(node.name, proc_frame)
-        self._push_namespace(node.name.name_hint)
+        self._push_namespace(node.name)
         super().visit_Procedure(node)
         self._pop_namespace()
 
@@ -168,7 +179,7 @@ class SymbolTableBuilder(Visitor):
             + [(node.return_type.type_qualifier, node.return_type.base_type)],
         )
         self._add_symbol(node.name, op_frame)
-        self._push_namespace(node.name.name_hint)
+        self._push_namespace(node.name)
         super().visit_Operation(node)
         self._pop_namespace()
 

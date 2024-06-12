@@ -45,7 +45,6 @@ from abc import ABC
 from dataclasses import dataclass, field
 from typing import List
 
-from fhy.ir.expression import Expression as IRExpression
 from fhy.ir.identifier import Identifier as IRIdentifier
 
 from .base import ASTNode
@@ -98,9 +97,5 @@ class Function(Statement, ABC):
         return attrs
 
 
-class Expression(ASTNode, IRExpression, ABC):
-    """Abstract expression AST node.
-
-    Also is an expression from the IR to enable use in symbol table fields.
-
-    """
+class Expression(ASTNode, ABC):
+    """Abstract expression AST node."""

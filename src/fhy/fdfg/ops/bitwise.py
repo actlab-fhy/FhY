@@ -1,5 +1,6 @@
-from ..core import Op
-from fhy.ir import Identifier, NumericalType, DataType, PrimitiveDataType
+from ..op import Op
+from fhy.ir.identifier import Identifier
+from fhy.ir.type import NumericalType, DataType, PrimitiveDataType
 
 
 bitwise_not_op = Op(Identifier("bitwise_not"))

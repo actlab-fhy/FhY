@@ -44,6 +44,7 @@ from typing import Dict, List, Optional, Set
 import networkx as nx  # type: ignore[import-untyped]
 
 from fhy import error, ir
+from fhy.ir.program import Program as IRProgram
 from fhy.lang import collect_imported_identifiers
 from fhy.lang.ast.passes import build_symbol_table, replace_identifiers
 
@@ -100,7 +101,7 @@ class ASTProgramBuilder(object):
         """Source code directory."""
         return self._workspace.source
 
-    def build(self) -> ir.Program:
+    def build(self) -> IRProgram:
         """Build an ir.Program composed of (multiple) modules."""
         unresolved_asts: List[SourceFileAST] = self._build_source_file_asts()
         paths: Set[Path] = {i.path for i in unresolved_asts}
@@ -108,7 +109,7 @@ class ASTProgramBuilder(object):
         resolved_asts: List[SourceFileAST] = self._resolve_imports(
             unresolved_asts, module_tree
         )
-        ast_program: ir.Program = self._build_program(resolved_asts)
+        ast_program: IRProgram = self._build_program(resolved_asts)
 
         return ast_program
 
@@ -326,18 +327,20 @@ class ASTProgramBuilder(object):
 
         return resolved_sources
 
-    def _build_program(self, source_file_asts: List[SourceFileAST]) -> ir.Program:
-        # TODO: Chris will change this later
-        program = ir.Program()
+    def _build_program(self, source_file_asts: List[SourceFileAST]) -> IRProgram:
+        program = IRProgram()
         for source_file_ast in source_file_asts:
             program._components[source_file_ast.ast.name] = source_file_ast.ast
+            # TODO: don't redo this...
+            symbol_table = build_symbol_table(source_file_ast.ast)
+            program._symbol_table.update_namespaces(symbol_table)
 
         return program
 
 
 def build_ast_program(
     workspace: Workspace, options: CompilationOptions, log: logging.Logger = _log
-) -> ir.Program:
+) -> IRProgram:
     """Build an ir.Program.
 
     Args:

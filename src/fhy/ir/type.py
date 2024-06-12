@@ -33,7 +33,7 @@
 
 from abc import ABC
 from enum import StrEnum
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from .expression import Expression
 
