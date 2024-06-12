@@ -222,6 +222,9 @@ class ASTPrettyFormatter(BasePass):
     def visit_FloatLiteral(self, float_literal: ast.FloatLiteral) -> str:
         return str(float_literal.value)
 
+    def visit_ComplexLiteral(self, complex_literal: ast.ComplexLiteral) -> str:
+        return str(complex_literal.value)
+
     def visit_QualifiedType(self, qualified_type: ast.QualifiedType) -> str:
         return f"{qualified_type.type_qualifier} {self.visit(qualified_type.base_type)}"
 

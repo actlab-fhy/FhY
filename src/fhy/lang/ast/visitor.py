@@ -57,6 +57,7 @@ from .node import (
     Argument,
     ArrayAccessExpression,
     BinaryExpression,
+    ComplexLiteral,
     DeclarationStatement,
     Expression,
     ExpressionStatement,
@@ -350,6 +351,14 @@ class Visitor(BasePass):
 
         """
 
+    def visit_ComplexLiteral(self, node: ComplexLiteral) -> None:
+        """Visit a complex literal node.
+
+        Args:
+            node (ComplexLiteral): Complex literal node to visit.
+
+        """
+
     def visit_QualifiedType(self, node: QualifiedType) -> None:
         """Visit a qualified type node.
 
@@ -560,6 +569,9 @@ class Visitor(BasePass):
 #     def enter_FloatLiteral(self, node: FloatLiteral) -> None: ...
 #     def exit_FloatLiteral(self, node: FloatLiteral) -> None: ...
 
+#     def enter_ComplexLiteral(self, node: ComplexLiteral) -> None: ...
+#     def exit_ComplexLiteral(self, node: ComplexLiteral) -> None: ...
+
 #     def enter_QualifiedType(self, node: QualifiedType) -> None: ...
 #     def exit_QualifiedType(self, node: QualifiedType) -> None: ...
 
@@ -740,6 +752,8 @@ class Transformer(BasePass):
             return self.visit_IntLiteral(node)
         elif isinstance(node, FloatLiteral):
             return self.visit_FloatLiteral(node)
+        elif isinstance(node, ComplexLiteral):
+            return self.visit_ComplexLiteral(node)
         else:
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
@@ -827,6 +841,9 @@ class Transformer(BasePass):
         return copy(node)
 
     def visit_FloatLiteral(self, node: FloatLiteral) -> FloatLiteral:
+        return copy(node)
+
+    def visit_ComplexLiteral(self, node: ComplexLiteral) -> ComplexLiteral:
         return copy(node)
 
     def visit_QualifiedType(self, node: QualifiedType) -> QualifiedType:

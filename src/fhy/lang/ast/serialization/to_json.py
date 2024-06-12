@@ -86,8 +86,13 @@ class AlmostJson:
 
     def data(self) -> dict:
         """Return class attributes into a dictionary record, recursively."""
-        values = {k: convert(v) for k, v in self.attributes.items()}
-        return dict(cls_name=self.cls_name, attributes=values)
+        attributes = {
+            k: val
+            for k, v in self.attributes.items()
+            if (val := convert(v)) is not None
+        }
+
+        return dict(cls_name=self.cls_name, attributes=attributes)
 
     def __eq__(self, value: object) -> bool:
         return (
@@ -101,7 +106,17 @@ JSONObject = AlmostJson | Sequence[AlmostJson]
 
 
 class ASTtoJSON(visitor.BasePass):
-    """Convert an AST Node into a json object."""
+    """Convert an AST node into a json object.
+
+    Args:
+        include_span (bool): Include span in output if true.
+
+    """
+
+    include_span: bool
+
+    def __init__(self, include_span: bool = True):
+        self.include_span = include_span
 
     def default(self, node):
         if isinstance(node, list):
@@ -450,7 +465,7 @@ class ASTtoJSON(visitor.BasePass):
         return [self.visit(node) for node in nodes]
 
     def visit_Span(self, span: Span | None) -> AlmostJson | None:
-        if span is None:
+        if span is None or not self.include_span:
             return None
 
         if span.source is not None:
@@ -477,7 +492,7 @@ class ASTtoJSON(visitor.BasePass):
 
 
 class JSONtoAST(visitor.BasePass):
-    """Converts a JSON object into AST Nodes."""
+    """Converts a JSON object into AST nodes."""
 
     def visit(self, node: JSONObject | None) -> Any:
         if isinstance(node, list):
@@ -906,9 +921,21 @@ class JSONtoAST(visitor.BasePass):
 def dump(
     node: ASTObject | Sequence[ASTObject],
     indent: int | str | None = "  ",
+    include_span: bool = True,
 ) -> str:
-    """Serialize an AST Node to json string, with a given indent."""
-    to_json = ASTtoJSON()
+    """Serialize an AST node to json string, with a given indent.
+
+    Args:
+        node (ASTObject | List[ASTObject]): FhY AST-like node(s).
+        indent (optional, str | int): indentation of json output for human readability.
+            If an integer is provided, it indicates the number of spaces used.
+        include_span (bool): If true, include span in json output.
+
+    Returns:
+        (str): json serialized node(s)
+
+    """
+    to_json = ASTtoJSON(include_span)
     obj: AlmostJson | list[AlmostJson] = to_json.visit(node)
     data = [j.data() for j in obj] if isinstance(obj, list) else obj.data()
 
