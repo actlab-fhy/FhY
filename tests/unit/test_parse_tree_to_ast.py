@@ -1,7 +1,5 @@
 """Test Conversion of FhY Source Code from CST to AST."""
 
-from typing import List, Optional, Type
-
 import pytest
 from fhy import error, ir
 from fhy.lang import ast
@@ -165,7 +163,7 @@ def _assert_is_expected_operation(
 def _assert_is_expected_qualified_type(
     node: ast.ASTNode,
     expected_type_qualifier: ir.TypeQualifier,
-    expected_base_type_cls: Type[ir.Type],
+    expected_base_type_cls: type[ir.Type],
 ) -> None:
     assert isinstance(node, ast.QualifiedType), wrong_node_babe(ast.QualifiedType, node)
 
@@ -196,7 +194,7 @@ def _assert_is_expected_argument(
 def _assert_is_expected_numerical_type(
     numerical_type: ir.NumericalType,
     expected_primitive_data_type: ir.PrimitiveDataType,
-    expected_shape: List[ast.Expression],
+    expected_shape: list[ast.Expression],
 ) -> None:
     assert isinstance(numerical_type, ir.NumericalType), wrong_node_babe(
         ir.NumericalType, numerical_type
@@ -225,7 +223,7 @@ def _assert_is_expected_numerical_type(
 
 
 def _assert_is_expected_shape(
-    shape: List[ast.Expression], expected_shape: List[ast.Expression]
+    shape: list[ast.Expression], expected_shape: list[ast.Expression]
 ) -> None:
     assert isinstance(shape, list), f'Expected shape to be a list, got "{type(shape)}"'
     assert all(isinstance(expr, ast.Expression) for expr in shape), (
@@ -246,7 +244,7 @@ def _assert_is_expected_index_type(
     index_type: ir.IndexType,
     expected_low: ast.Expression,
     expected_high: ast.Expression,
-    expected_stride: Optional[ast.Expression],
+    expected_stride: ast.Expression | None,
 ) -> None:
     assert isinstance(index_type, ir.IndexType), wrong_node_babe(
         ir.IndexType, index_type
@@ -281,7 +279,7 @@ def _assert_is_expected_index_type(
 def _assert_is_expected_declaration_statement(
     node: ast.ASTNode,
     expected_variable_name: ir.Identifier,
-    expected_expression: Optional[ast.Expression],
+    expected_expression: ast.Expression | None,
 ) -> None:
     assert isinstance(node, ast.DeclarationStatement), wrong_node_babe(
         ast.DeclarationStatement, node
@@ -311,7 +309,7 @@ def _assert_is_expected_declaration_statement(
 
 def _assert_is_expected_expression_statement(
     node: ast.ASTNode,
-    expected_left_expression: Optional[ast.Expression],
+    expected_left_expression: ast.Expression | None,
     expected_right_expression: ast.Expression,
 ) -> None:
     assert isinstance(node, ast.ExpressionStatement), wrong_node_babe(
@@ -513,7 +511,7 @@ def test_empty_operation_return_type(construct_ast):
     ["templates"],
     [(["T"],), (["T", "K"],), (["V", "Ex", "F"],)],
 )
-def test_operation_template_types(construct_ast, templates: List[str]):
+def test_operation_template_types(construct_ast, templates: list[str]):
     """Test that an Empty Operation with a Return Type is Converted Correctly."""
     source: str = "op foo<%s>(input int32[n, m] x) -> output int32[n, m] {}"
     print(source % ", ".join(templates))

@@ -32,7 +32,6 @@
 """FhY source code to AST module converter."""
 
 import logging
-from typing import List, Optional, Set
 
 from antlr4 import (  # type: ignore[import-untyped]  # type: ignore[import-untyped]
     DFA,
@@ -89,7 +88,7 @@ class ThrowingErrorListener(ErrorListener):
         startIndex: int,
         stopIndex: int,
         exact: bool,
-        ambigAlts: Set[int],
+        ambigAlts: set[int],
         configs: ATNConfigSet,
     ):
         report = self._report(
@@ -108,7 +107,7 @@ class ThrowingErrorListener(ErrorListener):
         dfa: DFA,
         startIndex: int,
         stopIndex: int,
-        conflictingAlts: Set[int],
+        conflictingAlts: set[int],
         configs: ATNConfigSet,
     ):
         report = self._report(
@@ -164,8 +163,8 @@ class ThrowingErrorListener(ErrorListener):
     def get_text(
         self,
         recognizer: FhYParser,
-        start: Optional[int] = None,
-        stop: Optional[int] = None,
+        start: int | None = None,
+        stop: int | None = None,
     ) -> str:
         stream = recognizer.getTokenStream()
         text = stream.getText(start, stop)
@@ -176,7 +175,7 @@ class ThrowingErrorListener(ErrorListener):
         decision: int = dfa.decision
         index: int = dfa.atnStartState.ruleIndex
 
-        rules: List[str] = recognizer.ruleNames
+        rules: list[str] = recognizer.ruleNames
         if index < 0 or index >= len(rules):
             return str(decision)
 
@@ -186,7 +185,7 @@ class ThrowingErrorListener(ErrorListener):
 
         return name
 
-    def get_conflict(self, reportedAlts: Set[int], configs: ATNConfigSet) -> Set[int]:
+    def get_conflict(self, reportedAlts: set[int], configs: ATNConfigSet) -> set[int]:
         if reportedAlts is None:
             return reportedAlts
 
@@ -226,7 +225,7 @@ def _fhy_source_to_parse_tree(
 
 def from_fhy_source(
     fhy_source_content: str,
-    source: Optional[ast.Source] = None,
+    source: ast.Source | None = None,
     log: logging.Logger = _log,
 ) -> ast.Module:
     """Convert FhY source code into corresponding AST module representation.

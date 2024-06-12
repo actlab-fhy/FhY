@@ -56,7 +56,6 @@ Primitive Expressions:
 from abc import ABC
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import List
 
 from fhy.ir.identifier import Identifier as IRIdentifier
 from fhy.ir.type import Type as IRType
@@ -99,7 +98,7 @@ class UnaryExpression(Expression):
     operation: UnaryOperation
     expression: Expression
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["operation", "expression"])
         return attrs
@@ -180,7 +179,7 @@ class BinaryExpression(Expression):
     left: Expression
     right: Expression
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["operation", "left", "right"])
         return attrs
@@ -206,7 +205,7 @@ class TernaryExpression(Expression):
     true: Expression
     false: Expression
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["condition", "true", "false"])
         return attrs
@@ -229,7 +228,7 @@ class TupleAccessExpression(Expression):
     tuple_expression: Expression
     element_index: "IntLiteral"
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["tuple_expression", "element_index"])
         return attrs
@@ -255,11 +254,11 @@ class FunctionExpression(Expression):
     """
 
     function: Expression
-    template_types: List[IRType] = field(default_factory=list)
-    indices: List[Expression] = field(default_factory=list)
-    args: List[Expression] = field(default_factory=list)
+    template_types: list[IRType] = field(default_factory=list)
+    indices: list[Expression] = field(default_factory=list)
+    args: list[Expression] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["function", "template_types", "indices", "args"])
         return attrs
@@ -280,9 +279,9 @@ class ArrayAccessExpression(Expression):
     """
 
     array_expression: Expression
-    indices: List[Expression] = field(default_factory=list)
+    indices: list[Expression] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["array_expression", "indices"])
         return attrs
@@ -301,9 +300,9 @@ class TupleExpression(Expression):
 
     """
 
-    expressions: List[Expression] = field(default_factory=list)
+    expressions: list[Expression] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["expressions"])
         return attrs
@@ -323,7 +322,7 @@ class IdentifierExpression(Expression):
 
     identifier: IRIdentifier
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["identifier"])
         return attrs
@@ -348,7 +347,7 @@ class IntLiteral(Literal):
 
     value: int
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["value"])
         return attrs
@@ -368,7 +367,7 @@ class FloatLiteral(Literal):
 
     value: float
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["value"])
         return attrs
@@ -388,7 +387,7 @@ class ComplexLiteral(Literal):
 
     value: complex
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["value"])
         return attrs

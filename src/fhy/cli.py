@@ -38,11 +38,10 @@ import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, TypeVar, Union
+from typing import Annotated, Optional, TypeVar
 
 import typer
 import typer.core
-from typing_extensions import Annotated
 
 from fhy import __version__, ir
 from fhy.driver import CompilationOptions, Workspace, compile_fhy
@@ -70,7 +69,7 @@ if typer.core.rich is not None:
 
 
 def make_logger(
-    verbose: bool = False, file: Optional[Union[str, Path]] = None
+    verbose: bool = False, file: str | Path | None = None
 ) -> logging.Logger:
     """Construct a simple logger."""
     level: int = logging.DEBUG if verbose else logging.INFO
@@ -144,10 +143,10 @@ def _confirm_arg(value: bool, check: str) -> bool:
 
 
 def compile_fhy_source(
-    main_file: Optional[Path] = None,
+    main_file: Path | None = None,
     verbose: bool = False,
-    log_file: Optional[Path] = None,
-    config: Optional[Path] = None,
+    log_file: Path | None = None,
+    config: Path | None = None,
     force_rebuild: bool = False,
 ) -> CompilationResult:
     """Parse a source file, convert into high level IR Program."""

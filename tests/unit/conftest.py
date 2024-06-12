@@ -6,7 +6,7 @@ file.
 
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 from fhy.lang.ast import ASTNode

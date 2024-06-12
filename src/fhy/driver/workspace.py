@@ -34,7 +34,7 @@
 from pathlib import Path
 
 
-class Workspace(object):
+class Workspace:
     """Workspace describing project root main file path.
 
     Args:

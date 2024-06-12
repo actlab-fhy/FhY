@@ -41,7 +41,8 @@ Functions:
 
 import re
 from collections import ChainMap
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Any
 
 from antlr4 import ParserRuleContext  # type: ignore[import-untyped]
 
@@ -54,8 +55,8 @@ from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped
 
 
 def _get_source_info(
-    ctx: ParserRuleContext, source: Optional[Source] = None, parent: bool = False
-) -> Optional[Span]:
+    ctx: ParserRuleContext, source: Source | None = None, parent: bool = False
+) -> Span | None:
     """Retrieves line and column information from a context."""
     start = ctx.start
     stop = ctx.stop
@@ -69,7 +70,7 @@ def _get_source_info(
     return None
 
 
-def _source_position(span: Optional[Span]) -> str:
+def _source_position(span: Span | None) -> str:
     if span is None:
         return ""
     line, col = span.line, span.column
@@ -78,7 +79,7 @@ def _source_position(span: Optional[Span]) -> str:
     return text
 
 
-def _initialize_builtin_identifiers() -> Dict[str, ir.Identifier]:
+def _initialize_builtin_identifiers() -> dict[str, ir.Identifier]:
     return {
         "sum": ir.Identifier("sum"),
     }
@@ -101,10 +102,10 @@ class ParseTreeConverter(FhYVisitor):
 
     """
 
-    source: Optional[Source]
+    source: Source | None
     _scopes: ChainMap[str, ir.Identifier]
 
-    def __init__(self, source: Optional[Source] = None) -> None:
+    def __init__(self, source: Source | None = None) -> None:
         self.source = source
         self._scopes = ChainMap(_initialize_builtin_identifiers())
 
@@ -122,16 +123,16 @@ class ParseTreeConverter(FhYVisitor):
             self._scopes[name_hint] = identifier
             return identifier
 
-    def _get_span(self, ctx: ParserRuleContext) -> Optional[Span]:
+    def _get_span(self, ctx: ParserRuleContext) -> Span | None:
         return _get_source_info(ctx, self.source)
 
     # =====================
     # MODULE VISITORS
     # =====================
     def visitModule(self, ctx: FhYParser.ModuleContext) -> ast.Module:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
 
-        statements: List[ast.Statement] = self.visitScope(ctx.scope())
+        statements: list[ast.Statement] = self.visitScope(ctx.scope())
 
         return ast.Module(statements=statements, span=span)
 
@@ -148,7 +149,7 @@ class ParseTreeConverter(FhYVisitor):
         for module_name in identifier_expression_ctx.IDENTIFIER():
             name_hint_components.append(module_name.getText())
         name_hint: str = ".".join(name_hint_components)
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
 
         return ast.Import(name=self._get_identifier(name_hint), span=span)
 
@@ -156,14 +157,14 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Function_declarationContext
     ) -> Any:
         # TODO: Implement
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         text: str = _source_position(span)
 
         raise NotImplementedError(f"Function Declarations are not Supported. {text}")
 
     def visitFunction_definition(
         self, ctx: FhYParser.Function_definitionContext
-    ) -> Union[ast.Operation, ast.Procedure]:
+    ) -> ast.Operation | ast.Procedure:
         # TODO: add template types and indices (3rd and 4th returned values here)
         # TODO: consider getting function name here as the open scope needed to be moved
         #       to function header so the function name is still in the parent scope
@@ -172,14 +173,14 @@ class ParseTreeConverter(FhYVisitor):
         )
 
         body_ctx: FhYParser.Function_bodyContext = ctx.function_body()
-        body: List[ast.Statement] = self.visitFunction_body(body_ctx)
-        span: Optional[Span] = self._get_span(ctx)
+        body: list[ast.Statement] = self.visitFunction_body(body_ctx)
+        span: Span | None = self._get_span(ctx)
 
         self._close_scope()
 
         if keyword == "proc":
             if return_type is not None:
-                pos: Optional[Span] = self._get_span(
+                pos: Span | None = self._get_span(
                     ctx.function_header().qualified_type()
                 )
                 text: str = _source_position(pos)
@@ -217,15 +218,15 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitFunction_header(
         self, ctx: FhYParser.Function_headerContext
-    ) -> Tuple[
+    ) -> tuple[
         str,
         ir.Identifier,
-        List[ir.Identifier],
-        List[ast.Argument],
-        List[ast.Argument],
-        Optional[ast.QualifiedType],
+        list[ir.Identifier],
+        list[ast.Argument],
+        list[ast.Argument],
+        ast.QualifiedType | None,
     ]:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
 
         # NOTE: Predefined Function Keywords required for parsing Function.
         if (kw_ctx := ctx.FUNCTION_KEYWORD()) is None:
@@ -244,19 +245,19 @@ class ParseTreeConverter(FhYVisitor):
         self._open_scope()
 
         args_ctx: FhYParser.Function_argsContext = ctx.function_args(0)
-        args: List[ast.Argument] = self.visitFunction_args(args_ctx)
+        args: list[ast.Argument] = self.visitFunction_args(args_ctx)
 
         # TODO: Implement Support for Function template and indices
-        template: List[ir.Identifier] = []
+        template: list[ir.Identifier] = []
         if ctx.function_template_types is not None:
             template_ctx: FhYParser.Identifier_listContext = ctx.identifier_list()
             template.extend(self.visitIdentifier_list(template_ctx))
 
-        indices: List[ast.Argument] = []
+        indices: list[ast.Argument] = []
         if (index_ctx := ctx.function_indices) is not None:
             indices.extend(self.visitFunction_args(index_ctx))
 
-        return_type: Optional[ast.QualifiedType] = None
+        return_type: ast.QualifiedType | None = None
         if (return_type_ctx := ctx.qualified_type()) is not None:
             return_type = self.visitQualified_type(return_type_ctx)
 
@@ -264,8 +265,8 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitFunction_args(
         self, ctx: FhYParser.Function_argsContext
-    ) -> List[ast.Argument]:
-        args: List[ast.Argument] = []
+    ) -> list[ast.Argument]:
+        args: list[ast.Argument] = []
         if ctx.function_arg() is not None:
             for arg_ctx in ctx.function_arg():
                 arg: ast.Argument = self.visitFunction_arg(arg_ctx)
@@ -274,7 +275,7 @@ class ParseTreeConverter(FhYVisitor):
         return args
 
     def visitFunction_arg(self, ctx: FhYParser.Function_argContext) -> ast.Argument:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
 
         qualified_type: ast.QualifiedType
         qualified_type = self.visitQualified_type(ctx.qualified_type())
@@ -289,12 +290,12 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitFunction_body(
         self, ctx: FhYParser.Function_bodyContext
-    ) -> List[ast.Statement]:
+    ) -> list[ast.Statement]:
         return self.visitScope(ctx.scope())
 
-    def visitScope(self, ctx: FhYParser.ScopeContext) -> List[ast.Statement]:
+    def visitScope(self, ctx: FhYParser.ScopeContext) -> list[ast.Statement]:
         self._open_scope()
-        statements: List[ast.Statement] = []
+        statements: list[ast.Statement] = []
         if ctx.statement() is not None:
             for statement_ctx in ctx.statement():
                 statement = self.visitStatement(statement_ctx)
@@ -306,7 +307,7 @@ class ParseTreeConverter(FhYVisitor):
     def visitDeclaration_statement(
         self, ctx: FhYParser.Declaration_statementContext
     ) -> ast.DeclarationStatement:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         qualified_type: ast.QualifiedType
         qualified_type = self.visitQualified_type(ctx.qualified_type())
 
@@ -338,7 +339,7 @@ class ParseTreeConverter(FhYVisitor):
 
         right_expression_ctx: FhYParser.ExpressionContext = ctx.expression()
         right_expression: ast.Expression = self.visitExpression(right_expression_ctx)
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
 
         return ast.ExpressionStatement(
             left=left_expression, right=right_expression, span=span
@@ -347,14 +348,14 @@ class ParseTreeConverter(FhYVisitor):
     def visitSelection_statement(
         self, ctx: FhYParser.Selection_statementContext
     ) -> ast.SelectionStatement:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         condition_ctx: FhYParser.ExpressionContext = ctx.expression()
         condition: ast.Expression = self.visitExpression(condition_ctx)
 
         true_body_ctx: FhYParser.ScopeContext = ctx.scope(0)
-        true_body: List[ast.Statement] = self.visitScope(true_body_ctx)
+        true_body: list[ast.Statement] = self.visitScope(true_body_ctx)
 
-        false_body: List[ast.Statement] = []
+        false_body: list[ast.Statement] = []
         if (false_body_ctx := ctx.scope(1)) is not None:
             false_body = self.visitScope(false_body_ctx)
 
@@ -365,19 +366,19 @@ class ParseTreeConverter(FhYVisitor):
     def visitIteration_statement(
         self, ctx: FhYParser.Iteration_statementContext
     ) -> ast.ForAllStatement:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         index_ctx: FhYParser.ExpressionContext = ctx.expression()
         index: ast.Expression = self.visitExpression(index_ctx)
 
         body_ctx: FhYParser.ScopeContext = ctx.scope()
-        body: List[ast.Statement] = self.visitScope(body_ctx)
+        body: list[ast.Statement] = self.visitScope(body_ctx)
 
         return ast.ForAllStatement(index=index, body=body, span=span)
 
     def visitReturn_statement(
         self, ctx: FhYParser.Return_statementContext
     ) -> ast.ReturnStatement:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         expression_ctx: FhYParser.ExpressionContext = ctx.expression()
         expression: ast.Expression = self.visitExpression(expression_ctx)
 
@@ -389,7 +390,7 @@ class ParseTreeConverter(FhYVisitor):
     def visitExpression_list(
         self, ctx: FhYParser.Expression_listContext
     ) -> Sequence[Expressions]:
-        expressions: List[Expressions] = []
+        expressions: list[Expressions] = []
         if ctx.expression() is not None:
             for expression_ctx in ctx.expression():
                 expressions.append(self.visitExpression(expression_ctx))
@@ -397,7 +398,7 @@ class ParseTreeConverter(FhYVisitor):
         return expressions
 
     def visitExpression(self, ctx: FhYParser.ExpressionContext) -> ast.Expression:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         if ctx.nested_expression is not None:
             return self.visitExpression(ctx.expression(0))
 
@@ -485,7 +486,7 @@ class ParseTreeConverter(FhYVisitor):
     def visitPrimitive_expression(
         self, ctx: FhYParser.Primitive_expressionContext
     ) -> ast.Expression:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         if ctx.tuple_access_expression is not None:
             expression: ast.Expression = self.visitPrimitive_expression(
                 ctx.primitive_expression()
@@ -515,21 +516,21 @@ class ParseTreeConverter(FhYVisitor):
 
             expression_list_counter: int = 0
 
-            template_types: List[ast.Expression] = []
+            template_types: list[ast.Expression] = []
             if ctx.LESS_THAN() is not None and ctx.GREATER_THAN() is not None:
                 template_types = self.visitExpression_list(
                     ctx.expression_list(expression_list_counter)
                 )
                 expression_list_counter += 1
 
-            indices: List[ast.Expression] = []
+            indices: list[ast.Expression] = []
             if ctx.OPEN_BRACKET() is not None and ctx.CLOSE_BRACKET() is not None:
                 indices = self.visitExpression_list(
                     ctx.expression_list(expression_list_counter)
                 )
                 expression_list_counter += 1
 
-            args: List[ast.Expression] = self.visitExpression_list(
+            args: list[ast.Expression] = self.visitExpression_list(
                 ctx.expression_list(expression_list_counter)
             )
 
@@ -573,15 +574,15 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitIdentifier_list(
         self, ctx: FhYParser.Identifier_listContext
-    ) -> List[ir.Identifier]:
-        ids: List[ir.Identifier] = []
+    ) -> list[ir.Identifier]:
+        ids: list[ir.Identifier] = []
         for name in ctx.IDENTIFIER():
             ids.append(self._get_identifier(name.getText()))
 
         return ids
 
     def visitLiteral(self, ctx: FhYParser.LiteralContext) -> ast.Literal:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
         if (int_literal_ctx := ctx.INT_LITERAL()) is not None:
             int_literal_str: str = int_literal_ctx.getText()
 
@@ -620,9 +621,9 @@ class ParseTreeConverter(FhYVisitor):
     def visitQualified_type(
         self, ctx: FhYParser.Qualified_typeContext
     ) -> ast.QualifiedType:
-        span: Optional[Span] = self._get_span(ctx)
+        span: Span | None = self._get_span(ctx)
 
-        type_qualifier: Optional[ir.TypeQualifier] = None
+        type_qualifier: ir.TypeQualifier | None = None
         if (type_qualifier_ctx := ctx.IDENTIFIER()) is not None:
             type_qualifier = ir.TypeQualifier(type_qualifier_ctx.getText())
 
@@ -661,21 +662,21 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitRange(
         self, ctx: FhYParser.RangeContext
-    ) -> Tuple[ast.Expression, ast.Expression, Optional[ast.Expression]]:
+    ) -> tuple[ast.Expression, ast.Expression, ast.Expression | None]:
         low_ctx: FhYParser.ExpressionContext = ctx.expression(0)
         low: ast.Expression = self.visitExpression(low_ctx)
 
         high_ctx: FhYParser.ExpressionContext = ctx.expression(1)
         high: ast.Expression = self.visitExpression(high_ctx)
 
-        stride: Optional[ast.Expression] = None
+        stride: ast.Expression | None = None
         if (stride_ctx := ctx.expression(2)) is not None:
             stride = self.visitExpression(stride_ctx)
 
         return low, high, stride
 
     def visitTuple_type(self, ctx: FhYParser.Tuple_typeContext) -> ir.type.TupleType:
-        types: List[ir.Type] = []
+        types: list[ir.Type] = []
         if (context := ctx.type_()) is not None:
             for t in context:
                 types.append(self.visitType(t))
@@ -684,7 +685,7 @@ class ParseTreeConverter(FhYVisitor):
 
 
 def from_parse_tree(
-    parse_tree: FhYParser.ModuleContext, source: Optional[Source] = None
+    parse_tree: FhYParser.ModuleContext, source: Source | None = None
 ) -> ast.Module:
     """Constructs an AST from a concrete syntax tree.
 

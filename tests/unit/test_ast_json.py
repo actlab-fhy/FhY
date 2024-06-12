@@ -9,7 +9,8 @@ equivalent to our starting data formats.
 """
 
 import json
-from typing import Callable, List, Tuple, TypeVar, Union
+from collections.abc import Callable
+from typing import TypeVar
 
 import pytest
 from fhy.ir import (
@@ -61,7 +62,7 @@ from ..utils import load_text
 TLiteral = TypeVar("TLiteral", IntLiteral, FloatLiteral, ComplexLiteral)
 
 
-def construct_id(name: str) -> Tuple[dict, Span]:
+def construct_id(name: str) -> tuple[dict, Span]:
     """Build an Identifier from a Name Hint."""
     _id = Identifier(name)
     obj = dict(cls_name="Identifier", attributes=dict(name_hint=name, _id=_id._id))
@@ -70,7 +71,7 @@ def construct_id(name: str) -> Tuple[dict, Span]:
 
 
 @pytest.fixture
-def span() -> Tuple[dict, Span]:
+def span() -> tuple[dict, Span]:
     a, b, c, d, e = 0, 10, 0, 10, "test"
     obj = dict(
         cls_name="Span",
@@ -88,8 +89,8 @@ def span() -> Tuple[dict, Span]:
 
 
 @pytest.fixture
-def literals(span) -> Callable[[Union[int, float, complex]], Tuple[dict, TLiteral]]:
-    def _build(value: Union[int, float, complex]):
+def literals(span) -> Callable[[int | float | complex], tuple[dict, TLiteral]]:
+    def _build(value: int | float | complex):  # noqa: PYI041
         span_obj, span_cls = span
         _literal: TLiteral
         if isinstance(value, complex):
@@ -112,8 +113,8 @@ def literals(span) -> Callable[[Union[int, float, complex]], Tuple[dict, TLitera
 
 
 def build_numerical_type(
-    primitive: PrimitiveDataType, shape_objs: List[dict], shape_cls: List[Expression]
-) -> Tuple[dict, NumericalType]:
+    primitive: PrimitiveDataType, shape_objs: list[dict], shape_cls: list[Expression]
+) -> tuple[dict, NumericalType]:
     """Builds a Numerical Type obj and node."""
     obj = dict(
         cls_name="NumericalType",
@@ -134,7 +135,7 @@ def build_numerical_type(
 
 
 @pytest.fixture
-def index_type(literals) -> Tuple[dict, IndexType]:
+def index_type(literals) -> tuple[dict, IndexType]:
     one_obj, one_cls = literals(1)
     upper_obj, upper_cls = construct_id("k")
 
@@ -157,7 +158,7 @@ def index_type(literals) -> Tuple[dict, IndexType]:
 
 
 @pytest.fixture
-def tuple_type() -> Tuple[dict, TupleType]:
+def tuple_type() -> tuple[dict, TupleType]:
     shape_1_obj, shape_1_id = construct_id("m")
     num_obj, numerical = build_numerical_type(
         PrimitiveDataType.INT32, [shape_1_obj], [shape_1_id]
@@ -171,7 +172,7 @@ def tuple_type() -> Tuple[dict, TupleType]:
 
 
 @pytest.fixture
-def qualified(span) -> Tuple[dict, QualifiedType]:
+def qualified(span) -> tuple[dict, QualifiedType]:
     span_obj, span_cls = span
     shape_1_obj, shape_1_id = construct_id("m")
     shape_2_obj, shape_2_id = construct_id("n")
@@ -198,7 +199,7 @@ def qualified(span) -> Tuple[dict, QualifiedType]:
 
 
 @pytest.fixture
-def arg1(span, qualified) -> Tuple[dict, Argument]:
+def arg1(span, qualified) -> tuple[dict, Argument]:
     span_obj, span_cls = span
     qtype_obj, qtype_cls = qualified
     arg_id_obj, arg_id = construct_id("rupaul")
@@ -223,7 +224,7 @@ def arg1(span, qualified) -> Tuple[dict, Argument]:
 
 # EXPRESSIONS
 @pytest.fixture
-def unary(span, literals) -> Tuple[dict, UnaryExpression]:
+def unary(span, literals) -> tuple[dict, UnaryExpression]:
     span_obj, span_cls = span
     negative = UnaryOperation.NEGATIVE
     literal_obj, literal_cls = literals(5)
@@ -243,7 +244,7 @@ def unary(span, literals) -> Tuple[dict, UnaryExpression]:
 
 
 @pytest.fixture
-def binary(span, literals) -> Tuple[dict, BinaryExpression]:
+def binary(span, literals) -> tuple[dict, BinaryExpression]:
     span_obj, span_cls = span
     addition = BinaryOperation.ADDITION
     lit_obj_left, lit_cls_left = literals(5)
@@ -267,7 +268,7 @@ def binary(span, literals) -> Tuple[dict, BinaryExpression]:
 
 
 @pytest.fixture
-def ternary(span, literals, binary, unary) -> Tuple[dict, TernaryExpression]:
+def ternary(span, literals, binary, unary) -> tuple[dict, TernaryExpression]:
     span_obj, span_cls = span
     cond_obj, cond_cls = literals(1)
     binary_obj, binary_cls = binary
@@ -291,7 +292,7 @@ def ternary(span, literals, binary, unary) -> Tuple[dict, TernaryExpression]:
 
 
 @pytest.fixture
-def tuple_access(span, literals) -> Tuple[dict, TupleAccessExpression]:
+def tuple_access(span, literals) -> tuple[dict, TupleAccessExpression]:
     span_obj, span_cls = span
     one_obj, one_cls = literals(1)
     name_obj, name_cls = construct_id("A")
@@ -314,7 +315,7 @@ def tuple_access(span, literals) -> Tuple[dict, TupleAccessExpression]:
 
 
 @pytest.fixture
-def function_call(span) -> Tuple[dict, FunctionExpression]:
+def function_call(span) -> tuple[dict, FunctionExpression]:
     span_obj, span_cls = span
     name_obj, name_cls = construct_id("funky")
 
@@ -332,7 +333,7 @@ def function_call(span) -> Tuple[dict, FunctionExpression]:
 
 
 @pytest.fixture
-def array_access(span) -> Tuple[dict, ArrayAccessExpression]:
+def array_access(span) -> tuple[dict, ArrayAccessExpression]:
     span_obj, span_cls = span
     array_id_obj, array_id_cls = construct_id("array")
     index_1_obj, index_1_cls = construct_id("j")
@@ -356,7 +357,7 @@ def array_access(span) -> Tuple[dict, ArrayAccessExpression]:
 
 
 @pytest.fixture
-def tuple_express(span) -> Tuple[dict, TupleExpression]:
+def tuple_express(span) -> tuple[dict, TupleExpression]:
     span_obj, span_cls = span
 
     obj = dict(
@@ -375,7 +376,7 @@ def tuple_express(span) -> Tuple[dict, TupleExpression]:
 
 
 @pytest.fixture
-def id_express(span) -> Tuple[dict, IdentifierExpression]:
+def id_express(span) -> tuple[dict, IdentifierExpression]:
     span_obj, span_cls = span
     id_obj, id_cls = construct_id("name")
 
@@ -396,7 +397,7 @@ def id_express(span) -> Tuple[dict, IdentifierExpression]:
 
 # STATEMENTS
 @pytest.fixture
-def declaration(span, qualified, binary) -> Tuple[dict, DeclarationStatement]:
+def declaration(span, qualified, binary) -> tuple[dict, DeclarationStatement]:
     span_obj, span_cls = span
     qtype_obj, qtype_cls = qualified
     binary_obj, binary_cls = binary
@@ -423,7 +424,7 @@ def declaration(span, qualified, binary) -> Tuple[dict, DeclarationStatement]:
 
 
 @pytest.fixture
-def express_state(span, unary, array_access) -> Tuple[dict, ExpressionStatement]:
+def express_state(span, unary, array_access) -> tuple[dict, ExpressionStatement]:
     span_obj, span_cls = span
     array_obj, array_cls = array_access
     unary_obj, unary_cls = unary
@@ -447,7 +448,7 @@ def express_state(span, unary, array_access) -> Tuple[dict, ExpressionStatement]
 
 
 @pytest.fixture
-def iteration_state(span) -> Tuple[dict, ForAllStatement]:
+def iteration_state(span) -> tuple[dict, ForAllStatement]:
     span_obj, span_cls = span
     index_obj, index_cls = construct_id("elements")
 
@@ -462,7 +463,7 @@ def iteration_state(span) -> Tuple[dict, ForAllStatement]:
 
 
 @pytest.fixture
-def select_state(span, binary) -> Tuple[dict, SelectionStatement]:
+def select_state(span, binary) -> tuple[dict, SelectionStatement]:
     span_obj, span_cls = span
     binary_obj, binary_cls = binary
 
@@ -481,7 +482,7 @@ def select_state(span, binary) -> Tuple[dict, SelectionStatement]:
 
 
 @pytest.fixture
-def return_state(span, unary) -> Tuple[dict, ReturnStatement]:
+def return_state(span, unary) -> tuple[dict, ReturnStatement]:
     span_obj, span_cls = span
     unary_obj, unary_cls = unary
 
@@ -500,7 +501,7 @@ def return_state(span, unary) -> Tuple[dict, ReturnStatement]:
 
 # FUNCTIONS
 @pytest.fixture
-def operation(span, arg1, qualified, express_state) -> Tuple[dict, Operation]:
+def operation(span, arg1, qualified, express_state) -> tuple[dict, Operation]:
     span_obj, span_cls = span
     arg1_obj, arg1_cls = arg1
     qtype_obj, qtype_cls = qualified
@@ -531,7 +532,7 @@ def operation(span, arg1, qualified, express_state) -> Tuple[dict, Operation]:
 
 
 @pytest.fixture
-def procedure(span, arg1, declaration) -> Tuple[dict, Procedure]:
+def procedure(span, arg1, declaration) -> tuple[dict, Procedure]:
     span_obj, span_cls = span
     arg1_obj, arg1_cls = arg1
     declare_obj, declare_cls = declaration
@@ -557,7 +558,7 @@ def procedure(span, arg1, declaration) -> Tuple[dict, Procedure]:
 
 # MODULE
 @pytest.fixture
-def module(span, operation, procedure) -> Tuple[dict, Module]:
+def module(span, operation, procedure) -> tuple[dict, Module]:
     span_obj, span_cls = span
     op_obj, op_cls = operation
     proc_obj, proc_cls = procedure
@@ -646,7 +647,7 @@ def test_identifier_node(function):
     function(obj, node)
 
 
-@pytest.mark.parametrize("value", [int(1), float(1), complex(1)])
+@pytest.mark.parametrize("value", [1, float(1), complex(1)])
 @pytest.mark.parametrize("function", [_test_to_json, _test_from_json])
 def test_literal_values(value, function, literals):
     """Test Literal Value Node to and From Json Object conversions."""

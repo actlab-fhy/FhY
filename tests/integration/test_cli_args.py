@@ -53,7 +53,7 @@ def test_log_file(file_log):
     assert os.path.exists(file_log), "Expected Log File to be created."
     assert "ERROR" in error, "Expected error message logged to stderr."
 
-    with open(file_log, "r") as f:
+    with open(file_log) as f:
         text = f.read()
 
     assert "ERROR" in text, "Expected Error Message within file."

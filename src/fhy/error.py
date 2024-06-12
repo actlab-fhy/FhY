@@ -35,12 +35,10 @@ All custom FhY exceptions can be viewed at 'Fhy.utils.errors.FHY_ERRORS'
 
 """
 
-from typing import Dict, Type
-
-FHY_ERRORS: Dict[Type[Exception], str] = {}
+FHY_ERRORS: dict[type[Exception], str] = {}
 
 
-def register_fhy_error(error: Type[Exception]) -> Type[Exception]:
+def register_fhy_error(error: type[Exception]) -> type[Exception]:
     """Register custom FhY exceptions."""
     FHY_ERRORS[error] = error.__doc__ or error.__name__
 
@@ -71,8 +69,6 @@ _initialize_builtins()
 @register_fhy_error
 class UsageError(Exception):
     """User induced error."""
-
-    ...
 
 
 @register_fhy_error

@@ -32,7 +32,6 @@
 """Qualified type AST node."""
 
 from dataclasses import dataclass
-from typing import List
 
 from fhy.ir.type import Type as IRType
 from fhy.ir.type import TypeQualifier as IRTypeQualifier
@@ -57,7 +56,7 @@ class QualifiedType(ASTNode):
     base_type: IRType
     type_qualifier: IRTypeQualifier
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["base_type", "type_qualifier"])
         return attrs

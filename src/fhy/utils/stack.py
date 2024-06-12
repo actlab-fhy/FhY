@@ -37,7 +37,8 @@ Classes:
 """
 
 from collections import deque
-from typing import Generic, Iterator, TypeVar
+from collections.abc import Iterator
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 

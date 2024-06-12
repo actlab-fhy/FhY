@@ -32,7 +32,6 @@
 """Identifier replacement transformer."""
 
 from copy import copy
-from typing import Dict
 
 from fhy import ir
 from fhy.lang.ast.alias import ASTObject
@@ -48,9 +47,9 @@ class IdentifierReplacer(Transformer):
 
     """
 
-    _identifier_map: Dict[ir.Identifier, ir.Identifier]
+    _identifier_map: dict[ir.Identifier, ir.Identifier]
 
-    def __init__(self, identifier_map: Dict[ir.Identifier, ir.Identifier]):
+    def __init__(self, identifier_map: dict[ir.Identifier, ir.Identifier]):
         super().__init__()
         self._identifier_map = identifier_map
 
@@ -59,7 +58,7 @@ class IdentifierReplacer(Transformer):
 
 
 def replace_identifiers(
-    node: ASTObject, identifier_map: Dict[ir.Identifier, ir.Identifier]
+    node: ASTObject, identifier_map: dict[ir.Identifier, ir.Identifier]
 ) -> ASTObject:
     """Replace identifiers within AST.
 
