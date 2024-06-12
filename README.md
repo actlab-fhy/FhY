@@ -80,9 +80,12 @@ If not already available on your system, [Install Java 11 JDK](https://www.azul.
 
 4. Install FhY.
 
+    We currently list typer-slim as a requirement, to minimize dependencies, but
+    recommend installing with the optional dependency `rich`.
+
     ```bash
     # Standard Installation
-    pip install .
+    pip install ".[rich]"
 
     # For contributors
     pip install ".[dev]"
@@ -95,12 +98,14 @@ command line. Start with a simple example from our integration tests (if you clo
 *FhY* repository), and serialize to *FhY* text to stdout.
 
 ```bash
-fhy --module tests/integration/data/input/matmul.fhy serialize --format pretty
+fhy serialize tests/integration/data/input/matmul.fhy --format pretty
 ```
 
-Use the help flag option to get more up to date information on usage of the CLI tool.
+Use the help flag option to get more up to date information on usage of the CLI tool,
+or on subcommands:
 ```bash
 fhy --help
+fhy serialize --help
 ```
 
 ## FhY License
