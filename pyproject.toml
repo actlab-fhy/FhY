@@ -21,6 +21,7 @@ keywords = [
 classifiers = [
    "Development Status :: 1 - Planning",
    "Programming Language :: Python :: 3",
+   "License :: OSI Approved :: BSD License",
 ]
 dynamic = ["version", "readme", "dependencies"]
 
@@ -39,8 +40,9 @@ exclude = ["grammar", "docs", "tests"]
 fhy = "fhy.cli:app"
 
 [project.optional-dependencies]
-dev = ["fhy[test,lint,type,docs,rich]", "tox"]
+dev = ["fhy[test,lint,type,docs,rich,pre-commit]", "tox"]
 test = ["pytest", "coverage", "pytest-xdist"]
+pre-commit = ["pre-commit>3.0.0"]
 lint = ["ruff", "pylint"]
 type = ["mypy"]
 docs = ["sphinx>=5.0.2"]
@@ -104,7 +106,7 @@ disable = [
    "C0103",  # invalid-name
    "C0116",  # missing-function-docstring
    "C1804",  # "use-implicit-booleaness-not-comparison-to-string",
-   "C1805",  # use-implicit-booleaness-not-comparison-to-zero 
+   "C1805",  # use-implicit-booleaness-not-comparison-to-zero
    "I0001",  # raw-checker-failed
    "I0010",  # bad-inline-option
    "I0011",  # locally-disabled

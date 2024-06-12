@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python package CI
+name: FhY CI
 
 on:
   push:
@@ -141,12 +141,12 @@ jobs:
         run: |
           "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
 
-      - name: PyTest
+      - name: Unit & Integration Testing
         run: |
           echo ${{ env.TOX_VERSION }}
           tox -e ${{ env.TOX_VERSION }}
 
-      - name: Save Coverage Data Temporarily
+      - name: Save Coverage Data
         uses: actions/upload-artifact@v4
         with:
           name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
@@ -190,3 +190,22 @@ jobs:
       - name: Report Testing Coverage
         run: |
           tox -e coverage | tee $GITHUB_STEP_SUMMARY
+
+  license:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.4'
+
+      - name: Install addlicense
+        run: |
+          go install github.com/google/addlicense@v1.1.1
+
+      - name: Check for License Headers
+        run: |
+          addlicense -check -f LICENSE -l bsd src
