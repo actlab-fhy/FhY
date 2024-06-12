@@ -31,10 +31,8 @@
 
 """Variable identifier class object to assign unique ID."""
 
-from typing import Any
 
-
-class Identifier(object):
+class Identifier:
     """Identifier node to assign a unique ID.
 
     Args:
@@ -69,7 +67,7 @@ class Identifier(object):
 
         return identifier
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, Identifier) and self._id == other._id
 
     def __hash__(self) -> int:

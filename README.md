@@ -4,9 +4,19 @@
         alt="FhYLogo"
         height=100ex
     >
+    <br>
+    <em><b>A Language for Modeling Physical Things</b></em>
+    <br><br>
+    <a href="https://github.com/actlab-fhy/FhY/actions?query=branch%3Amain+workflow%3AFhY%20CI" target="_blank">
+        <img src="https://github.com/actlab-fhy/FhY/actions/workflows/python-package.yml/badge.svg?branch=main" alt="FhY CI">
+    </a>
+    <a href="https://github.com/actlab-fhy/FhY/blob/main/LICENSE">
+        <img alt="FhY License" src="https://img.shields.io/badge/License-BSD_3--Clause-blue.svg">
+    </a>
 </div>
 
 <h1>
+    <br>
     FhY
 </h1>
 
@@ -70,11 +80,14 @@ If not already available on your system, [Install Java 11 JDK](https://www.azul.
 
 4. Install FhY.
 
+    We currently list typer-slim as a requirement, to minimize dependencies, but
+    recommend installing with the optional dependency `rich`.
+
     ```bash
     # Standard Installation
-    pip install .
+    pip install ".[rich]"
 
-    # For Developers
+    # For contributors
     pip install ".[dev]"
     ```
 
@@ -85,17 +98,19 @@ command line. Start with a simple example from our integration tests (if you clo
 *FhY* repository), and serialize to *FhY* text to stdout.
 
 ```bash
-fhy --module tests/integration/data/input/matmul.fhy serialize --format pretty
+fhy serialize tests/integration/data/input/matmul.fhy --format pretty
 ```
 
-Use the help flag option to get more up to date information on usage of the CLI tool.
+Use the help flag option to get more up to date information on usage of the CLI tool,
+or on subcommands:
 ```bash
 fhy --help
+fhy serialize --help
 ```
 
 ## FhY License
 
-FhY is distributed under the [BSD-3](LICENSE) license.
+FhY software is distributed under the [3-Clause BSD](LICENSE) open source license.
 
 
 ## Dependencies

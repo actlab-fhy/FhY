@@ -31,12 +31,12 @@
 
 """IO file handlers."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator, Optional, Tuple, Union
 
 
-def standard_path(value: Optional[Union[str, Path]]) -> Path:
+def standard_path(value: str | Path | None) -> Path:
     """Standardize and resolve a file path.
 
     Raises:
@@ -63,7 +63,7 @@ def standard_path(value: Optional[Union[str, Path]]) -> Path:
 @contextmanager
 def open_file(
     file_path: Path, mode: str
-) -> Generator[Tuple[Optional[str], Optional[Exception]], None, None]:
+) -> Generator[tuple[str | None, Exception | None], None, None]:
     """Overly cautious context manager to open a file with better error reporting.
 
     Args:

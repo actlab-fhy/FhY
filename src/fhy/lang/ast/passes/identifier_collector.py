@@ -39,8 +39,6 @@ Classes:
 
 """
 
-from typing import Set
-
 from fhy import ir
 from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import Visitor
@@ -51,21 +49,21 @@ from fhy.lang.ast.visitor import Visitor
 class IdentifierCollector(Visitor):
     """Collect all identifiers in the AST for any given node."""
 
-    _identifiers: Set[ir.Identifier]
+    _identifiers: set[ir.Identifier]
 
     def __init__(self) -> None:
         super().__init__()
         self._identifiers = set()
 
     @property
-    def identifiers(self) -> Set[ir.Identifier]:
+    def identifiers(self) -> set[ir.Identifier]:
         return self._identifiers
 
     def visit_Identifier(self, identifier: ir.Identifier) -> None:
         self._identifiers.add(identifier)
 
 
-def collect_identifiers(node: ASTObject) -> Set[ir.Identifier]:
+def collect_identifiers(node: ASTObject) -> set[ir.Identifier]:
     """Return a set of identifier objects from a given AST node object."""
     collector = IdentifierCollector()
     collector(node)

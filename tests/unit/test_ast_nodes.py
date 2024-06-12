@@ -1,7 +1,5 @@
 """Simple unit tests for the behavior of AST nodes."""
 
-from typing import List, Type
-
 import pytest
 from fhy.lang import ast
 
@@ -51,7 +49,7 @@ def test_base_node_keyname(name: str):
         (ast.QualifiedType, "QualifiedType"),
     ],
 )
-def test_keynames(node: Type[ast.ASTNode], expected: str):
+def test_keynames(node: type[ast.ASTNode], expected: str):
     """Test expected key names of AST nodes."""
     result = node.get_key_name()
     assert result == expected, f"Expected {expected}, but got {result} instead."
@@ -114,7 +112,7 @@ def test_keynames(node: Type[ast.ASTNode], expected: str):
         (ast.QualifiedType, False, ["span", "base_type", "type_qualifier"]),
     ],
 )
-def test_attributes(node: type[ast.ASTNode], is_abstract: bool, expected: List[str]):
+def test_attributes(node: type[ast.ASTNode], is_abstract: bool, expected: list[str]):
     """Test that the attributes trickle down subclasses."""
     # Mock instantiate the node
     if not is_abstract:
@@ -125,7 +123,7 @@ def test_attributes(node: type[ast.ASTNode], is_abstract: bool, expected: List[s
         class Test(node):
             """Mock class to test abstract method implementation."""
 
-            def get_visit_attrs(self) -> List[str]:
+            def get_visit_attrs(self) -> list[str]:
                 return super().get_visit_attrs()
 
         instance = Test(**{key: None for key in expected})
