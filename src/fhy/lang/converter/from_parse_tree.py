@@ -600,7 +600,15 @@ class ParseTreeConverter(FhYVisitor):
             float_literal = ast.FloatLiteral(
                 span=span, value=float(float_literal_ctx.getText())
             )
+
             return float_literal
+
+        elif (complex_literal_ctx := ctx.COMPLEX_LITERAL()) is not None:
+            complex_literal = ast.ComplexLiteral(
+                span=span, value=complex(complex_literal_ctx.getText())
+            )
+
+            return complex_literal
 
         else:
             text = _source_position(span)
