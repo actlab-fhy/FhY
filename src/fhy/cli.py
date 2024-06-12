@@ -272,6 +272,13 @@ def serialize(
             help="Indentation to apply to serialization for human readability.",
         ),
     ] = None,
+    include_span: Annotated[
+        bool,
+        typer.Option(
+            "--include-span",
+            help="Include source information in JSON output.",
+        ),
+    ] = False,
 ):
     """Serialize FhY AST nodes into alternative text representations."""
     compiled: CompilationResult = compile_fhy_source(
@@ -289,7 +296,7 @@ def serialize(
 
     elif format.value == SerializationOptions.JSON:
         sys.stdout.write("\n\n")
-        text: str = dump(list(program._components.values()), indent)
+        text: str = dump(list(program._components.values()), indent, include_span)
         sys.stdout.write(text)
         sys.stdout.write("\n\n")
 
