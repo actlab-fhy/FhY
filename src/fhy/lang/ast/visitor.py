@@ -142,9 +142,9 @@ class BasePass(ABC):
 class Visitor(BasePass):
     """AST node visitor."""
 
-    def visit(self, node: ASTObject | list[ASTObject]) -> None:
+    def visit(self, node: ASTObject | Sequence[ASTObject]) -> None:
         if isinstance(node, list):
-            self.visit_list(node)
+            self.visit_sequence(node)
         else:
             super().visit(node)
 
@@ -415,11 +415,11 @@ class Visitor(BasePass):
 
         """
 
-    def visit_list(self, nodes: list[ASTObject]) -> None:
+    def visit_sequence(self, nodes: Sequence[ASTObject]) -> None:
         """Visit a list of nodes or structures.
 
         Args:
-            nodes (List[ASTObject]): Nodes or structures to visit.
+            nodes (list[ASTObject]): Nodes or structures to visit.
 
         """
         for node in nodes:

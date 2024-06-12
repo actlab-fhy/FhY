@@ -44,7 +44,7 @@ Nodes = TypeVar("Nodes", bound=ASTTypeNodes)
 Expressions = _ir.Expression | core.Expression
 ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
 
-CoreASTNodes = core.Statement | core.Function, core.Expression
+CoreASTNodes = core.Statement | core.Function | core.Expression
 Core = TypeVar("Core", bound=CoreASTNodes)
 
 OtherTypes = _ir.Identifier | _ir.DataType | _ir.TypeQualifier | _ir.PrimitiveDataType
