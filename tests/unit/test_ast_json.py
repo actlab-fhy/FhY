@@ -739,7 +739,6 @@ def test_empty_module(construct_ast):
         cls_name="Module",
         attributes=dict(
             statements=[],
-            span=None,
         ),
     )
 
