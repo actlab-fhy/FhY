@@ -182,6 +182,9 @@ convention = "google"  # Accepts: "google" | "numpy" | "pep257"
    "UP022",  # replace-stdout-stderr (UP022)
    "UP031",  # printf-string-formatting (UP031)
 ]
+"*fhy/cli.py" = [
+   "UP007",  # non-pep604-annotation (UP007) --> We must use Optional[type] here
+]
 
 [tool.ruff.format]
 quote-style = "double"

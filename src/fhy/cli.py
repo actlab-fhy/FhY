@@ -38,7 +38,7 @@ import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, TypeVar
+from typing import Annotated, Optional, TypeVar
 
 import typer
 import typer.core
@@ -241,29 +241,29 @@ def main(
 )
 def serialize(
     main_file: Annotated[
-        Path | None,
+        Optional[Path],
         typer.Argument(help="Valid filepath to main FhY module source code."),
     ] = None,
     verbose: Annotated[
         bool, typer.Option("--verbose", help="Enable debugging.")
     ] = False,
     log_file: Annotated[
-        Path | None, typer.Option(help="Provide a filepath to write logs to.")
+        Optional[Path], typer.Option(help="Provide a filepath to write logs to.")
     ] = None,
     config: Annotated[
-        Path | None, typer.Option(help="FhY compilation configuration option file.")
+        Optional[Path], typer.Option(help="FhY compilation configuration option file.")
     ] = None,
     force_rebuild: Annotated[
         bool, typer.Option("--force-rebuild", help="Clear FhY cache before compiling.")
     ] = False,
     format: Annotated[
-        SerializationOptions | None,
+        Optional[SerializationOptions],
         typer.Option(
             "--format", "-f", case_sensitive=False, help="Format to serialize to."
         ),
     ] = None,
     indent: Annotated[
-        int | None,
+        Optional[int],
         typer.Option(
             "--indent",
             "-i",
