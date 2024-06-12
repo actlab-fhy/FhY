@@ -33,7 +33,6 @@
 
 from abc import ABC
 from enum import StrEnum
-from typing import List, Optional
 
 from .expression import Expression
 
@@ -55,7 +54,7 @@ class PrimitiveDataType(StrEnum):
     FLOAT64 = "float64"
 
 
-class DataType(object):
+class DataType:
     """Data type defines core type primitive, but of flexible Bit Width.
 
     Note:
@@ -94,10 +93,10 @@ class NumericalType(Type):
     """
 
     _data_type: DataType
-    _shape: List[Expression]
+    _shape: list[Expression]
 
     def __init__(
-        self, data_type: DataType, shape: Optional[List[Expression]] = None
+        self, data_type: DataType, shape: list[Expression] | None = None
     ) -> None:
         super().__init__()
         self._data_type = data_type
@@ -108,7 +107,7 @@ class NumericalType(Type):
         return self._data_type
 
     @property
-    def shape(self) -> List[Expression]:
+    def shape(self) -> list[Expression]:
         return self._shape
 
     def __repr__(self) -> str:
@@ -131,13 +130,13 @@ class IndexType(Type):
 
     _lower_bound: Expression
     _upper_bound: Expression
-    _stride: Optional[Expression]
+    _stride: Expression | None
 
     def __init__(
         self,
         lower_bound: Expression,
         upper_bound: Expression,
-        stride: Optional[Expression],
+        stride: Expression | None,
     ) -> None:
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
@@ -152,7 +151,7 @@ class IndexType(Type):
         return self._upper_bound
 
     @property
-    def stride(self) -> Optional[Expression]:
+    def stride(self) -> Expression | None:
         return self._stride
 
     def __repr__(self) -> str:
@@ -167,9 +166,9 @@ class TupleType(Type):
 
     """
 
-    _types: List[Type]
+    _types: list[Type]
 
-    def __init__(self, types: List[Type]) -> None:
+    def __init__(self, types: list[Type]) -> None:
         super().__init__()
         self._types = types
 

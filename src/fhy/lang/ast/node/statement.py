@@ -39,7 +39,6 @@ Statement ASTNodes:
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 from fhy.ir.identifier import Identifier as IRIdentifier
 
@@ -66,7 +65,7 @@ class Import(Statement):
 
     name: IRIdentifier
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name"])
         return attrs
@@ -89,7 +88,7 @@ class Argument(ASTNode):
     name: IRIdentifier
     qualified_type: QualifiedType
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name", "qualified_type"])
         return attrs
@@ -111,12 +110,12 @@ class Procedure(Function):
 
     """
 
-    templates: List[IRIdentifier] = field(default_factory=list)
-    args: List[Argument] = field(default_factory=list)
-    body: List[Statement] = field(default_factory=list)
+    templates: list[IRIdentifier] = field(default_factory=list)
+    args: list[Argument] = field(default_factory=list)
+    body: list[Statement] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
-        attrs: List[str] = super().get_visit_attrs()
+    def get_visit_attrs(self) -> list[str]:
+        attrs: list[str] = super().get_visit_attrs()
         attrs.extend(["templates", "args", "body"])
         return attrs
 
@@ -139,12 +138,12 @@ class Operation(Function):
 
     """
 
-    templates: List[IRIdentifier] = field(default_factory=list)
-    args: List[Argument] = field(default_factory=list)
-    body: List[Statement] = field(default_factory=list)
+    templates: list[IRIdentifier] = field(default_factory=list)
+    args: list[Argument] = field(default_factory=list)
+    body: list[Statement] = field(default_factory=list)
     return_type: QualifiedType
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["templates", "args", "body", "return_type"])
         return attrs
@@ -162,9 +161,9 @@ class Native(Function):
 
     """
 
-    args: List[Argument] = field(default_factory=list)
+    args: list[Argument] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["args"])
         return attrs
@@ -189,9 +188,9 @@ class DeclarationStatement(Statement):
 
     variable_name: IRIdentifier
     variable_type: QualifiedType
-    expression: Optional[Expression] = field(default=None)
+    expression: Expression | None = field(default=None)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["variable_name", "variable_type", "expression"])
         return attrs
@@ -211,10 +210,10 @@ class ExpressionStatement(Statement):
 
     """
 
-    left: Optional[Expression] = field(default=None)
+    left: Expression | None = field(default=None)
     right: Expression
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["left", "right"])
         return attrs
@@ -235,9 +234,9 @@ class ForAllStatement(Statement):
     """
 
     index: Expression
-    body: List[Statement] = field(default_factory=list)
+    body: list[Statement] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["index", "body"])
         return attrs
@@ -260,10 +259,10 @@ class SelectionStatement(Statement):
     """
 
     condition: Expression
-    true_body: List[Statement] = field(default_factory=list)
-    false_body: List[Statement] = field(default_factory=list)
+    true_body: list[Statement] = field(default_factory=list)
+    false_body: list[Statement] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["condition", "true_body", "false_body"])
         return attrs
@@ -283,7 +282,7 @@ class ReturnStatement(Statement):
 
     expression: Expression
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["expression"])
         return attrs

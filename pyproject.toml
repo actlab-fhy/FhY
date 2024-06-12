@@ -147,6 +147,14 @@ select = [
    "W",  # Warning
    "PL",  # Pylint
    # "C",  # Convention
+   "PYI",  # flake8-pyi
+   "UP",  # pyupgrade
+   "RUF",  # ruff
+   "PIE",  # flake8-pie
+   "PGH004",  # pygrep-hooks - Use specific rule codes when using noqa
+   "PLE",  # pylint error
+   "PLW",  # pylint warning
+   "PLR1714",  # Consider merging multiple comparisons
 ]
 ignore = [
    "D102",  # undocumented-public-method (D102)

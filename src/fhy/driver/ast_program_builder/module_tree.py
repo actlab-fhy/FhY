@@ -32,11 +32,11 @@
 """Project ModuleTree path."""
 
 from dataclasses import dataclass, field
-from typing import Optional, Set
+from typing import Optional
 
 
 @dataclass
-class ModuleTree(object):
+class ModuleTree:
     """Module tree path.
 
     Args:
@@ -48,12 +48,12 @@ class ModuleTree(object):
 
     file_name: str
     parent: Optional["ModuleTree"] = field(default=None)
-    children: Set["ModuleTree"] = field(default_factory=set)
+    children: set["ModuleTree"] = field(default_factory=set)
 
     @property
     def name(self) -> str:
         """Full project filepath import name."""
-        current_node: Optional[ModuleTree] = self
+        current_node: ModuleTree | None = self
         name_components = []
         while current_node:
             name_components.append(current_node.file_name)

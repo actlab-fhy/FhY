@@ -34,7 +34,6 @@
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from fhy.lang import ast, from_fhy_source
 
@@ -42,7 +41,7 @@ from ..file_reader import read_file
 
 
 @dataclass(frozen=True)
-class SourceFileAST(object):
+class SourceFileAST:
     """Data container mapping file information to ast module build.
 
     Args:
@@ -56,7 +55,7 @@ class SourceFileAST(object):
 
 
 def build_source_file_ast(
-    source_file_path: Path, log: Optional[logging.Logger] = None
+    source_file_path: Path, log: logging.Logger | None = None
 ) -> SourceFileAST:
     """Build an AST module from a valid filepath.
 

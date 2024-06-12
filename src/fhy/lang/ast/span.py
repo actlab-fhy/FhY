@@ -39,7 +39,6 @@ Classes:
 """
 
 from pathlib import Path
-from typing import Optional, Union
 
 
 class Slice:
@@ -70,7 +69,7 @@ class Slice:
 
 
 # TODO: Jason: Create Source object that can track the source file
-class Source(object):
+class Source:
     """Defines source file or namespace.
 
     Args:
@@ -78,9 +77,9 @@ class Source(object):
 
     """
 
-    namespace: Union[str, Path]
+    namespace: str | Path
 
-    def __init__(self, namespace: Union[str, Path]) -> None:
+    def __init__(self, namespace: str | Path) -> None:
         self.namespace = namespace
 
     def __eq__(self, value: object) -> bool:
@@ -90,7 +89,7 @@ class Source(object):
         return str(self.namespace)
 
 
-class Span(object):
+class Span:
     """Context to describe locations of an object.
 
     Args:
@@ -107,7 +106,7 @@ class Span(object):
 
     """
 
-    source: Optional[Source]
+    source: Source | None
     line: Slice
     column: Slice
 
@@ -117,7 +116,7 @@ class Span(object):
         end_line: int,
         start_column: int,
         end_column: int,
-        source: Optional[Source] = None,
+        source: Source | None = None,
     ) -> None:
         self.source = source
         self.line = Slice(start_line, end_line)
