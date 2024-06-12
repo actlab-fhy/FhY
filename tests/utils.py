@@ -1,12 +1,12 @@
 """Common Utilities (not fixtures) used in Unit and Integration Tests."""
 
 import json
-from typing import Any, List
+from typing import Any
 
 from fhy.lang.ast.serialization.to_json import AlmostJson, to_almost_json
 
 
-def list_to_types(xs: List[Any]) -> List[type]:
+def list_to_types(xs: list[Any]) -> list[type]:
     """Convert a List of objects into a list of object types."""
     return [type(x) for x in xs]
 

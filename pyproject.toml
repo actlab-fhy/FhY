@@ -147,6 +147,14 @@ select = [
    "W",  # Warning
    "PL",  # Pylint
    # "C",  # Convention
+   "PYI",  # flake8-pyi
+   "UP",  # pyupgrade
+   "RUF",  # ruff
+   "PIE",  # flake8-pie
+   "PGH004",  # pygrep-hooks - Use specific rule codes when using noqa
+   "PLE",  # pylint error
+   "PLW",  # pylint warning
+   "PLR1714",  # Consider merging multiple comparisons
 ]
 ignore = [
    "D102",  # undocumented-public-method (D102)
@@ -171,6 +179,11 @@ convention = "google"  # Accepts: "google" | "numpy" | "pep257"
    "D",  # PyDocstyle
    "F841",  # unused-variable (F841)
    "PLR2004",  # magic-value-comparison (PLR2004)
+   "UP022",  # replace-stdout-stderr (UP022)
+   "UP031",  # printf-string-formatting (UP031)
+]
+"*fhy/cli.py" = [
+   "UP007",  # non-pep604-annotation (UP007) --> We must use Optional[type] here
 ]
 
 [tool.ruff.format]

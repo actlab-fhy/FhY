@@ -31,7 +31,7 @@
 
 """A generic table mapping typed objects."""
 
-from typing import Dict, Generic, List, Tuple, TypeVar
+from typing import Generic, TypeVar
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -40,7 +40,7 @@ V = TypeVar("V")
 class Table(Generic[K, V]):
     """A generic table mapping typed key objects to typed value objects."""
 
-    _table: Dict[K, V]
+    _table: dict[K, V]
 
     def __init__(self) -> None:
         self._table = {}
@@ -57,15 +57,15 @@ class Table(Generic[K, V]):
     def __contains__(self, key: K) -> bool:
         return key in self._table
 
-    def keys(self) -> List[K]:
+    def keys(self) -> list[K]:
         """Table keys."""
         return list(self._table.keys())
 
-    def values(self) -> List[V]:
+    def values(self) -> list[V]:
         """Table values."""
         return list(self._table.values())
 
-    def items(self) -> List[Tuple[K, V]]:
+    def items(self) -> list[tuple[K, V]]:
         """Table key, value pairs."""
         return list(self._table.items())
 

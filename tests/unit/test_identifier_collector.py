@@ -1,6 +1,6 @@
 """Test the Identifier Collector AST Pass."""
 
-from typing import Callable, Generator
+from collections.abc import Callable, Generator
 
 import pytest
 from fhy.ir import Identifier, NumericalType, PrimitiveDataType, TypeQualifier

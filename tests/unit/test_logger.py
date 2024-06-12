@@ -2,8 +2,9 @@
 
 import logging
 import os
+from collections.abc import Callable, Generator
 from pathlib import Path
-from typing import Callable, Generator, Optional, cast
+from typing import cast
 
 import pytest
 from fhy import logger
@@ -11,7 +12,7 @@ from fhy import logger
 
 @pytest.fixture
 def get_log() -> Generator[Callable[..., logging.Logger], None, None]:
-    log: Optional[logging.Logger] = None
+    log: logging.Logger | None = None
 
     def _inner(*args, **kwargs) -> logging.Logger:
         nonlocal log

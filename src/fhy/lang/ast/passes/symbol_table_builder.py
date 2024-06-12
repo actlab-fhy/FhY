@@ -39,7 +39,7 @@ Classes:
 
 """
 
-from typing import Any, Set
+from typing import Any
 
 from fhy import ir
 from fhy.error import FhYSemanticsError
@@ -181,7 +181,7 @@ class SymbolTableBuilder(Visitor):
         self._add_symbol(node.name, arg_frame)
 
         if isinstance(node.qualified_type.base_type, ir.NumericalType):
-            shape_dimension_identifiers: Set[ir.Identifier] = set()
+            shape_dimension_identifiers: set[ir.Identifier] = set()
             for shape in node.qualified_type.base_type.shape:
                 shape_dimension_identifiers.update(collect_identifiers(shape))
 

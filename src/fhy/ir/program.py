@@ -35,7 +35,7 @@
 from .table import SymbolTable
 
 
-class Program(object):
+class Program:
     """Program object."""
 
     _components: dict  # Dict[Identifier, Union[ASTModule]]

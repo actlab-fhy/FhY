@@ -64,7 +64,7 @@ def test_single_file_examples_through_cli_pretty(file: str):
     result = cleanup_pretty_print_output(output)
 
     out_path = grab_expected_output_file(file)
-    with open(out_path, "r") as st:
+    with open(out_path) as st:
         expected = st.read()
 
     if result != expected:

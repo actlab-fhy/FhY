@@ -23,7 +23,7 @@ def test_empty_program(construct_ast):
     symbol_table = build_symbol_table(_ast)
 
     assert len(symbol_table) == 1
-    module_namespace = list(symbol_table.values())[0]
+    module_namespace = next(iter(symbol_table.values()))
     assert len(module_namespace) == 0
 
 
@@ -36,7 +36,7 @@ def test_empty_procedure(construct_ast):
 
     assert len(symbol_table) == 2
 
-    module_namespace_symbol_table = list(symbol_table.values())[0]
+    module_namespace_symbol_table = next(iter(symbol_table.values()))
     assert len(module_namespace_symbol_table) == 1
     assert "main" in _get_symbol_table_string_keys(module_namespace_symbol_table)
 
@@ -57,7 +57,7 @@ def test_procedure_with_arguments(construct_ast):
 
     assert len(symbol_table) == 2
 
-    module_namespace_symbol_table = list(symbol_table.values())[0]
+    module_namespace_symbol_table = next(iter(symbol_table.values()))
     assert len(module_namespace_symbol_table) == 1
     assert "main" in _get_symbol_table_string_keys(module_namespace_symbol_table)
 
@@ -78,7 +78,7 @@ def test_procedure_with_declaration_statement(construct_ast):
 
     assert len(symbol_table) == 2
 
-    module_namespace_symbol_table = list(symbol_table.values())[0]
+    module_namespace_symbol_table = next(iter(symbol_table.values()))
     assert len(module_namespace_symbol_table) == 1
     assert "main" in _get_symbol_table_string_keys(module_namespace_symbol_table)
 
@@ -133,7 +133,7 @@ def test_import_variable(construct_ast):
 
     assert len(symbol_table) == 2
 
-    module_namespace_symbol_table = list(symbol_table.values())[0]
+    module_namespace_symbol_table = next(iter(symbol_table.values()))
     assert len(module_namespace_symbol_table) == 2
     assert "main" in _get_symbol_table_string_keys(module_namespace_symbol_table)
     assert "constants.pi" in _get_symbol_table_string_keys(

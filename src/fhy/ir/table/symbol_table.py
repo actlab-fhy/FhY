@@ -46,7 +46,6 @@ Tables:
 
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import List, Tuple
 
 from fhy.ir.identifier import Identifier
 from fhy.ir.type import Type, TypeQualifier
@@ -101,10 +100,8 @@ class FunctionSymbolTableFrame(SymbolTableFrame):
 
     """
 
-    signature: List[Tuple[TypeQualifier, Type]] = field(default_factory=list)
+    signature: list[tuple[TypeQualifier, Type]] = field(default_factory=list)
 
 
 class SymbolTable(Table[Identifier, Table[Identifier, SymbolTableFrame]]):
     """Core symbol table, comprised of various frames, mapping a symbol identifier."""
-
-    ...
