@@ -464,7 +464,7 @@ class ASTtoJSON(visitor.BasePass):
         return [self.visit(node) for node in nodes]
 
     def visit_Span(self, span: Optional[Span]) -> Optional[AlmostJson]:
-        if span is None:
+        if span is None or not self.include_span:
             return None
 
         if span.source is not None:
@@ -924,9 +924,21 @@ class JSONtoAST(visitor.BasePass):
 def dump(
     node: Union[ASTObject, Sequence[ASTObject]],
     indent: Optional[Union[int, str]] = "  ",
+    include_span: bool = True,
 ) -> str:
-    """Serialize an AST Node to json string, with a given indent."""
-    to_json = ASTtoJSON()
+    """Serialize an AST node to json string, with a given indent.
+
+    Args:
+        node (ASTObject | List[ASTObject]): FhY AST-like node(s).
+        indent (optional, str | int): indentation of json output for human readability.
+            If an integer is provided, it indicates the number of spaces used.
+        include_span (bool): If true, include span in json output.
+
+    Returns:
+        (str): json serialized node(s)
+
+    """
+    to_json = ASTtoJSON(include_span)
     obj: Union[AlmostJson, List[AlmostJson]] = to_json.visit(node)
     data = [j.data() for j in obj] if isinstance(obj, list) else obj.data()
 
