@@ -179,6 +179,8 @@ convention = "google"  # Accepts: "google" | "numpy" | "pep257"
    "D",  # PyDocstyle
    "F841",  # unused-variable (F841)
    "PLR2004",  # magic-value-comparison (PLR2004)
+   "UP022",  # replace-stdout-stderr (UP022)
+   "UP031",  # printf-string-formatting (UP031)
 ]
 
 [tool.ruff.format]
