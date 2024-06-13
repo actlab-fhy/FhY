@@ -35,58 +35,6 @@ def get_element_id(node_name) -> str:
     return str(node_name.id)
 
 # converthe networx graph to cytoscape graph
-def nx_to_cytoscape(G):
-    '''
-    link: https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.spring_layout.html
-    calculates the positions of the nodes in the graph using the 
-    spring layout algorithm, which positions nodes using a 
-    force-directed approach that simulates a physical system.
-
-    '''
-    elements = []
-    positions = nx.spring_layout(G)  # Use spring layout for better visualization
-
-    for node, data in G.nodes(data=True):
-        node_data = data["data"]
-        element = {
-            'data': {'id': get_element_id(node), "color": NODE_TO_COLOR_MAP[type(node_data)]},
-            'position': {'x': positions[node][0]*500, 'y': positions[node][1]*500}
-        }
-
-        if isinstance(node_data, SourceNode):
-            element["data"]["label"] = "Source"
-        elif isinstance(node_data, SinkNode):
-            element["data"]["label"] = "Sink"
-        elif isinstance(node_data, PrimitiveNode):
-            element["data"]["label"] = node_data.op.name.name_hint
-        elif isinstance(node_data, LoopNode):
-            element["data"]["label"] = "Loop"
-            element["data"]["indices"] = f"[{', '.join([i.name_hint for i in node_data.index_symbol_names])}]"
-            element["data"]["graph"] = nx_to_cytoscape(node_data.fdfg.graph)
-        elif isinstance(node_data, ReductionNode):
-            element["data"]["label"] = node_data.symbol_name.name_hint
-            element["data"]["reduced_indices"] = f"[{', '.join([i.name_hint for i in node_data.index_symbol_names])}]"
-            element["data"]["graph"] = nx_to_cytoscape(node_data.fdfg.graph)
-        elif isinstance(node_data, FunctionNode):
-            element["data"]["label"] = node_data.symbol_name.name_hint
-            element["data"]["graph"] = nx_to_cytoscape(node_data.fdfg.graph)
-        else:
-            raise RuntimeError()
-
-        elements.append(element)
-    
-    for edge in G.edges(data=True):
-        elements.append({
-            'data': {
-                'source': get_element_id(edge[0]), 
-                'target': get_element_id(edge[1]),
-                "label": edge[2]["data"].symbol_name.name_hint
-            }
-        })
-
-    return elements
-
-# Topoligical Sort of the graph nodes
 # def nx_to_cytoscape(G):
 #     '''
 #     link: https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.spring_layout.html
@@ -96,18 +44,13 @@ def nx_to_cytoscape(G):
 
 #     '''
 #     elements = []
-#     # positions = nx.spring_layout(G)  # Use spring layout for better visualization
-#         # Perform a topological sort of the graph nodes
-#     sorted_nodes = list(nx.topological_sort(G))
-#     print(sorted_nodes)
-#     # Create a custom layout for a top-down layout
-#     positions = {node: (500, i * 250) for i, node in enumerate(sorted_nodes)}
+#     positions = nx.spring_layout(G)  # Use spring layout for better visualization
 
 #     for node, data in G.nodes(data=True):
 #         node_data = data["data"]
 #         element = {
 #             'data': {'id': get_element_id(node), "color": NODE_TO_COLOR_MAP[type(node_data)]},
-#             'position': {'x': positions[node][0], 'y': positions[node][1]}
+#             'position': {'x': positions[node][0]*500, 'y': positions[node][1]*500}
 #         }
 
 #         if isinstance(node_data, SourceNode):
@@ -123,6 +66,7 @@ def nx_to_cytoscape(G):
 #         elif isinstance(node_data, ReductionNode):
 #             element["data"]["label"] = node_data.symbol_name.name_hint
 #             element["data"]["reduced_indices"] = f"[{', '.join([i.name_hint for i in node_data.index_symbol_names])}]"
+#             element["data"]["graph"] = nx_to_cytoscape(node_data.fdfg.graph)
 #         elif isinstance(node_data, FunctionNode):
 #             element["data"]["label"] = node_data.symbol_name.name_hint
 #             element["data"]["graph"] = nx_to_cytoscape(node_data.fdfg.graph)
@@ -141,6 +85,62 @@ def nx_to_cytoscape(G):
 #         })
 
 #     return elements
+
+# Topoligical Sort of the graph nodes
+def nx_to_cytoscape(G):
+    '''
+    link: https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.spring_layout.html
+    calculates the positions of the nodes in the graph using the 
+    spring layout algorithm, which positions nodes using a 
+    force-directed approach that simulates a physical system.
+
+    '''
+    elements = []
+    # positions = nx.spring_layout(G)  # Use spring layout for better visualization
+        # Perform a topological sort of the graph nodes
+    sorted_nodes = list(nx.topological_sort(G))
+    print(sorted_nodes)
+    # Create a custom layout for a top-down layout
+    positions = {node: (500, i * 250) for i, node in enumerate(sorted_nodes)}
+
+    for node, data in G.nodes(data=True):
+        node_data = data["data"]
+        element = {
+            'data': {'id': get_element_id(node), "color": NODE_TO_COLOR_MAP[type(node_data)]},
+            'position': {'x': positions[node][0], 'y': positions[node][1]}
+        }
+
+        if isinstance(node_data, SourceNode):
+            element["data"]["label"] = "Source"
+        elif isinstance(node_data, SinkNode):
+            element["data"]["label"] = "Sink"
+        elif isinstance(node_data, PrimitiveNode):
+            element["data"]["label"] = node_data.op.name.name_hint
+        elif isinstance(node_data, LoopNode):
+            element["data"]["label"] = "Loop"
+            element["data"]["indices"] = f"[{', '.join([i.name_hint for i in node_data.index_symbol_names])}]"
+            element["data"]["graph"] = nx_to_cytoscape(node_data.fdfg.graph)
+        elif isinstance(node_data, ReductionNode):
+            element["data"]["label"] = node_data.symbol_name.name_hint
+            element["data"]["reduced_indices"] = f"[{', '.join([i.name_hint for i in node_data.index_symbol_names])}]"
+        elif isinstance(node_data, FunctionNode):
+            element["data"]["label"] = node_data.symbol_name.name_hint
+            element["data"]["graph"] = nx_to_cytoscape(node_data.fdfg.graph)
+        else:
+            raise RuntimeError()
+
+        elements.append(element)
+    
+    for edge in G.edges(data=True):
+        elements.append({
+            'data': {
+                'source': get_element_id(edge[0]), 
+                'target': get_element_id(edge[1]),
+                "label": edge[2]["data"].symbol_name.name_hint
+            }
+        })
+
+    return elements
 
 # for the properties of the nodes 
 def handle_node_properties(node_data):
