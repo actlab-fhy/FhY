@@ -177,13 +177,15 @@ class ASTPrettyFormatter(BasePass):
 
     def visit_UnaryExpression(self, unary_expression: ast.UnaryExpression) -> str:
         return (
-            f"{unary_expression.operation}({self.visit(unary_expression.expression)})"
+            f"{unary_expression.operation.value}"
+            f"({self.visit(unary_expression.expression)})"
         )
 
     def visit_BinaryExpression(self, binary_expression: ast.BinaryExpression) -> str:
         left = self.visit(binary_expression.left)
         right = self.visit(binary_expression.right)
-        return f"({left} {binary_expression.operation} {right})"
+
+        return f"({left} {binary_expression.operation.value} {right})"
 
     def visit_TernaryExpression(self, ternary_expression: ast.TernaryExpression) -> str:
         condition = self.visit(ternary_expression.condition)
@@ -241,7 +243,10 @@ class ASTPrettyFormatter(BasePass):
         return str(complex_literal.value)
 
     def visit_QualifiedType(self, qualified_type: ast.QualifiedType) -> str:
-        return f"{qualified_type.type_qualifier} {self.visit(qualified_type.base_type)}"
+        return (
+            f"{qualified_type.type_qualifier.value} "
+            f"{self.visit(qualified_type.base_type)}"
+        )
 
     def visit_NumericalType(self, numerical_type: ir.NumericalType) -> str:
         if len(numerical_type.shape) == 0:
@@ -251,7 +256,7 @@ class ASTPrettyFormatter(BasePass):
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
     def visit_DataType(self, data_type: ir.DataType) -> str:
-        return str(data_type.primitive_data_type)
+        return str(data_type.primitive_data_type.value)
 
     def visit_IndexType(self, index_type: ir.IndexType) -> str:
         index_range = f"{self.visit(index_type.lower_bound)}:"

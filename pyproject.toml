@@ -14,7 +14,7 @@ maintainers = [
    {name = "Christopher Priebe", email = "cpriebe@ucsd.edu"},
    {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 keywords = [
    "Compiler", "Cross-Domain Language", "Cross-Domain Compiler", "Multi-Target Compiler"
 ]

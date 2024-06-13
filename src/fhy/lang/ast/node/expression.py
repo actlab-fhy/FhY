@@ -55,10 +55,10 @@ Primitive Expressions:
 
 from abc import ABC
 from dataclasses import dataclass, field
-from enum import StrEnum
 
 from fhy.ir.identifier import Identifier as IRIdentifier
 from fhy.ir.type import Type as IRType
+from fhy.utils.enumeration import StrEnum
 
 from .core import Expression
 

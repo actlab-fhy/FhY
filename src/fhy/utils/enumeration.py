@@ -29,18 +29,35 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""FhY AST serialization module.
+"""The following module is provided for backward compatibility.
 
-We currently support serializing to json formats.
+IntEnum and StrEnum were made available in standard library starting in Python version
+3.11
 
 """
 
-from fhy.utils.enumeration import StrEnum
+try:
+    from enum import IntEnum, StrEnum
 
+except ImportError:
+    import enum
 
-class SerializationOptions(StrEnum):
-    """Supported serialization options."""
+    # NOTE: The following code is adapted from Cpython standard library.
+    class IntEnum(int, enum.Enum):  # type: ignore[no-redef]
+        """Enum where members are also (and must be) ints."""
 
-    JSON = "json"
-    PRETTY = "pretty"
-    PRETTYID = "pretty-id"
+    class StrEnum(str, enum.Enum):  # type: ignore[no-redef]
+        """Enum where members are also (and must be) strings."""
+
+        def __new__(cls, *values):
+            """Values must already be of type `str`."""
+            value = str(*values)
+            member = str.__new__(cls, value)
+            member._value_ = value
+
+            return member
+
+        @staticmethod
+        def _generate_next_value_(name, start, count, last_values):
+            """Return the lower-cased version of the member name."""
+            return name.lower()
