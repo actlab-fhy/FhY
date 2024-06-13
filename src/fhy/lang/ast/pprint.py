@@ -29,13 +29,13 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Pretty print serialization of ASTNodes into FhY language.
+"""Pretty print serialization of AST nodes into FhY language.
 
 Functions:
-    pprint_ast: Helper function to serialize the ASTNode into text
+    pprint_ast: Helper function to serialize the AST node into text
 
 Classes:
-    ASTPrettyPrinter: Deconstructs ASTNodes into FhY language text
+    ASTPrettyPrinter: Deconstructs AST nodes into FhY language text
 
 """
 
@@ -204,7 +204,10 @@ class ASTPrettyFormatter(BasePass):
         return f"{func}<{template_types}>[{indices}]({args})"
 
     def _tuple(self, nodes: list) -> str:
-        return "( " + ", ".join([self.visit(i) for i in nodes]) + " )"
+        a = "( " + ", ".join([self.visit(i) for i in nodes])
+        a += ", )" if len(nodes) == 1 else " )"
+
+        return a
 
     def visit_TupleExpression(self, node: ast.TupleExpression) -> str:
         return self._tuple(node.expressions)
@@ -275,18 +278,18 @@ class ASTPrettyFormatter(BasePass):
 
 
 def pformat_ast(
-    ast: ast.ASTNode, indent_char: str = "  ", is_identifier_id_printed: bool = False
+    ast: ast.ASTNode, indent_char: str = "  ", show_id: bool = False
 ) -> str:
-    """Returns FhY text from a given an ASTNode.
+    """Returns FhY text from a given an AST node.
 
     Args:
         ast (ASTNode): a valid FhY AST node
         indent_char (str): character(s) used to indent the output text
-        is_identifier_id_printed (bool): Includes assigned ID in output text if true
+        show_id (bool): Include assigned ID in output text if true
 
     Raises:
         RuntimeError: When class is improperly used and the indent becomes negative.
 
     """
-    pformatter = ASTPrettyFormatter(indent_char, is_identifier_id_printed)
+    pformatter = ASTPrettyFormatter(indent_char, show_id)
     return pformatter(ast)
