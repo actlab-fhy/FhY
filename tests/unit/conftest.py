@@ -173,6 +173,7 @@ def build_numerical_type() -> (
 @add_fixture_node
 @pytest.fixture
 def index_type(literals, construct_id) -> tuple[dict, IndexType]:
+    text = "index[1:k:1]"
     one_obj, one_cls = literals(1)
     upper_obj, upper_cls = construct_id("k")
 
@@ -197,6 +198,7 @@ def index_type(literals, construct_id) -> tuple[dict, IndexType]:
 @add_fixture_node
 @pytest.fixture
 def tuple_type(construct_id, build_numerical_type) -> tuple[dict, TupleType]:
+    text = "tuple ( int32[m], )"
     shape_1_obj, shape_1_id = construct_id("m")
     num_obj, numerical = build_numerical_type(
         PrimitiveDataType.INT32, [shape_1_obj], [shape_1_id]
@@ -214,6 +216,7 @@ def tuple_type(construct_id, build_numerical_type) -> tuple[dict, TupleType]:
 def qualified(
     span_node, construct_id, build_numerical_type
 ) -> tuple[dict, QualifiedType]:
+    text = "input int32[m, n]"
     span_obj, span_cls = span_node
     shape_1_obj, shape_1_id = construct_id("m")
     shape_2_obj, shape_2_id = construct_id("n")
@@ -242,6 +245,7 @@ def qualified(
 @add_fixture_node
 @pytest.fixture
 def arg1(span_node, qualified, construct_id) -> tuple[dict, Argument]:
+    text: str = "input int32[m, n] rupaul"
     span_obj, span_cls = span_node
     qtype_obj, qtype_cls = qualified
     arg_id_obj, arg_id = construct_id("rupaul")
@@ -268,6 +272,7 @@ def arg1(span_node, qualified, construct_id) -> tuple[dict, Argument]:
 @add_fixture_node
 @pytest.fixture
 def unary(span_node, literals) -> tuple[dict, UnaryExpression]:
+    text: str = "-(5)"
     span_obj, span_cls = span_node
     negative = UnaryOperation.NEGATIVE
     literal_obj, literal_cls = literals(5)
@@ -289,6 +294,7 @@ def unary(span_node, literals) -> tuple[dict, UnaryExpression]:
 @add_fixture_node
 @pytest.fixture
 def binary(span_node, literals) -> tuple[dict, BinaryExpression]:
+    text: str = "(5 + 10.0)"
     span_obj, span_cls = span_node
     addition = BinaryOperation.ADDITION
     lit_obj_left, lit_cls_left = literals(5)
@@ -314,6 +320,7 @@ def binary(span_node, literals) -> tuple[dict, BinaryExpression]:
 @add_fixture_node
 @pytest.fixture
 def ternary(span_node, literals, binary, unary) -> tuple[dict, TernaryExpression]:
+    text: str = "(1 ? (5 + 10.0) : -(5))"
     span_obj, span_cls = span_node
     cond_obj, cond_cls = literals(1)
     binary_obj, binary_cls = binary
@@ -341,6 +348,7 @@ def ternary(span_node, literals, binary, unary) -> tuple[dict, TernaryExpression
 def tuple_access(
     span_node, literals, construct_id
 ) -> tuple[dict, TupleAccessExpression]:
+    text: str = "A.1"
     span_obj, span_cls = span_node
     one_obj, one_cls = literals(1)
     name_obj, name_cls = construct_id("A")
@@ -365,6 +373,7 @@ def tuple_access(
 @add_fixture_node
 @pytest.fixture
 def function_call(span_node, construct_id) -> tuple[dict, FunctionExpression]:
+    text: str = "funky<>[]()"
     span_obj, span_cls = span_node
     name_obj, name_cls = construct_id("funky")
 
@@ -384,6 +393,7 @@ def function_call(span_node, construct_id) -> tuple[dict, FunctionExpression]:
 @add_fixture_node
 @pytest.fixture
 def array_access(span_node, construct_id) -> tuple[dict, ArrayAccessExpression]:
+    text: str = "array[j, k]"
     span_obj, span_cls = span_node
     array_id_obj, array_id_cls = construct_id("array")
     index_1_obj, index_1_cls = construct_id("j")
@@ -409,6 +419,7 @@ def array_access(span_node, construct_id) -> tuple[dict, ArrayAccessExpression]:
 @add_fixture_node
 @pytest.fixture
 def tuple_express(span_node) -> tuple[dict, TupleExpression]:
+    text: str = "(  )"
     span_obj, span_cls = span_node
 
     obj = dict(
@@ -429,6 +440,7 @@ def tuple_express(span_node) -> tuple[dict, TupleExpression]:
 @add_fixture_node
 @pytest.fixture
 def id_express(span_node, construct_id) -> tuple[dict, IdentifierExpression]:
+    text: str = "name"
     span_obj, span_cls = span_node
     id_obj, id_cls = construct_id("name")
 
@@ -453,6 +465,7 @@ def id_express(span_node, construct_id) -> tuple[dict, IdentifierExpression]:
 def declaration(
     span_node, qualified, binary, construct_id
 ) -> tuple[dict, DeclarationStatement]:
+    text: str = "input int32[m, n] bar = (5 + 10.0);"
     span_obj, span_cls = span_node
     qtype_obj, qtype_cls = qualified
     binary_obj, binary_cls = binary
@@ -481,6 +494,7 @@ def declaration(
 @add_fixture_node
 @pytest.fixture
 def express_state(span_node, unary, array_access) -> tuple[dict, ExpressionStatement]:
+    text: str = "array[j, k] = -(5);"
     span_obj, span_cls = span_node
     array_obj, array_cls = array_access
     unary_obj, unary_cls = unary
@@ -506,6 +520,7 @@ def express_state(span_node, unary, array_access) -> tuple[dict, ExpressionState
 @add_fixture_node
 @pytest.fixture
 def iteration_state(span_node, construct_id) -> tuple[dict, ForAllStatement]:
+    text: str = "forall (elements) {\n\n}"
     span_obj, span_cls = span_node
     index_obj, index_cls = construct_id("elements")
 
@@ -522,6 +537,7 @@ def iteration_state(span_node, construct_id) -> tuple[dict, ForAllStatement]:
 @add_fixture_node
 @pytest.fixture
 def select_state(span_node, binary) -> tuple[dict, SelectionStatement]:
+    text: str = "if (5 + 10.0) {\n\n}"
     span_obj, span_cls = span_node
     binary_obj, binary_cls = binary
 
@@ -542,6 +558,7 @@ def select_state(span_node, binary) -> tuple[dict, SelectionStatement]:
 @add_fixture_node
 @pytest.fixture
 def return_state(span_node, unary) -> tuple[dict, ReturnStatement]:
+    text: str = "return -(5);"
     span_obj, span_cls = span_node
     unary_obj, unary_cls = unary
 
@@ -564,6 +581,10 @@ def return_state(span_node, unary) -> tuple[dict, ReturnStatement]:
 def operation(
     span_node, arg1, qualified, express_state, construct_id
 ) -> tuple[dict, Operation]:
+    text: str = (
+        "op foobar<>(input int32[m, n] rupaul) -> input int32[m, n]"
+        " {\n  array[j, k] = -(5);\n}"
+    )
     span_obj, span_cls = span_node
     arg1_obj, arg1_cls = arg1
     qtype_obj, qtype_cls = qualified
@@ -596,6 +617,10 @@ def operation(
 @add_fixture_node
 @pytest.fixture
 def procedure(span_node, arg1, declaration, construct_id) -> tuple[dict, Procedure]:
+    text: str = (
+        "proc buzz<>(input int32[m, n] rupaul) "
+        "{\n  input int32[m, n] bar = (5 + 10.0);\n}"
+    )
     span_obj, span_cls = span_node
     arg1_obj, arg1_cls = arg1
     declare_obj, declare_cls = declaration
@@ -623,6 +648,12 @@ def procedure(span_node, arg1, declaration, construct_id) -> tuple[dict, Procedu
 @add_fixture_node
 @pytest.fixture
 def module(span_node, operation, procedure) -> tuple[dict, Module]:
+    text: str = (
+        "op foobar<>(input int32[m, n] rupaul) -> input int32[m, n]"
+        " {\n  array[j, k] = -(5);\n}\n"
+        "proc buzz<>(input int32[m, n] rupaul) "
+        "{\n  input int32[m, n] bar = (5 + 10.0);\n}"
+    )
     span_obj, span_cls = span_node
     op_obj, op_cls = operation
     proc_obj, proc_cls = procedure
