@@ -67,16 +67,17 @@ class UnaryOperation(StrEnum):
     """FhY language unary operators.
 
     Arithmetic:
-        Negative
+        Negation
 
     Logical:
         Logical Not
 
     Bitwise:
         Bitwise Not
+
     """
 
-    NEGATIVE = "-"
+    NEGATION = "-"
     BITWISE_NOT = "~"
     LOGICAL_NOT = "!"
 
@@ -141,7 +142,7 @@ class BinaryOperation(StrEnum):
     DIVISION = "/"
     ADDITION = "+"
     SUBTRACTION = "-"
-    LEFT_SHIT = "<<"
+    LEFT_SHIFT = "<<"
     RIGHT_SHIFT = ">>"
     LESS_THAN = "<"
     LESS_THAN_OR_EQUAL = "<="

@@ -274,7 +274,7 @@ def arg1(span_node, qualified, construct_id) -> tuple[dict, Argument]:
 def unary(span_node, literals) -> tuple[dict, UnaryExpression]:
     text: str = "-(5)"
     span_obj, span_cls = span_node
-    negative = UnaryOperation.NEGATIVE
+    negative = UnaryOperation.NEGATION
     literal_obj, literal_cls = literals(5)
 
     obj = dict(
