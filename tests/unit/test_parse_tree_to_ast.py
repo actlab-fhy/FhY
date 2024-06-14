@@ -52,15 +52,18 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
         return expr1.identifier.name_hint == expr2.identifier.name_hint
 
     elif isinstance(expr1, ast.TupleExpression):
-        raise NotImplementedError()
+        return len(expr1.expressions) == len(expr2.expressions) and all(
+            is_primitive_expression_equal(i, j)
+            for i, j in zip(expr1.expressions, expr2.expressions)
+        )
 
     elif isinstance(expr1, ast.TupleAccessExpression):
         return (
-            is_primitive_expression_equal(
+            expr1.element_index == expr2.element_index
+            and is_primitive_expression_equal(
                 expr1.tuple_expression,
                 expr2.tuple_expression,
             )
-            and expr1.element_index == expr2.element_index
         )
 
     elif isinstance(expr1, ast.ArrayAccessExpression):
@@ -855,6 +858,22 @@ def test_tensor_access_expression(construct_ast):
             indices=[ast.IdentifierExpression(identifier=ir.Identifier("i"))],
         ),
         ast.IntLiteral(value=1),
+    )
+
+
+def test_tuple_expression(construct_ast):
+    """Test construction of a tuple expression."""
+    source: str = "b = (a,);"
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    _assert_is_expected_expression_statement(
+        statement,
+        ast.IdentifierExpression(identifier=ir.Identifier("b")),
+        ast.TupleExpression(
+            expressions=[ast.IdentifierExpression(identifier=ir.Identifier("a"))]
+        ),
     )
 
 
