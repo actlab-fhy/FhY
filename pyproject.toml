@@ -148,7 +148,7 @@ select = [
    "D",  # PyDocstyle
    "W",  # Warning
    "PL",  # Pylint
-   # "C",  # Convention
+   "C",  # Convention
    "PYI",  # flake8-pyi
    "UP",  # pyupgrade
    "RUF",  # ruff
