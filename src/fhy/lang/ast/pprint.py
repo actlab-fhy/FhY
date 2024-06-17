@@ -41,6 +41,7 @@ Classes:
 
 from fhy import ir
 from fhy.lang import ast
+from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import BasePass
 
 
@@ -49,20 +50,20 @@ class ASTPrettyFormatter(BasePass):
 
     Args:
         indent_char (str): character(s) used to indent the output text
-        is_identifier_id_printed (bool): Includes assigned ID in output text if true
+        show_id (bool): Include assigned identifier ID in output text if true
 
     Raises:
         RuntimeError: When class is improperly used and the indent becomes negative.
 
     """
 
-    _is_identifier_id_printed: bool
+    show_id: bool
     _indent_char: str
     _current_indent: int
 
-    def __init__(self, indent_char: str, is_identifier_id_printed: bool) -> None:
+    def __init__(self, indent_char: str, show_id: bool) -> None:
         super().__init__()
-        self._is_identifier_id_printed = is_identifier_id_printed
+        self.show_id = show_id
         self._indent_char = indent_char
         self._current_indent = 0
 
@@ -205,14 +206,14 @@ class ASTPrettyFormatter(BasePass):
         func = self.visit(function_expression.function)
         return f"{func}<{template_types}>[{indices}]({args})"
 
-    def _tuple(self, nodes: list) -> str:
-        a = "( " + ", ".join([self.visit(i) for i in nodes])
+    def _build_base_tuple(self, nodes: list[ASTObject]) -> str:
+        a: str = "( " + ", ".join([self.visit(i) for i in nodes])
         a += ", )" if len(nodes) == 1 else " )"
 
         return a
 
     def visit_TupleExpression(self, node: ast.TupleExpression) -> str:
-        return self._tuple(node.expressions)
+        return self._build_base_tuple(node.expressions)
 
     def visit_TupleAccessExpression(self, node: ast.TupleAccessExpression) -> str:
         _tuple: str = self.visit(node.tuple_expression)
@@ -270,10 +271,10 @@ class ASTPrettyFormatter(BasePass):
         return f"index[{index_range}]"
 
     def visit_TupleType(self, tuple_type: ir.TupleType) -> str:
-        return "tuple " + self._tuple(tuple_type._types)
+        return "tuple " + self._build_base_tuple(tuple_type._types)
 
     def visit_Identifier(self, identifier: ir.Identifier) -> str:
-        if self._is_identifier_id_printed:
+        if self.show_id:
             return f"({identifier.name_hint}::{identifier.id})"
         else:
             return identifier.name_hint
