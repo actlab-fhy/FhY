@@ -32,7 +32,8 @@
 """Data type node definitions."""
 
 from abc import ABC
-from enum import StrEnum
+
+from fhy.utils.enumeration import StrEnum
 
 from .expression import Expression
 

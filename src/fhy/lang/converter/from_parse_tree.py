@@ -391,9 +391,13 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Expression_listContext
     ) -> Sequence[Expressions]:
         expressions: list[Expressions] = []
-        if ctx.expression() is not None:
-            for expression_ctx in ctx.expression():
-                expressions.append(self.visitExpression(expression_ctx))
+        exes: Sequence[FhYParser.ExpressionContext] | None
+        if (exes := ctx.expression()) is None:
+            return expressions
+
+        expression_ctx: FhYParser.ExpressionContext
+        for expression_ctx in exes:
+            expressions.append(self.visitExpression(expression_ctx))
 
         return expressions
 
@@ -564,6 +568,32 @@ class ParseTreeConverter(FhYVisitor):
         else:
             text: str = _source_position(span)
             raise FhYSyntaxError(f"Invalid Primitive Expression. {text}")
+
+    def visitAtom(
+        self, ctx: FhYParser.AtomContext
+    ) -> ast.TupleExpression | ast.IdentifierExpression | ast.Literal:
+        span: Span | None = self._get_span(ctx)
+        tup: FhYParser.TupleContext | None
+        literal: FhYParser.LiteralContext | None
+        id_express: FhYParser.Identifier_expressionContext | None
+
+        if (tup := ctx.tuple_()) is not None:
+            expressions: Sequence[Expressions] = self.visitExpression_list(tup)
+
+            return ast.TupleExpression(
+                span=span,
+                expressions=expressions,  # type: ignore[arg-type]
+            )
+
+        elif (literal := ctx.literal()) is not None:
+            return self.visitLiteral(literal)
+
+        elif (id_express := ctx.identifier_expression()) is not None:
+            return self.visitIdentifier_expression(id_express)
+
+        else:
+            text: str = _source_position(span)
+            raise NotImplementedError(f"Unsupported Atom Context. {text}")
 
     def visitIdentifier_expression(
         self, ctx: FhYParser.Identifier_expressionContext
