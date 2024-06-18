@@ -128,6 +128,20 @@ _FLOAT_COMPLEX_DATA_TYPE_LATTICE = _define_float_complex_data_type_lattice()
 def promote_primitive_data_types(
     primitive_data_type1: PrimitiveDataType, primitive_data_type2: PrimitiveDataType
 ) -> PrimitiveDataType:
+    """Promote two primitive data types to a common type.
+
+    Args:
+        primitive_data_type1 (PrimitiveDataType): First primitive data type.
+        primitive_data_type2 (PrimitiveDataType): Second primitive data type.
+
+    Returns:
+        PrimitiveDataType: Common type to which both primitive data types can
+            be promoted.
+
+    Raises:
+        FhYTypeError: If the promotion is not supported.
+
+    """
     _UINT_DATA_TYPES = {
         PrimitiveDataType.UINT8,
         PrimitiveDataType.UINT16,
@@ -171,9 +185,9 @@ def promote_primitive_data_types(
             primitive_data_type1, primitive_data_type2
         )
     else:
-        raise FhYTypeError(
-            f"Unsupported primitive data type promotion: {primitive_data_type1}, {primitive_data_type2}"
-        )
+        error_message: str = "Unsupported primitive data type promotion: "
+        error_message += f"{primitive_data_type1}, {primitive_data_type2}"
+        raise FhYTypeError(error_message)
 
 
 class DataType:
@@ -184,7 +198,7 @@ class DataType:
         template types.
 
     Args:
-        primitive_data_type (PrimitiveType):
+        primitive_data_type (PrimitiveType): Primitive data type.
 
     """
 
@@ -206,6 +220,19 @@ class DataType:
 
 
 def promote_data_types(data_type1: DataType, data_type2: DataType) -> DataType:
+    """Promote two data types to a common type.
+
+    Args:
+        data_type1 (DataType): First data type.
+        data_type2 (DataType): Second data type.
+
+    Returns:
+        DataType: Common type to which both data types can be promoted.
+
+    Raises:
+        FhYTypeError: If the promotion is not supported.
+
+    """
     return DataType(
         promote_primitive_data_types(
             data_type1.primitive_data_type, data_type2.primitive_data_type
@@ -214,11 +241,11 @@ def promote_data_types(data_type1: DataType, data_type2: DataType) -> DataType:
 
 
 class NumericalType(Type):
-    """Vector array of a given DataType and shape.
+    """Multi-dimensional array of a given base data type and shape.
 
     Args:
-        data_type (DataType): Type information of data contained in vector
-        shape (list[Expression]): Shape of vector
+        data_type (DataType): Base data type of multi-dimensional array.
+        shape (list[Expression]): Shape of multi-dimensional array.
 
     """
 
@@ -249,9 +276,9 @@ class IndexType(Type):
     """An indexer, or slice.
 
     Args:
-        lower_bound (Expression): Start index [inclusive]
-        upper_bound (Expression): End index [inclusive]
-        stride (Optional[Expression]): Increment
+        lower_bound (Expression): Start index [inclusive].
+        upper_bound (Expression): End index [inclusive].
+        stride (Optional[Expression]): Step size.
 
     Notes:
         * Grammatically similar to a python slice or range(start, stop, step)
@@ -292,7 +319,7 @@ class TupleType(Type):
     """Tuple data type.
 
     Args:
-        types (list[Type]): types of each element within the tuple
+        types (list[Type]): Types of each element within the tuple.
 
     """
 
@@ -308,7 +335,7 @@ class TupleType(Type):
 
 
 class TypeQualifier(StrEnum):
-    """Supported type qualifiers define a variable's permissions."""
+    """Supported type qualifiers to define a variable's permissions."""
 
     INPUT = "input"
     OUTPUT = "output"
@@ -320,6 +347,16 @@ class TypeQualifier(StrEnum):
 def promote_type_qualifiers(
     type_qualifier1: TypeQualifier, type_qualifier2: TypeQualifier
 ) -> TypeQualifier:
+    """Promote two type qualifiers to a common type.
+
+    Args:
+        type_qualifier1 (TypeQualifier): First type qualifier.
+        type_qualifier2 (TypeQualifier): Second type qualifier.
+
+    Returns:
+        TypeQualifier: Common type to which both type qualifiers can be promoted.
+
+    """
     if (
         type_qualifier1 == TypeQualifier.PARAM
         and type_qualifier2 == TypeQualifier.PARAM
@@ -329,4 +366,6 @@ def promote_type_qualifiers(
         return TypeQualifier.TEMP
 
     # Error message for future use if needed
-    # raise FhYTypeError(f"Unsupported type qualifier promotion: {type_qualifier1}, {type_qualifier2}")
+    # error_message: str = "Unsupported type qualifier promotion: "
+    # error_message += f"{type_qualifier1}, {type_qualifier2}"
+    # raise FhYTypeError(error_message)

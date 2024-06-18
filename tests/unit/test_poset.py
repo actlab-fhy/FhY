@@ -1,22 +1,22 @@
 import pytest
-from fhy.utils.poset import POSet
+from fhy.utils.poset import PartiallyOrderedSet
 
 
 def test_empty_poset():
-    poset = POSet[int]()
+    poset = PartiallyOrderedSet[int]()
 
     assert len(poset) == 0
 
 
 def test_add_element():
-    poset = POSet[int]()
+    poset = PartiallyOrderedSet[int]()
     poset.add_element(1)
 
     assert len(poset) == 1
 
 
 def test_add_order():
-    poset = POSet[int]()
+    poset = PartiallyOrderedSet[int]()
     poset.add_element(1)
     poset.add_element(2)
     poset.add_order(1, 2)
@@ -26,7 +26,7 @@ def test_add_order():
 
 
 def test_invalid_order():
-    poset = POSet[int]()
+    poset = PartiallyOrderedSet[int]()
     poset.add_element(1)
     poset.add_element(2)
     poset.add_order(1, 2)
