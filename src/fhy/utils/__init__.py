@@ -31,4 +31,6 @@
 
 """Common FhY Utilities, and Miscellaneous Fixings."""
 
+from .lattice import Lattice
+from .poset import POSet
 from .stack import Stack
