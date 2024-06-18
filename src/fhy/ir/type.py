@@ -29,11 +29,13 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Data type node definitions."""
+"""FhY type system definitions."""
 
 from abc import ABC
 from enum import StrEnum
 
+from fhy.utils import Lattice
+from fhy.error import FhYTypeError
 from .expression import Expression
 
 
@@ -44,17 +46,120 @@ class Type(ABC):
 class PrimitiveDataType(StrEnum):
     """Supported primitive data types."""
 
-    INT = "int"
-    FLOAT = "float"
+    UINT8 = "uint8"
+    UINT16 = "uint16"
+    UINT32 = "uint32"
+    UINT64 = "uint64"
     INT8 = "int8"
     INT16 = "int16"
     INT32 = "int32"
     INT64 = "int64"
+    FLOAT16 = "float16"
     FLOAT32 = "float32"
     FLOAT64 = "float64"
+    COMPLEX32 = "complex32"
+    COMPLEX64 = "complex64"
+    COMPLEX128 = "complex128"
 
 
-class DataType:
+def _define_uint_data_type_lattice() -> Lattice[PrimitiveDataType]:
+    lattice = Lattice[PrimitiveDataType]()
+    lattice.add_element(PrimitiveDataType.UINT8)
+    lattice.add_element(PrimitiveDataType.UINT16)
+    lattice.add_element(PrimitiveDataType.UINT32)
+    lattice.add_element(PrimitiveDataType.UINT64)
+
+    lattice.add_order(PrimitiveDataType.UINT8, PrimitiveDataType.UINT16)
+    lattice.add_order(PrimitiveDataType.UINT16, PrimitiveDataType.UINT32)
+    lattice.add_order(PrimitiveDataType.UINT32, PrimitiveDataType.UINT64)
+
+    if not lattice.is_lattice():
+        raise RuntimeError("Unsigned integer lattice is not a lattice.")
+
+    return lattice
+
+
+def _define_int_data_type_lattice() -> Lattice[PrimitiveDataType]:
+    lattice = Lattice[PrimitiveDataType]()
+    lattice.add_element(PrimitiveDataType.INT8)
+    lattice.add_element(PrimitiveDataType.INT16)
+    lattice.add_element(PrimitiveDataType.INT32)
+    lattice.add_element(PrimitiveDataType.INT64)
+
+    lattice.add_order(PrimitiveDataType.INT8, PrimitiveDataType.INT16)
+    lattice.add_order(PrimitiveDataType.INT16, PrimitiveDataType.INT32)
+    lattice.add_order(PrimitiveDataType.INT32, PrimitiveDataType.INT64)
+
+    if not lattice.is_lattice():
+        raise RuntimeError("Integer lattice is not a lattice.")
+
+    return lattice
+
+
+def _define_float_complex_data_type_lattice() -> Lattice[PrimitiveDataType]:
+    lattice = Lattice[PrimitiveDataType]()
+    lattice.add_element(PrimitiveDataType.FLOAT16)
+    lattice.add_element(PrimitiveDataType.FLOAT32)
+    lattice.add_element(PrimitiveDataType.FLOAT64)
+    lattice.add_element(PrimitiveDataType.COMPLEX32)
+    lattice.add_element(PrimitiveDataType.COMPLEX64)
+    lattice.add_element(PrimitiveDataType.COMPLEX128)
+
+    lattice.add_order(PrimitiveDataType.FLOAT16, PrimitiveDataType.FLOAT32)
+    lattice.add_order(PrimitiveDataType.FLOAT32, PrimitiveDataType.FLOAT64)
+    lattice.add_order(PrimitiveDataType.FLOAT16, PrimitiveDataType.COMPLEX32)
+    lattice.add_order(PrimitiveDataType.FLOAT32, PrimitiveDataType.COMPLEX64)
+    lattice.add_order(PrimitiveDataType.FLOAT64, PrimitiveDataType.COMPLEX128)
+    lattice.add_order(PrimitiveDataType.COMPLEX32, PrimitiveDataType.COMPLEX64)
+    lattice.add_order(PrimitiveDataType.COMPLEX64, PrimitiveDataType.COMPLEX128)
+
+    if not lattice.is_lattice():
+        raise RuntimeError("Floating point and complex lattice is not a lattice.")
+
+    return lattice
+
+
+_UINT_DATA_TYPE_LATTICE = _define_uint_data_type_lattice()
+_INT_DATA_TYPE_LATTICE = _define_int_data_type_lattice()
+_FLOAT_COMPLEX_DATA_TYPE_LATTICE = _define_float_complex_data_type_lattice()
+
+
+def promote_primitive_data_types(
+    primitive_data_type1: PrimitiveDataType,
+    primitive_data_type2: PrimitiveDataType
+) -> PrimitiveDataType:
+    _UINT_DATA_TYPES = {
+        PrimitiveDataType.UINT8,
+        PrimitiveDataType.UINT16,
+        PrimitiveDataType.UINT32,
+        PrimitiveDataType.UINT64,
+    }
+    _INT_DATA_TYPES = {
+        PrimitiveDataType.INT8,
+        PrimitiveDataType.INT16,
+        PrimitiveDataType.INT32,
+        PrimitiveDataType.INT64,
+    }
+    _FLOAT_COMPLEX_DATA_TYPES = {
+        PrimitiveDataType.FLOAT16,
+        PrimitiveDataType.FLOAT32,
+        PrimitiveDataType.FLOAT64,
+        PrimitiveDataType.COMPLEX32,
+        PrimitiveDataType.COMPLEX64,
+        PrimitiveDataType.COMPLEX128,
+    }
+
+    if primitive_data_type1 in _UINT_DATA_TYPES and primitive_data_type2 in _UINT_DATA_TYPES:
+        return _UINT_DATA_TYPE_LATTICE.get_least_upper_bound(primitive_data_type1, primitive_data_type2)
+    elif primitive_data_type1 in _INT_DATA_TYPES and primitive_data_type2 in _INT_DATA_TYPES:
+        return _INT_DATA_TYPE_LATTICE.get_least_upper_bound(primitive_data_type1, primitive_data_type2)
+    elif primitive_data_type1 in _FLOAT_COMPLEX_DATA_TYPES and primitive_data_type2 in _FLOAT_COMPLEX_DATA_TYPES:
+        return _FLOAT_COMPLEX_DATA_TYPE_LATTICE.get_least_upper_bound(primitive_data_type1, primitive_data_type2)
+    else:
+        raise FhYTypeError(f"Unsupported primitive data type promotion: {primitive_data_type1}, {primitive_data_type2}")
+
+
+class DataType(object):
     """Data type defines core type primitive, but of flexible Bit Width.
 
     Note:
@@ -83,12 +188,16 @@ class DataType:
         return f"DataType({self._primitive_data_type})"
 
 
+def promote_data_types(data_type1: DataType, data_type2: DataType) -> DataType:
+    return DataType(promote_primitive_data_types(data_type1.primitive_data_type, data_type2.primitive_data_type))
+
+
 class NumericalType(Type):
     """Vector array of a given DataType and shape.
 
     Args:
         data_type (DataType): Type information of data contained in vector
-        shape (List[Expression]): Shape of vector
+        shape (list[Expression]): Shape of vector
 
     """
 
@@ -162,7 +271,7 @@ class TupleType(Type):
     """Tuple data type.
 
     Args:
-        types (List[Type]): types of each element within the tuple
+        types (list[Type]): types of each element within the tuple
 
     """
 
@@ -185,3 +294,13 @@ class TypeQualifier(StrEnum):
     STATE = "state"
     PARAM = "param"
     TEMP = "temp"
+
+
+def promote_type_qualifiers(type_qualifier1: TypeQualifier, type_qualifier2: TypeQualifier) -> TypeQualifier:
+    if type_qualifier1 == TypeQualifier.PARAM and type_qualifier2 == TypeQualifier.PARAM:
+        return TypeQualifier.PARAM
+    else:
+        return TypeQualifier.TEMP
+
+    # Error message for future use if needed
+    # raise FhYTypeError(f"Unsupported type qualifier promotion: {type_qualifier1}, {type_qualifier2}")
