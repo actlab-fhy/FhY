@@ -99,6 +99,7 @@ class ASTPrettyFormatter(BasePass):
         templates = ", ".join(self.visit(arg) for arg in operation.templates)
         args = ", ".join(self.visit(arg) for arg in operation.args)
         ret = self.visit(operation.return_type)
+
         return (
             f"op {name}<{templates}>({args}) -> {ret} "
             + "{\n"
@@ -115,6 +116,7 @@ class ASTPrettyFormatter(BasePass):
         name = self.visit(procedure.name)
         templates = ", ".join(self.visit(arg) for arg in procedure.templates)
         args = ", ".join(self.visit(arg) for arg in procedure.args)
+
         return (
             f"proc {name}<{templates}>({args}) " + "{\n" + pprinted_statements + "\n}"
         )
@@ -132,6 +134,7 @@ class ASTPrettyFormatter(BasePass):
             right = f" = {self.visit(declaration_statement.expression)};"
         else:
             right = ";"
+
         return left + right
 
     def visit_ExpressionStatement(
@@ -141,6 +144,7 @@ class ASTPrettyFormatter(BasePass):
             left = f"{self.visit(expression_statement.left)} = "
         else:
             left = ""
+
         return left + self.visit(expression_statement.right) + ";"
 
     def visit_SelectionStatement(
@@ -192,6 +196,7 @@ class ASTPrettyFormatter(BasePass):
         condition = self.visit(ternary_expression.condition)
         _true = self.visit(ternary_expression.true)
         _false = self.visit(ternary_expression.false)
+
         return f"({condition} ? {_true} : {_false})"
 
     def visit_FunctionExpression(
@@ -204,6 +209,7 @@ class ASTPrettyFormatter(BasePass):
         indices = ", ".join(self.visit(index) for index in function_expression.indices)
         args = ", ".join(self.visit(arg) for arg in function_expression.args)
         func = self.visit(function_expression.function)
+
         return f"{func}<{template_types}>[{indices}]({args})"
 
     def _build_base_tuple(self, nodes: list[ASTObject]) -> str:
@@ -254,6 +260,7 @@ class ASTPrettyFormatter(BasePass):
             shape = ""
         else:
             shape = f"[{', '.join(self.visit(dim) for dim in numerical_type.shape)}]"
+
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
     def visit_DataType(self, data_type: ir.DataType) -> str:
