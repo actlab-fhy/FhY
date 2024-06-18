@@ -92,6 +92,11 @@ class FhYImportError(ImportError):
 
 
 @register_fhy_error
+class FhYTypeError(TypeError):
+    """Type error in FhY program."""
+
+
+@register_fhy_error
 class UnregisteredASTNode(KeyError):
     """ASTNode information has not been registered with FhY."""
 
