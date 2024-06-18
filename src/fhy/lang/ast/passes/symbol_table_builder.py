@@ -189,7 +189,7 @@ class SymbolTableBuilder(Visitor):
                 if not self._is_symbol_defined(dimension):
                     var_frame = ir.VariableSymbolTableFrame(
                         name=dimension,
-                        type=ir.NumericalType(ir.DataType(ir.PrimitiveDataType.INT)),
+                        type=ir.NumericalType(ir.DataType(ir.PrimitiveDataType.UINT64)),
                         type_qualifier=ir.TypeQualifier.PARAM,
                     )
                     self._add_symbol(dimension, var_frame)
