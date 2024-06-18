@@ -33,10 +33,10 @@
 
 from abc import ABC
 
+from fhy.error import FhYTypeError
+from fhy.utils import Lattice
 from fhy.utils.enumeration import StrEnum
 
-from fhy.utils import Lattice
-from fhy.error import FhYTypeError
 from .expression import Expression
 
 
@@ -126,8 +126,7 @@ _FLOAT_COMPLEX_DATA_TYPE_LATTICE = _define_float_complex_data_type_lattice()
 
 
 def promote_primitive_data_types(
-    primitive_data_type1: PrimitiveDataType,
-    primitive_data_type2: PrimitiveDataType
+    primitive_data_type1: PrimitiveDataType, primitive_data_type2: PrimitiveDataType
 ) -> PrimitiveDataType:
     _UINT_DATA_TYPES = {
         PrimitiveDataType.UINT8,
@@ -150,17 +149,34 @@ def promote_primitive_data_types(
         PrimitiveDataType.COMPLEX128,
     }
 
-    if primitive_data_type1 in _UINT_DATA_TYPES and primitive_data_type2 in _UINT_DATA_TYPES:
-        return _UINT_DATA_TYPE_LATTICE.get_least_upper_bound(primitive_data_type1, primitive_data_type2)
-    elif primitive_data_type1 in _INT_DATA_TYPES and primitive_data_type2 in _INT_DATA_TYPES:
-        return _INT_DATA_TYPE_LATTICE.get_least_upper_bound(primitive_data_type1, primitive_data_type2)
-    elif primitive_data_type1 in _FLOAT_COMPLEX_DATA_TYPES and primitive_data_type2 in _FLOAT_COMPLEX_DATA_TYPES:
-        return _FLOAT_COMPLEX_DATA_TYPE_LATTICE.get_least_upper_bound(primitive_data_type1, primitive_data_type2)
+    if (
+        primitive_data_type1 in _UINT_DATA_TYPES
+        and primitive_data_type2 in _UINT_DATA_TYPES
+    ):
+        return _UINT_DATA_TYPE_LATTICE.get_least_upper_bound(
+            primitive_data_type1, primitive_data_type2
+        )
+    elif (
+        primitive_data_type1 in _INT_DATA_TYPES
+        and primitive_data_type2 in _INT_DATA_TYPES
+    ):
+        return _INT_DATA_TYPE_LATTICE.get_least_upper_bound(
+            primitive_data_type1, primitive_data_type2
+        )
+    elif (
+        primitive_data_type1 in _FLOAT_COMPLEX_DATA_TYPES
+        and primitive_data_type2 in _FLOAT_COMPLEX_DATA_TYPES
+    ):
+        return _FLOAT_COMPLEX_DATA_TYPE_LATTICE.get_least_upper_bound(
+            primitive_data_type1, primitive_data_type2
+        )
     else:
-        raise FhYTypeError(f"Unsupported primitive data type promotion: {primitive_data_type1}, {primitive_data_type2}")
+        raise FhYTypeError(
+            f"Unsupported primitive data type promotion: {primitive_data_type1}, {primitive_data_type2}"
+        )
 
 
-class DataType(object):
+class DataType:
     """Data type defines core type primitive, but of flexible Bit Width.
 
     Note:
@@ -190,7 +206,11 @@ class DataType(object):
 
 
 def promote_data_types(data_type1: DataType, data_type2: DataType) -> DataType:
-    return DataType(promote_primitive_data_types(data_type1.primitive_data_type, data_type2.primitive_data_type))
+    return DataType(
+        promote_primitive_data_types(
+            data_type1.primitive_data_type, data_type2.primitive_data_type
+        )
+    )
 
 
 class NumericalType(Type):
@@ -297,8 +317,13 @@ class TypeQualifier(StrEnum):
     TEMP = "temp"
 
 
-def promote_type_qualifiers(type_qualifier1: TypeQualifier, type_qualifier2: TypeQualifier) -> TypeQualifier:
-    if type_qualifier1 == TypeQualifier.PARAM and type_qualifier2 == TypeQualifier.PARAM:
+def promote_type_qualifiers(
+    type_qualifier1: TypeQualifier, type_qualifier2: TypeQualifier
+) -> TypeQualifier:
+    if (
+        type_qualifier1 == TypeQualifier.PARAM
+        and type_qualifier2 == TypeQualifier.PARAM
+    ):
         return TypeQualifier.PARAM
     else:
         return TypeQualifier.TEMP

@@ -1,5 +1,6 @@
-import pytest
 from typing import Any
+
+import pytest
 from fhy.utils.lattice import Lattice
 
 

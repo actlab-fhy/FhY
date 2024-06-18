@@ -1,4 +1,5 @@
-from typing import Generic, TypeVar, Optional
+from typing import Generic, TypeVar
+
 from .poset import POSet
 
 T = TypeVar("T")
@@ -6,6 +7,7 @@ T = TypeVar("T")
 
 class Lattice(Generic[T]):
     """A lattice (order theory)."""
+
     _poset: POSet[T]
 
     def __init__(self):
@@ -39,10 +41,12 @@ class Lattice(Generic[T]):
         """Get the least upper bound of two elements."""
         join = self.get_join(x, y)
         if join is None:
-            raise RuntimeError(f"No least upper bound of {x} and {y} found for lattice.")
+            raise RuntimeError(
+                f"No least upper bound of {x} and {y} found for lattice."
+            )
         return join
 
-    def get_meet(self, x: T, y: T) -> Optional[T]:
+    def get_meet(self, x: T, y: T) -> T | None:
         """Get the greatest lower bound of two elements."""
         meet = None
         for z in self._poset:
@@ -51,7 +55,7 @@ class Lattice(Generic[T]):
                     meet = z
         return meet
 
-    def get_join(self, x: T, y: T) -> Optional[T]:
+    def get_join(self, x: T, y: T) -> T | None:
         """Get the least upper bound of two elements."""
         join = None
         for z in self._poset:

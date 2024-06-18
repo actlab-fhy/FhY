@@ -1,5 +1,10 @@
 import pytest
-from fhy.ir.type import PrimitiveDataType, promote_primitive_data_types, TypeQualifier, promote_type_qualifiers
+from fhy.ir.type import (
+    PrimitiveDataType,
+    TypeQualifier,
+    promote_primitive_data_types,
+    promote_type_qualifiers,
+)
 
 
 @pytest.mark.parametrize(
@@ -30,4 +35,3 @@ def test_promote_primitive_data_type(primitive_data_type1, primitive_data_type2,
 )
 def test_promote_type_qualifiers(type_qualifer1, type_qualifer2, expected_type_qualifer):
     assert promote_type_qualifiers(type_qualifer1, type_qualifer2) == expected_type_qualifer, f"Expected the promotion of {type_qualifer1} and {type_qualifer2} to be {expected_type_qualifer}."
-    
