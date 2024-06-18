@@ -31,7 +31,6 @@
 
 """FhY Command Line Interface (CLI) Compiler Utility."""
 
-import enum
 import logging
 import os
 import shutil
@@ -50,6 +49,7 @@ from fhy.lang.ast.pprint import pformat_ast
 from fhy.lang.ast.serialization import SerializationOptions
 from fhy.lang.ast.serialization.to_json import dump
 from fhy.logger import add_file_handler, get_logger
+from fhy.utils.enumeration import IntEnum
 
 T = TypeVar("T")
 
@@ -91,7 +91,7 @@ class DefaultPaths:
         return os.path.join(cls.hidden_directory, cls._log_file)
 
 
-class Status(int, enum.Enum):
+class Status(IntEnum):
     """Exit Codes describing the Status of CLI Request."""
 
     OK = 0

@@ -30,6 +30,7 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
         ast.TupleExpression,
         ast.TupleAccessExpression,
         ast.ArrayAccessExpression,
+        ast.FunctionExpression,
     )
     if (
         not isinstance(expr1, primitive_expression_types)
@@ -42,7 +43,7 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
             f"{type(expr1)}, {type(expr2)}"
         )
 
-    if isinstance(expr1, (ast.IntLiteral, ast.FloatLiteral, ast.ComplexLiteral)):
+    if isinstance(expr1, ast.IntLiteral | ast.FloatLiteral | ast.ComplexLiteral):
         return expr1.value == expr2.value
 
     elif isinstance(expr1, ast.IdentifierExpression):
@@ -51,15 +52,18 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
         return expr1.identifier.name_hint == expr2.identifier.name_hint
 
     elif isinstance(expr1, ast.TupleExpression):
-        raise NotImplementedError()
+        return len(expr1.expressions) == len(expr2.expressions) and all(
+            is_primitive_expression_equal(i, j)
+            for i, j in zip(expr1.expressions, expr2.expressions)
+        )
 
     elif isinstance(expr1, ast.TupleAccessExpression):
         return (
-            is_primitive_expression_equal(
+            expr1.element_index == expr2.element_index
+            and is_primitive_expression_equal(
                 expr1.tuple_expression,
                 expr2.tuple_expression,
             )
-            and expr1.element_index == expr2.element_index
         )
 
     elif isinstance(expr1, ast.ArrayAccessExpression):
@@ -67,6 +71,9 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
             is_primitive_expression_equal(i1, i2)
             for i1, i2 in zip(expr1.indices, expr2.indices)
         )
+
+    elif isinstance(expr1, ast.FunctionExpression):
+        return is_primitive_expression_equal(expr1.function, expr2.function)
 
     else:
         return False
@@ -717,9 +724,6 @@ def test_ternary_expressions(construct_ast):
     assert is_primitive_expression_equal(expression.false, ast.IntLiteral(value=8))
 
 
-# TODO: Debug and Support Tuple Access Expressions.
-# NOTE: Identifier Expressions are Taking Precedence over Tuple Access Primitives.
-# @pytest.mark.skip(reason="Unsupported. Problematic")
 @pytest.mark.parametrize(["name"], [("A",), ("A1",), ("A_",)])
 def test_tuple_access_expression(construct_ast, name: str):
     """Test a Tuple Access Expression."""
@@ -728,11 +732,31 @@ def test_tuple_access_expression(construct_ast, name: str):
     _assert_is_expected_module(_ast, 1)
 
     statement = _ast.statements[0]
+
     _assert_is_expected_expression_statement(
         statement,
         ast.IdentifierExpression(identifier=ir.Identifier("x")),
         ast.TupleAccessExpression(
             tuple_expression=ast.IdentifierExpression(identifier=ir.Identifier(name)),
+            element_index=1,
+        ),
+    )
+
+
+def test_tuple_access_function_expression(construct_ast):
+    """Test a tuple access expression against a function primitive expression."""
+    source: str = "x = f().1;"
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    _assert_is_expected_expression_statement(
+        statement,
+        ast.IdentifierExpression(identifier=ir.Identifier("x")),
+        ast.TupleAccessExpression(
+            tuple_expression=ast.FunctionExpression(
+                function=ast.IdentifierExpression(identifier=ir.Identifier("f"))
+            ),
             element_index=1,
         ),
     )
@@ -834,6 +858,22 @@ def test_tensor_access_expression(construct_ast):
             indices=[ast.IdentifierExpression(identifier=ir.Identifier("i"))],
         ),
         ast.IntLiteral(value=1),
+    )
+
+
+def test_tuple_expression(construct_ast):
+    """Test construction of a tuple expression."""
+    source: str = "b = (a,);"
+    _ast: ast.Module = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    statement = _ast.statements[0]
+    _assert_is_expected_expression_statement(
+        statement,
+        ast.IdentifierExpression(identifier=ir.Identifier("b")),
+        ast.TupleExpression(
+            expressions=[ast.IdentifierExpression(identifier=ir.Identifier("a"))]
+        ),
     )
 
 

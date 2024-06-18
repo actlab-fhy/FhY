@@ -14,7 +14,7 @@ maintainers = [
    {name = "Christopher Priebe", email = "cpriebe@ucsd.edu"},
    {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 keywords = [
    "Compiler", "Cross-Domain Language", "Cross-Domain Compiler", "Multi-Target Compiler"
 ]
@@ -26,6 +26,7 @@ classifiers = [
 dynamic = ["version", "readme", "dependencies"]
 
 [tool.setuptools.dynamic]
+version = {attr = "fhy.__version__"}
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements_build.txt", "requirements.txt"]}
 

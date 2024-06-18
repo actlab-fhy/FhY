@@ -32,7 +32,8 @@
 """FhY type system definitions."""
 
 from abc import ABC
-from enum import StrEnum
+
+from fhy.utils.enumeration import StrEnum
 
 from fhy.utils import Lattice
 from fhy.error import FhYTypeError
