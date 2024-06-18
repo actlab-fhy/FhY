@@ -33,7 +33,7 @@
 
 from typing import Generic, TypeVar
 
-import networkx as nx
+import networkx as nx  # type: ignore
 
 T = TypeVar("T")
 
