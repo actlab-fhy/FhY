@@ -113,6 +113,7 @@ class SymbolTableBuilder(Visitor):
         for table in self._table_stack:
             if symbol in table.keys():
                 return True
+
         return False
 
     def _add_symbol(self, symbol: ir.Identifier, frame: ir.SymbolTableFrame) -> None:

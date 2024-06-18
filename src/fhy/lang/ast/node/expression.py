@@ -102,6 +102,7 @@ class UnaryExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["operation", "expression"])
+
         return attrs
 
 
@@ -183,6 +184,7 @@ class BinaryExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["operation", "left", "right"])
+
         return attrs
 
 
@@ -209,6 +211,7 @@ class TernaryExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["condition", "true", "false"])
+
         return attrs
 
 
@@ -232,6 +235,7 @@ class TupleAccessExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["tuple_expression", "element_index"])
+
         return attrs
 
 
@@ -262,6 +266,7 @@ class FunctionExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["function", "template_types", "indices", "args"])
+
         return attrs
 
 
@@ -285,6 +290,7 @@ class ArrayAccessExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["array_expression", "indices"])
+
         return attrs
 
 
@@ -306,6 +312,7 @@ class TupleExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["expressions"])
+
         return attrs
 
 
@@ -326,6 +333,7 @@ class IdentifierExpression(Expression):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["identifier"])
+
         return attrs
 
 
@@ -371,6 +379,7 @@ class FloatLiteral(Literal):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["value"])
+
         return attrs
 
 
@@ -391,4 +400,5 @@ class ComplexLiteral(Literal):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["value"])
+
         return attrs

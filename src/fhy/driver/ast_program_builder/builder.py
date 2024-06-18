@@ -344,7 +344,7 @@ def build_ast_program(
         log (optional, logging.Logger): Provide a logger for debugging purposes.
 
     Raises:
-        FhYImportError: Problematic Import statement detected.
+        FhYImportError: Problematic import statement detected.
 
     Returns:
         (ir.Program):

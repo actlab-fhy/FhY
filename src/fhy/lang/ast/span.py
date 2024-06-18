@@ -135,4 +135,5 @@ class Span:
         if self.source is not None:
             text += f"{self.source} "
         text += f"Lines {self.line} Columns: {self.column}"
+
         return text

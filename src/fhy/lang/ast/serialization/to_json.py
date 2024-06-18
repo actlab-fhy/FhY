@@ -400,6 +400,7 @@ class ASTtoJSON(visitor.BasePass):
         # NOTE: Complex Values are not JSON Serializable. We must Separate the
         #       real and imaginary parts contained by a dictionary.
         result = dict(real=node.value.real, imag=node.value.imag)
+
         return AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(span=self.visit_Span(node.span), value=result),
