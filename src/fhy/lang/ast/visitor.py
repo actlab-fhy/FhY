@@ -34,7 +34,6 @@
 Classes:
     BasePass: Abstract visitor pattern base class.
     Visitor: Visitor with control for how to visit child nodes.
-    Listener: Visitor without control for how to visit child nodes.
     Transformer: Visitor to modify AST nodes.
 
 """
