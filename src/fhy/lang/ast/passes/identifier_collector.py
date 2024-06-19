@@ -67,4 +67,5 @@ def collect_identifiers(node: ASTObject) -> set[ir.Identifier]:
     """Return a set of identifier objects from a given AST node object."""
     collector = IdentifierCollector()
     collector(node)
+
     return collector.identifiers

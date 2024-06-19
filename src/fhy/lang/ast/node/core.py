@@ -71,6 +71,7 @@ class Module(ASTNode):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name", "statements"])
+
         return attrs
 
 
@@ -94,6 +95,7 @@ class Function(Statement, ABC):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name"])
+
         return attrs
 
 

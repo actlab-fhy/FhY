@@ -126,7 +126,6 @@ class ASTtoJSON(visitor.BasePass):
 
     def visit_Module(self, node: ast.Module) -> AlmostJson:
         statements: list[AlmostJson] = self.visit_sequence(node.statements)
-
         obj = AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(
@@ -162,7 +161,6 @@ class ASTtoJSON(visitor.BasePass):
         args: list[AlmostJson] = self.visit_sequence(node.args)
         body: list[AlmostJson] = self.visit_sequence(node.body)
         name: AlmostJson = self.visit_Identifier(node.name)
-
         obj = AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(
@@ -282,7 +280,6 @@ class ASTtoJSON(visitor.BasePass):
     def visit_BinaryExpression(self, node: ast.BinaryExpression) -> AlmostJson:
         left: AlmostJson = self.visit(node.left)
         right: AlmostJson = self.visit(node.right)
-
         obj = AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(
@@ -299,7 +296,6 @@ class ASTtoJSON(visitor.BasePass):
         condition: AlmostJson = self.visit(node.condition)
         true: AlmostJson = self.visit(node.true)
         false: AlmostJson = self.visit(node.false)
-
         obj = AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(
@@ -376,7 +372,6 @@ class ASTtoJSON(visitor.BasePass):
 
     def visit_IdentifierExpression(self, node: ast.IdentifierExpression) -> AlmostJson:
         identifier: AlmostJson = self.visit(node.identifier)
-
         obj = AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(span=self.visit_Span(node.span), identifier=identifier),
@@ -400,6 +395,7 @@ class ASTtoJSON(visitor.BasePass):
         # NOTE: Complex Values are not JSON Serializable. We must Separate the
         #       real and imaginary parts contained by a dictionary.
         result = dict(real=node.value.real, imag=node.value.imag)
+
         return AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(span=self.visit_Span(node.span), value=result),
@@ -582,6 +578,7 @@ class JSONtoAST(visitor.BasePass):
         )
         if (_express := values.get("expression")) is not None:
             values["expression"] = self.visit(_express)
+
         express = values.get("expression")
 
         return ast.DeclarationStatement(
@@ -598,6 +595,7 @@ class JSONtoAST(visitor.BasePass):
         span: Span | None = self.visit_Span(values.get("span"))
         if (_left := values.get("left")) is not None:
             values["left"] = self.visit(_left)
+
         left: ast.Expression | None = values.get("left")
         right: ast.Expression = self.visit(values.get("right"))
 
@@ -768,6 +766,7 @@ class JSONtoAST(visitor.BasePass):
     def visit_FloatLiteral(self, node: AlmostJson | None) -> ast.FloatLiteral:
         if node is None:
             raise ValueError("Invalid FloatLiteral")
+
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
         if (value := values.get("value")) is None:
@@ -819,6 +818,7 @@ class JSONtoAST(visitor.BasePass):
     ) -> ir.NumericalType:
         if numerical_type is None:
             raise ValueError("Invalid numerical_type")
+
         values: dict = numerical_type.attributes
         dtype: ir.DataType = self.visit_DataType(values.get("data_type"))
         shape: list[ir.Expression] = self.visit_sequence(values.get("shape"))
@@ -840,19 +840,7 @@ class JSONtoAST(visitor.BasePass):
                 AlmostJson(
                     cls_name=ast.IntLiteral.get_key_name(),
                     attributes=dict(
-                        span=AlmostJson(
-                            cls_name=Span.__name__,
-                            attributes=dict(
-                                start_column=0,
-                                end_column=0,
-                                start_line=0,
-                                end_line=0,
-                                source=AlmostJson(
-                                    cls_name=Source.__name__,
-                                    attributes=dict(namespace="_null"),
-                                ),
-                            ),
-                        ),
+                        span=None,
                         value=1,
                     ),
                 )
@@ -875,6 +863,7 @@ class JSONtoAST(visitor.BasePass):
     def visit_Identifier(self, identifier: AlmostJson | None) -> ir.Identifier:
         if identifier is None:
             raise ValueError("No Identifier Provided")
+
         if (hint := identifier.attributes.get("name_hint")) is None:
             raise ValueError("Invalid Identifier Name")
 
@@ -882,11 +871,9 @@ class JSONtoAST(visitor.BasePass):
 
         if (value := identifier.attributes.get("_id")) is None:
             raise ValueError("Invalid ID.")
-        identity._id = value
 
         # NOTE: We are Hacking the Identifier Class, which automatically assigns an ID.
-        #       Do we care if we are increasing the assignment ID when creating these
-        #       Objects? or Do we override the _id from the JSON?
+        identity._id = value
 
         return identity
 
@@ -906,6 +893,7 @@ class JSONtoAST(visitor.BasePass):
         if (_source := values.get("source")) is not None:
             source = self.visit_Source(_source)
         maybe = dict(source=source)
+
         return Span(
             start_column=values.get("start_column") or 0,
             end_column=values.get("end_column") or 0,
