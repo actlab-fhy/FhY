@@ -68,6 +68,7 @@ class Import(Statement):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name"])
+
         return attrs
 
 
@@ -91,6 +92,7 @@ class Argument(ASTNode):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name", "qualified_type"])
+
         return attrs
 
 
@@ -117,6 +119,7 @@ class Procedure(Function):
     def get_visit_attrs(self) -> list[str]:
         attrs: list[str] = super().get_visit_attrs()
         attrs.extend(["templates", "args", "body"])
+
         return attrs
 
 
@@ -146,6 +149,7 @@ class Operation(Function):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["templates", "args", "body", "return_type"])
+
         return attrs
 
 
@@ -166,6 +170,7 @@ class Native(Function):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["args"])
+
         return attrs
 
 
@@ -193,6 +198,7 @@ class DeclarationStatement(Statement):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["variable_name", "variable_type", "expression"])
+
         return attrs
 
 
@@ -216,6 +222,7 @@ class ExpressionStatement(Statement):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["left", "right"])
+
         return attrs
 
 
@@ -239,6 +246,7 @@ class ForAllStatement(Statement):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["index", "body"])
+
         return attrs
 
 
@@ -265,6 +273,7 @@ class SelectionStatement(Statement):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["condition", "true_body", "false_body"])
+
         return attrs
 
 
@@ -285,4 +294,5 @@ class ReturnStatement(Statement):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["expression"])
+
         return attrs

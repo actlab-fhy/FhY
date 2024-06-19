@@ -127,8 +127,7 @@ class ASTProgramBuilder:
 
         while source_file_queue:
             filepath: Path = source_file_queue.popleft()
-            paths = map(lambda k: k.path, source_file_asts)
-            if any(i == filepath for i in paths):
+            if any(i.path == filepath for i in source_file_asts):
                 continue
 
             self.log.debug(
@@ -144,10 +143,10 @@ class ASTProgramBuilder:
                 import_identifier.name_hint
                 for import_identifier in imported_identifiers
             }
-            import_paths: set[Path] = set(
+            import_paths: set[Path] = {
                 self._get_source_file_path_from_imported_symbol(imported_symbol)
                 for imported_symbol in qualname
-            )
+            }
             source_file_queue.extend(import_paths)
 
         return source_file_asts
@@ -345,7 +344,7 @@ def build_ast_program(
         log (optional, logging.Logger): Provide a logger for debugging purposes.
 
     Raises:
-        FhYImportError: Problematic Import statement detected.
+        FhYImportError: Problematic import statement detected.
 
     Returns:
         (ir.Program):

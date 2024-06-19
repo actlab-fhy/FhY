@@ -113,6 +113,7 @@ class NumericalType(Type):
 
     def __repr__(self) -> str:
         shape = ",".join(repr(s) for s in self._shape)
+
         return f"NumericalType({self._data_type}, [{shape}])"
 
 

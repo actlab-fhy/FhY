@@ -59,4 +59,5 @@ class QualifiedType(ASTNode):
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["base_type", "type_qualifier"])
+
         return attrs

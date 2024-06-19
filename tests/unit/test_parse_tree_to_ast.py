@@ -82,7 +82,7 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
 def _assert_is_expected_module(node: ast.ASTNode, expected_num_statements: int) -> None:
     assert isinstance(node, ast.Module), wrong_node_babe(ast.Module, node)
 
-    assert all(map(lambda x: isinstance(x, ast.Statement), node.statements)), (
+    assert all(isinstance(x, ast.Statement) for x in node.statements), (
         'Expected all statements to be "Statement" AST nodes, got '
         + f'"{list_to_types(node.statements)}"'
     )
@@ -470,7 +470,7 @@ def test_empty_operation(construct_ast, source: str):
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.statements[0]
+    operation: ast.Operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 0, 0)
 
 
@@ -480,7 +480,7 @@ def test_empty_operation_return_type(construct_ast):
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.statements[0]
+    operation: ast.Operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 1, 0)
 
     arg = operation.args[0]
