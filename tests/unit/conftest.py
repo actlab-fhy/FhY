@@ -11,10 +11,10 @@ from typing import TypeVar
 
 import pytest
 from fhy.ir import (
-    DataType,
     Identifier,
     IndexType,
     NumericalType,
+    Primitive,
     PrimitiveDataType,
     TupleType,
     TypeQualifier,
@@ -154,15 +154,15 @@ def build_numerical_type() -> (
             cls_name="NumericalType",
             attributes=dict(
                 data_type=dict(
-                    cls_name="DataType",
-                    attributes=dict(primitive_data_type=primitive.value),
+                    cls_name="Primitive",
+                    attributes=dict(data_type=primitive.value),
                 ),
                 shape=shape_objs,
             ),
         )
 
         numerical = NumericalType(
-            data_type=DataType(primitive_data_type=primitive), shape=shape_cls
+            data_type=Primitive(data_type=primitive), shape=shape_cls
         )
 
         return obj, numerical

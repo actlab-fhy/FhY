@@ -672,7 +672,7 @@ class ParseTreeConverter(FhYVisitor):
     def visitNumerical_type(
         self, ctx: FhYParser.Numerical_typeContext
     ) -> ir.NumericalType:
-        data_type: ir.DataType = self.visitDtype(ctx.dtype())
+        data_type: ir.Primitive = self.visitDtype(ctx.dtype())
         shape: Sequence[Expressions] = []
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
@@ -682,8 +682,8 @@ class ParseTreeConverter(FhYVisitor):
             shape=list(shape),
         )
 
-    def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.DataType:
-        return ir.DataType(ir.PrimitiveDataType(ctx.IDENTIFIER().getText()))
+    def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.Primitive:
+        return ir.Primitive(ir.PrimitiveDataType(ctx.IDENTIFIER().getText()))
 
     def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> ir.IndexType:
         low, high, stride = self.visitRange(ctx.range_())
