@@ -521,7 +521,6 @@ def test_empty_operation_return_type(construct_ast):
 def test_operation_template_types(construct_ast, templates: list[str]):
     """Test that an Empty Operation with a Return Type is Converted Correctly."""
     source: str = "op foo<%s>(input int32[n, m] x) -> output int32[n, m] {}"
-    print(source % ", ".join(templates))
     _ast = construct_ast(source % ", ".join(templates))
     _assert_is_expected_module(_ast, 1)
 

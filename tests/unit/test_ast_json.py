@@ -185,6 +185,5 @@ def test_empty_module(construct_ast):
 
     result: AlmostJson = ASTtoJSON().visit(ast)
     data = result.data()
-    print(data)
 
     assert data == expected, "Unexpected Object."
