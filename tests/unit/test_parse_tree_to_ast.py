@@ -718,6 +718,9 @@ def test_binary_expressions(construct_ast, operator: ast.BinaryOperation):
     )
 
     expression = statement.expression
+    assert isinstance(expression, ast.BinaryExpression), wrong_node_babe(
+        ast.BinaryExpression, expression
+    )
     assert (
         expression.operation == operator
     ), f'Expected "{operator}" operation. Received: "{expression.operation}"'
@@ -985,7 +988,6 @@ def test_tuple_type(construct_ast, source: str):
     _assert_is_expected_qualified_type(
         statement.variable_type, ir.TypeQualifier.OUTPUT, ir.TupleType
     )
-    # TODO: Jason -> this test's assertions need to be expanded
 
     _tuple: ir.TupleType = statement.variable_type.base_type
     assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
