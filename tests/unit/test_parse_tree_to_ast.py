@@ -869,6 +869,32 @@ def test_function_expression_as_expression_statement(construct_ast, source: str)
     )
 
 
+def test_function_expression_with_templates(construct_ast):
+    """Test Function Call Expression within as an Expression Statement."""
+    _ast: ast.Module = construct_ast("proc foo<T>(input T[m,n] A) { bar<T>(); }")
+    _assert_is_expected_module(_ast, 1)
+
+    proc = _ast.statements[0]
+    assert isinstance(proc, ast.Procedure), wrong_node_babe(ast.Procedure, proc)
+    template = proc.templates[0]
+    assert isinstance(template, ir.Template), wrong_node_babe(ir.Template, template)
+
+    statement = proc.body[0]
+    assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
+        ast.ExpressionStatement, statement
+    )
+    function = statement.right
+    assert isinstance(function, ast.FunctionExpression), wrong_node_babe(
+        ast.FunctionExpression, function
+    )
+    ftemp = function.template_types[0]
+    assert isinstance(ftemp, ir.Template), wrong_node_babe(ir.Template, ftemp)
+
+    assert (
+        template._data_type.id == ftemp._data_type.id
+    ), "Expected same Template Identifier ID."
+
+
 def test_tensor_access_expression(construct_ast):
     """Test construction of a Tensor Access Expression."""
     source: str = "A[i] = 1;"  # Semantically Invalid

@@ -554,11 +554,12 @@ class ParseTreeConverter(FhYVisitor):
 
             expression_list_counter: int = 0
 
-            template_types: list[ast.Expression] = []
+            template_types: list[ast.Expression | ir.type.DataType] = []
             if ctx.LESS_THAN() is not None and ctx.GREATER_THAN() is not None:
-                template_types = self.visitExpression_list(
+                initial = self.visitExpression_list(
                     ctx.expression_list(expression_list_counter)
                 )
+                template_types = self._update_templates(initial)
                 expression_list_counter += 1
 
             indices: list[ast.Expression] = []
