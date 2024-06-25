@@ -718,15 +718,11 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.type.DataType:
         text: str = ctx.IDENTIFIER().getText()
-        if text in ir.PrimitiveDataType:
-            data_type = ir.PrimitiveDataType(text)
+        try:
+            return ir.Primitive(ir.PrimitiveDataType(text))
 
-            return ir.Primitive(data_type)
-
-        else:
-            data = self._get_type(text)
-
-            return ir.Template(data)
+        except (KeyError, ValueError):
+            return ir.Template(self._get_type(text))
 
     def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> ir.IndexType:
         low, high, stride = self.visitRange(ctx.range_())
