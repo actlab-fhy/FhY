@@ -40,7 +40,7 @@ function_definition
     ;
 
 function_header
-    : function_type=FUNCTION_KEYWORD name=IDENTIFIER (LESS_THAN function_template_types=identifier_list GREATER_THAN)? (OPEN_BRACKET function_indices=function_args CLOSE_BRACKET)? OPEN_PARENTHESES function_args CLOSE_PARENTHESES (ARROW return_type=qualified_type)?
+    : function_type=FUNCTION_KEYWORD name=IDENTIFIER (LESS_THAN function_template_types=expression_list GREATER_THAN)? (OPEN_BRACKET function_indices=function_args CLOSE_BRACKET)? OPEN_PARENTHESES function_args CLOSE_PARENTHESES (ARROW return_type=qualified_type)?
     ;
 
 identifier_list
