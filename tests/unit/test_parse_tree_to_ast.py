@@ -531,8 +531,34 @@ def test_operation_template_types(construct_ast, templates: list[str]):
         templates
     ), "Expected Same Number of Template Types."
     for j, k in zip(operation.templates, templates):
-        assert isinstance(j, ir.Identifier), wrong_node_babe(ir.Identifier, j)
-        assert j.name_hint == k, f"Expected Same Identifier Name: {j.name_hint}"
+        assert isinstance(j, ir.Template), wrong_node_babe(ir.Template, j)
+        (
+            j._data_type.name_hint == k,
+            f"Expected Same Identifier Name: {j._data_type.name_hint}",
+        )
+
+
+def test_operation_template_type_body(construct_ast):
+    """Test that an Template type Identifier IDs are equivalent."""
+    source: str = "op foo<T>(input T[n, m] x) -> output int32[n, m] {temp T[n, m] A;}"
+    _ast = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    operation: ast.Operation = _ast.statements[0]
+    _assert_is_expected_operation(operation, "foo", 1, 1)
+
+    template = operation.templates[0]
+    assert isinstance(template, ir.Template), wrong_node_babe(ir.Template, template)
+
+    statement: ast.Statement = operation.body[0]
+    assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
+        ast.DeclarationStatement, statement
+    )
+
+    numerical: ir.NumericalType = statement.variable_type.base_type
+    assert (
+        numerical.data_type._data_type.id == template._data_type.id
+    ), "Expected same Template Identifier ID."
 
 
 # ==========

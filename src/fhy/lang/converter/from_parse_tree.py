@@ -85,6 +85,21 @@ def _initialize_builtin_identifiers() -> dict[str, ir.Identifier]:
     }
 
 
+def _grab_identifier(name: str, scope: ChainMap[str, ir.Identifier]) -> ir.Identifier:
+    if name in scope:
+        return scope[name]
+
+    else:
+        identifier = ir.Identifier(name)
+        scope[name] = identifier
+
+        return identifier
+
+
+def _initialize_builtin_types() -> dict[str, ir.Identifier]:
+    return {t.value: ir.Identifier(t.value) for t in ir.PrimitiveDataType}
+
+
 class ParseTreeConverter(FhYVisitor):
     """Constructs an AST representation from a FhY Concrete Syntax Tree Node Visitor.
 
@@ -104,24 +119,40 @@ class ParseTreeConverter(FhYVisitor):
 
     source: Source | None
     _scopes: ChainMap[str, ir.Identifier]
+    _types: ChainMap[str, ir.Identifier]
 
     def __init__(self, source: Source | None = None) -> None:
         self.source = source
         self._scopes = ChainMap(_initialize_builtin_identifiers())
+        self._types = ChainMap(_initialize_builtin_types())
 
     def _open_scope(self) -> None:
         self._scopes = self._scopes.new_child()
+        self._types = self._types.new_child()
 
     def _close_scope(self) -> None:
         self._scopes = self._scopes.parents
+        self._types = self._types.parents
 
     def _get_identifier(self, name_hint: str) -> ir.Identifier:
-        if name_hint in self._scopes:
-            return self._scopes[name_hint]
-        else:
-            identifier = ir.Identifier(name_hint)
-            self._scopes[name_hint] = identifier
-            return identifier
+        return _grab_identifier(name_hint, self._scopes)
+
+    def _update_templates(
+        self, nodes: list[Expressions]
+    ) -> list[Expressions | ir.type.DataType]:
+        templates: list[Expressions | ir.type.DataType] = []
+        for e in nodes:
+            if isinstance(e, ast.IdentifierExpression):
+                self._types[e.identifier.name_hint] = e.identifier
+                templates.append(ir.Template(data_type=e.identifier))
+            else:
+                templates.append(e)
+
+        return templates
+
+    def _get_type(self, node):
+        """Retrieve type within scope (accounting for available template types)."""
+        return _grab_identifier(node, self._types)
 
     def _get_span(self, ctx: ParserRuleContext) -> Span | None:
         return _get_source_info(ctx, self.source)
@@ -165,7 +196,6 @@ class ParseTreeConverter(FhYVisitor):
     def visitFunction_definition(
         self, ctx: FhYParser.Function_definitionContext
     ) -> ast.Operation | ast.Procedure:
-        # TODO: add template types and indices (3rd and 4th returned values here)
         # TODO: consider getting function name here as the open scope needed to be moved
         #       to function header so the function name is still in the parent scope
         keyword, name, template, indices, args, return_type = self.visitFunction_header(
@@ -247,12 +277,16 @@ class ParseTreeConverter(FhYVisitor):
         args_ctx: FhYParser.Function_argsContext = ctx.function_args(0)
         args: list[ast.Argument] = self.visitFunction_args(args_ctx)
 
-        # TODO: Implement Support for Function template and indices
+        # NOTE: This is ugly, we have to tranform template types
+        #       While template types within the body of a function correctly visitType
+        #       to construct template types directly, we must populate them here.
         template: list[ir.Identifier] = []
         if ctx.function_template_types is not None:
-            template_ctx: FhYParser.Identifier_listContext = ctx.identifier_list()
-            template.extend(self.visitIdentifier_list(template_ctx))
+            template_ctx: FhYParser.Expression_listContext = ctx.expression_list()
+            initial = self.visitExpression_list(template_ctx)
+            template.extend(self._update_templates(initial))
 
+        # TODO: Implement Support for Function indices
         indices: list[ast.Argument] = []
         if (index_ctx := ctx.function_indices) is not None:
             indices.extend(self.visitFunction_args(index_ctx))
@@ -672,7 +706,7 @@ class ParseTreeConverter(FhYVisitor):
     def visitNumerical_type(
         self, ctx: FhYParser.Numerical_typeContext
     ) -> ir.NumericalType:
-        data_type: ir.Primitive = self.visitDtype(ctx.dtype())
+        data_type: ir.type.DataType = self.visitDtype(ctx.dtype())
         shape: Sequence[Expressions] = []
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
@@ -682,8 +716,17 @@ class ParseTreeConverter(FhYVisitor):
             shape=list(shape),
         )
 
-    def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.Primitive:
-        return ir.Primitive(ir.PrimitiveDataType(ctx.IDENTIFIER().getText()))
+    def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.type.DataType:
+        text: str = ctx.IDENTIFIER().getText()
+        if text in ir.PrimitiveDataType:
+            data_type = ir.PrimitiveDataType(text)
+
+            return ir.Primitive(data_type)
+
+        else:
+            data = self._get_type(text)
+
+            return ir.Template(data)
 
     def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> ir.IndexType:
         low, high, stride = self.visitRange(ctx.range_())
