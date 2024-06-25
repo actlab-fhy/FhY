@@ -883,6 +883,19 @@ def test_function_expression_with_templates(construct_ast):
     assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
         ast.ExpressionStatement, statement
     )
+
+    # Check argument too.
+    arg = proc.args[0]
+    assert isinstance(arg, ast.Argument), wrong_node_babe(ast.Argument, arg)
+    assert isinstance(arg.qualified_type.base_type, ir.NumericalType), wrong_node_babe(
+        ir.NumericalType, arg.qualified_type.base_type
+    )
+    arg_temp = arg.qualified_type.base_type.data_type
+    assert isinstance(arg_temp, ir.Template), wrong_node_babe(ir.Template, arg_temp)
+    assert (
+        template._data_type.id == arg_temp._data_type.id
+    ), "Expected same Template Identifier ID."
+
     function = statement.right
     assert isinstance(function, ast.FunctionExpression), wrong_node_babe(
         ast.FunctionExpression, function

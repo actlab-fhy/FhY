@@ -274,9 +274,6 @@ class ParseTreeConverter(FhYVisitor):
 
         self._open_scope()
 
-        args_ctx: FhYParser.Function_argsContext = ctx.function_args(0)
-        args: list[ast.Argument] = self.visitFunction_args(args_ctx)
-
         # NOTE: This is ugly, we have to tranform template types
         #       While template types within the body of a function correctly visitType
         #       to construct template types directly, we must populate them here.
@@ -290,6 +287,10 @@ class ParseTreeConverter(FhYVisitor):
         indices: list[ast.Argument] = []
         if (index_ctx := ctx.function_indices) is not None:
             indices.extend(self.visitFunction_args(index_ctx))
+
+        # Visit args after template types, to register potential types beforehand
+        args_ctx: FhYParser.Function_argsContext = ctx.function_args(0)
+        args: list[ast.Argument] = self.visitFunction_args(args_ctx)
 
         return_type: ast.QualifiedType | None = None
         if (return_type_ctx := ctx.qualified_type()) is not None:
@@ -697,6 +698,7 @@ class ParseTreeConverter(FhYVisitor):
             raise FhYSyntaxError(f"No Type Qualifier Provided. {text}")
 
         base_type = self.visitType(ctx.type_())
+        print("Base Type:", base_type)
 
         return ast.QualifiedType(
             base_type=base_type,
