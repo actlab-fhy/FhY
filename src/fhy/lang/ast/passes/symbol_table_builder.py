@@ -78,9 +78,7 @@ class SymbolTableBuilder(Visitor):
 
     def __init__(self) -> None:
         super().__init__()
-
         self._symbol_table = ir.SymbolTable()
-
         self._table_stack = Stack[ir.Table[ir.Identifier, ir.SymbolTableFrame]]()
 
     @property
@@ -126,6 +124,7 @@ class SymbolTableBuilder(Visitor):
     def __call__(self, node: core.Module, *args: Any, **kwargs: Any) -> Any:
         if not isinstance(node, core.Module):
             raise TypeError(f'Expected a "Module" node. Received: {type(node)}')
+
         return super().__call__(node, *args, **kwargs)
 
     def visit_Module(self, node: core.Module) -> None:

@@ -161,7 +161,6 @@ def test_identifier_validation(unidirectional_import, config):
     ast_files: list[SourceFileAST] = program._build_source_file_asts()
     paths: set[Path] = {i.path for i in ast_files}
     tree: ModuleTree = program._build_module_tree(paths)
-
     result: list[SourceFileAST] = program._resolve_imports(ast_files, tree)
 
     # Use sets to show differences in asts
@@ -176,7 +175,7 @@ def test_identifier_validation(unidirectional_import, config):
     difference = previous_ids.difference(current_ids)
     assert len(difference) == 1, "Expected One Identifier to be Replaced."
 
-    identifier = next(iter(difference))
+    identifier: ir.Identifier = next(iter(difference))
     assert (
         identifier.name_hint == "unidirectional_import.b.B"
     ), "UnExpected Identifier Replaced."

@@ -1,14 +1,42 @@
 """Unit Test Symbol Table Builder Module."""
 
+from collections.abc import Generator
+
 import pytest
 from fhy import error, ir
 from fhy.lang.ast.passes import build_symbol_table
+from fhy.lang.ast.passes.symbol_table_builder import SymbolTableBuilder
 
 
 def _get_symbol_table_string_keys(
     symbol_table: ir.Table[ir.Identifier, ir.SymbolTableFrame],
 ) -> set[str]:
     return {symbol.name_hint for symbol in symbol_table.keys()}
+
+
+@pytest.fixture
+def table_strs():
+    tab: ir.Table[str, str] = ir.Table()
+    for c in "abc":
+        tab[c] = c.upper()
+
+    yield tab
+
+
+@pytest.fixture
+def symbol_builder() -> Generator[SymbolTableBuilder, None, None]:
+    builder = SymbolTableBuilder()
+    # Create a mock module namespace
+    builder._push_namespace("module")
+
+    yield builder
+
+
+# NOTE: First test properties and behaviors and base table structure
+def test_base_table(table_strs):
+    assert "a" in table_strs, "Expected `a` in table."
+    assert table_strs["a"] == "A", "Expected correct returning result."
+    assert set(table_strs.items()) == {("a", "A"), ("b", "B"), ("c", "C")}
 
 
 def test_empty_program(construct_ast):
@@ -42,6 +70,25 @@ def test_empty_procedure(construct_ast):
 
     main_namespace_symbol_table = list(symbol_table.values())[1]
     assert len(main_namespace_symbol_table) == 0
+
+
+def test_empty_operation(operation, symbol_builder: SymbolTableBuilder):
+    """Tests empty Operation body contains procedure name in symbol table."""
+    obj, node = operation
+    symbol_builder.visit_Operation(node)
+
+    assert len(symbol_builder.symbol_table) == 2
+    assert "foobar" in _get_symbol_table_string_keys(symbol_builder.symbol_table)
+    print("Values\n", symbol_builder.symbol_table.values())
+    gener = iter(symbol_builder.symbol_table.values())
+    namespace_symbol_table = next(gener)
+    assert len(namespace_symbol_table) == 1, "Expected one operation in namespace."
+
+    # Test that all variables are found with expected parts of table.
+    assert "foobar" in _get_symbol_table_string_keys(namespace_symbol_table)
+    names = _get_symbol_table_string_keys(next(gener))
+    for j in ("rupaul", "m", "n"):
+        assert j in names
 
 
 def test_procedure_with_arguments(construct_ast):
