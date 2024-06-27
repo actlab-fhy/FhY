@@ -410,7 +410,7 @@ class ASTtoJSON(visitor.BasePass):
     def visit_Template(self, node: ir.Template) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(node),
-            attributes=dict(data_type=node.template_type),
+            attributes=dict(data_type=self.visit(node.template_type)),
         )
 
     def visit_QualifiedType(self, node: ast.QualifiedType) -> AlmostJson:

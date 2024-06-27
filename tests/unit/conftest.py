@@ -16,6 +16,7 @@ from fhy.ir import (
     NumericalType,
     Primitive,
     PrimitiveDataType,
+    Template,
     TupleType,
     TypeQualifier,
 )
@@ -612,6 +613,28 @@ def operation(
     )
 
     return obj, op
+
+
+@add_fixture_node
+@pytest.fixture
+def procedure_with_templates(construct_id) -> tuple[dict, Procedure]:
+    name_id_obj, name_id = construct_id("mumu")
+    tobj, tid = construct_id("T")
+
+    obj = dict(
+        cls_name="Procedure",
+        attributes=dict(
+            name=name_id_obj,
+            templates=[dict(cls_name="Template", attributes=dict(data_type=tobj))],
+            args=[],
+            body=[],
+        ),
+    )
+    proc = Procedure(
+        span=None, name=name_id, templates=[Template(data_type=tid)], args=[], body=[]
+    )
+
+    return obj, proc
 
 
 @add_fixture_node

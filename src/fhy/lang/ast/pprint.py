@@ -263,11 +263,11 @@ class ASTPrettyFormatter(BasePass):
 
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
-    def visit_Primitive(self, node: ir.type.Primitive) -> str:
+    def visit_Primitive(self, node: ir.Primitive) -> str:
         return str(node.primitive_data_type.value)
 
-    def visit_Template(self, node: ir.type.Template) -> str:
-        return str(node.template_type)  # NOTE: Double check this.
+    def visit_Template(self, node: ir.Template) -> str:
+        return self.visit_Identifier(node.template_type)
 
     def visit_IndexType(self, index_type: ir.IndexType) -> str:
         index_range = f"{self.visit(index_type.lower_bound)}:"

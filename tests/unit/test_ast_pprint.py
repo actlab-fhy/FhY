@@ -203,6 +203,14 @@ def test_procedure(procedure):
     assert result == expected, "Unexpected Formatting"
 
 
+def test_procedure_with_templates(procedure_with_templates):
+    obj, node = procedure_with_templates
+    expected: str = "proc mumu<T>() {\n\n}"
+
+    result = pformat_ast(node)
+    assert result == expected, "Unexpected Formatting"
+
+
 def test_module(module):
     """Test pretty printing module node."""
     obj, node = module
