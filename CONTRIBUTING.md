@@ -12,7 +12,7 @@ cd FhY
 ```
 
 2. Create a new virtual environment (instructions to create and activate a virutal
-   environment may differ here on diffent OS and shells)
+   environment may differ here on different OS and shells)
 
 ```bash
 python -m venv .venv
@@ -49,7 +49,7 @@ And now you are ready to start hacking with FhY.
 ## Creating a new Pull Request
 When submitting a pull request, we ask you to check the following:
 
-1. First create an issue on FhY to reference before starting a pull request, and discuss
+1. First create an issue on FhY to reference before starting a pull request and discuss
    possible implementation details, or nuances.
 
 2. Unit tests, documentation, and code style are in order.
@@ -67,7 +67,7 @@ When submitting a pull request, we ask you to check the following:
 
 Most of our code is automatically linted and formatted using the developer tools ruff,
 pylint, and mypy (for static typing). For reference, we also take inspiration from
-[goole's style guide](https://google.github.io/styleguide/pyguide.html).
+[Google's style guide](https://google.github.io/styleguide/pyguide.html).
 
 ### Doctstrings
 

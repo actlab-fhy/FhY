@@ -618,6 +618,7 @@ def operation(
 @add_fixture_node
 @pytest.fixture
 def procedure_with_templates(construct_id) -> tuple[dict, Procedure]:
+    text: str = "proc mumu<T>() {\n\n}"
     name_id_obj, name_id = construct_id("mumu")
     tobj, tid = construct_id("T")
 
