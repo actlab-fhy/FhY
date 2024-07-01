@@ -279,8 +279,8 @@ class ParseTreeConverter(FhYVisitor):
         #       to construct template types directly, we must populate them here.
         template: list[ir.Identifier] = []
         if ctx.function_template_types is not None:
-            template_ctx: FhYParser.Expression_listContext = ctx.expression_list()
-            initial = self.visitExpression_list(template_ctx)
+            template_ctx: FhYParser.Dtype_listContext = ctx.dtype_list()
+            initial = self.visitDtype_list(template_ctx)
             template.extend(self._update_templates(initial))
 
         # TODO: Implement Support for Function indices
@@ -553,16 +553,12 @@ class ParseTreeConverter(FhYVisitor):
                 function_expression_ctx
             )
 
-            expression_list_counter: int = 0
-
             template_types: list[ast.Expression | ir.type.DataType] = []
-            if ctx.LESS_THAN() is not None and ctx.GREATER_THAN() is not None:
-                initial = self.visitExpression_list(
-                    ctx.expression_list(expression_list_counter)
-                )
+            if ctx.dtype_list() is not None:
+                initial = self.visitDtype_list(ctx.dtype_list())
                 template_types = self._update_templates(initial)
-                expression_list_counter += 1
 
+            expression_list_counter: int = 0
             indices: list[ast.Expression] = []
             if ctx.OPEN_BRACKET() is not None and ctx.CLOSE_BRACKET() is not None:
                 indices = self.visitExpression_list(
@@ -698,7 +694,6 @@ class ParseTreeConverter(FhYVisitor):
             raise FhYSyntaxError(f"No Type Qualifier Provided. {text}")
 
         base_type = self.visitType(ctx.type_())
-        print("Base Type:", base_type)
 
         return ast.QualifiedType(
             base_type=base_type,
@@ -721,11 +716,25 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.type.DataType:
         text: str = ctx.IDENTIFIER().getText()
+        # res: list[Expressions] = []
+        if ctx.expression_list() is not None:
+            # res = list(self.visitExpression_list(ctx.expression_list()))
+            raise NotImplementedError("Template Type Expressions not yet Supported.")
+
         try:
             return ir.Primitive(ir.PrimitiveDataType(text))
 
         except (KeyError, ValueError):
             return ir.Template(self._get_type(text))
+
+    def visitDtype_list(
+        self, ctx: FhYParser.Dtype_listContext
+    ) -> list[ir.type.DataType]:
+        dtypes: list[ir.type.DataType] = []
+        for d in ctx.dtype():
+            dtypes.append(self.visitDtype(d))
+
+        return dtypes
 
     def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> ir.IndexType:
         low, high, stride = self.visitRange(ctx.range_())

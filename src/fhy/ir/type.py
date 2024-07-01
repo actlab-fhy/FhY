@@ -43,6 +43,10 @@ class Type(ABC):
     """Abstract node defining data type."""
 
 
+class DataType(ABC):
+    """Abstract data type class."""
+
+
 class PrimitiveDataType(StrEnum):
     """Supported primitive data types."""
 
@@ -56,26 +60,6 @@ class PrimitiveDataType(StrEnum):
     FLOAT64 = "float64"
 
 
-class DataType(ABC):
-    """Abstract data type class.
-
-    Args:
-        data_type (PrimitiveDataType | Identifier):
-
-    """
-
-    _data_type: PrimitiveDataType | _Identifier
-
-    def __init__(
-        self,
-        data_type: PrimitiveDataType | _Identifier,
-    ) -> None:
-        self._data_type = data_type
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._data_type})"
-
-
 class Primitive(DataType):
     """Primitive defines core data type primitive.
 
@@ -86,10 +70,7 @@ class Primitive(DataType):
 
     _data_type: PrimitiveDataType
 
-    def __init__(
-        self,
-        data_type: PrimitiveDataType,
-    ) -> None:
+    def __init__(self, data_type: PrimitiveDataType) -> None:
         self._data_type = data_type
 
     @property
@@ -99,12 +80,24 @@ class Primitive(DataType):
 
 
 class Template(DataType):
-    """Template defines template struct type."""
+    """Template defines template struct type.
+
+    Args:
+        data_type (Identifier): template type place holder
+        bit_size (int, optional): size of type in bits
+
+    """
 
     _data_type: _Identifier
+    bit_size: int | None
+
+    def __init__(self, data_type: _Identifier, bit_size: int | None = None) -> None:
+        self._data_type = data_type
+        self.bit_size = bit_size
 
     @property
-    def template_type(self):
+    def template_type(self) -> _Identifier:
+        """Template Identifier."""
         return self._data_type
 
 

@@ -40,7 +40,7 @@ function_definition
     ;
 
 function_header
-    : function_type=FUNCTION_KEYWORD name=IDENTIFIER (LESS_THAN function_template_types=expression_list GREATER_THAN)? (OPEN_BRACKET function_indices=function_args CLOSE_BRACKET)? OPEN_PARENTHESES function_args CLOSE_PARENTHESES (ARROW return_type=qualified_type)?
+    : function_type=FUNCTION_KEYWORD name=IDENTIFIER ( function_template_types=dtype_list )? (OPEN_BRACKET function_indices=function_args CLOSE_BRACKET)? OPEN_PARENTHESES function_args CLOSE_PARENTHESES (ARROW return_type=qualified_type)?
     ;
 
 identifier_list
@@ -105,6 +105,10 @@ dtype
     : base_dtype=IDENTIFIER (LESS_THAN expression_list GREATER_THAN)?
     ;
 
+dtype_list
+    : LESS_THAN (dtype (COMMA dtype)* COMMA?)? GREATER_THAN
+    ;
+
 index_type
     : INDEX OPEN_BRACKET range CLOSE_BRACKET
     ;
@@ -141,7 +145,7 @@ expression_list
 
 primitive_expression
     : tuple_access_expression=primitive_expression FLOAT_LITERAL
-    | function_expression=primitive_expression (LESS_THAN expression_list GREATER_THAN)? (OPEN_BRACKET expression_list CLOSE_BRACKET)? OPEN_PARENTHESES expression_list CLOSE_PARENTHESES
+    | function_expression=primitive_expression (dtype_list)? (OPEN_BRACKET expression_list CLOSE_BRACKET)? OPEN_PARENTHESES expression_list CLOSE_PARENTHESES
     | array_access_expression=primitive_expression OPEN_BRACKET expression_list CLOSE_BRACKET
     | atom
     ;
