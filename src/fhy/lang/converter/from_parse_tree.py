@@ -145,6 +145,9 @@ class ParseTreeConverter(FhYVisitor):
             if isinstance(e, ast.IdentifierExpression):
                 self._types[e.identifier.name_hint] = e.identifier
                 templates.append(ir.Template(data_type=e.identifier))
+            elif isinstance(e, ir.Identifier):
+                self._types[e.name_hint] = e
+                templates.append(ir.Template(data_type=e))
             else:
                 templates.append(e)
 
@@ -274,13 +277,11 @@ class ParseTreeConverter(FhYVisitor):
 
         self._open_scope()
 
-        # NOTE: This is ugly, we have to tranform template types
-        #       While template types within the body of a function correctly visitType
-        #       to construct template types directly, we must populate them here.
+        # NOTE: Transform Identifiers into Template DataTypes
         template: list[ir.Identifier] = []
         if ctx.function_template_types is not None:
-            template_ctx: FhYParser.Dtype_listContext = ctx.dtype_list()
-            initial = self.visitDtype_list(template_ctx)
+            template_ctx: FhYParser.Identifier_listContext = ctx.identifier_list()
+            initial = self.visitIdentifier_list(template_ctx)
             template.extend(self._update_templates(initial))
 
         # TODO: Implement Support for Function indices
