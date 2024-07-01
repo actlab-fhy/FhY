@@ -1,3 +1,4 @@
+"""f-DFG nodes."""
 from .base import Node
 from .io import SourceNode, SinkNode
 from .fractalized import FunctionNode

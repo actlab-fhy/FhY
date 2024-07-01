@@ -1,9 +1,16 @@
+"""Primitive nodes for the f-DFG."""
 from typing import Any
 from .base import Node
 from ..op import Op
 
 
 class PrimitiveNode(Node):
+    """Primitive node for the f-DFG.
+
+    Args:
+        op (Op): Operation of the node.
+
+    """
     _op: Op
 
     def __init__(self, op: Op) -> None:
@@ -16,6 +23,12 @@ class PrimitiveNode(Node):
 
 
 class LiteralNode(Node):
+    """Literal node for the f-DFG.
+
+    Args:
+        value (Any): Value of the node.
+
+    """
     _value: Any
 
     def __init__(self, value: Any) -> None:

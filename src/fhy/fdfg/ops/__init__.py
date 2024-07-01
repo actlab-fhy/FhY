@@ -1,3 +1,4 @@
+"""f-DFG operations."""
 from .math import neg_op
 from .math import add_op, sub_op, mul_op, div_op, floor_div_op, mod_op, pow_op
 from .bitwise import (

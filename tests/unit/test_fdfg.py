@@ -102,8 +102,8 @@ def test_basic_primitive_unary_operation_graph(given_fdfg_op):
     expected_graph.add_edge(expected_graph_unary_op_node_name, expected_graph_sink_node_name, data=Edge(c, 0, 0))
 
     fdfg.add_node(unary_op_node_name, unary_op_node)
-    fdfg.add_edge(fdfg.source_node_name, unary_op_node_name, a, 0, 0)
-    fdfg.add_edge(unary_op_node_name, fdfg.sink_node_name, c, 0, 0)
+    fdfg.add_edge(fdfg.source_node_name, unary_op_node_name, 0, 0, symbol_name=a)
+    fdfg.add_edge(unary_op_node_name, fdfg.sink_node_name, 0, 0, symbol_name=c)
 
     assert_expected_expression_graph(fdfg.graph, expected_graph)
 
@@ -146,9 +146,9 @@ def test_basic_primitive_binary_operation_graph(given_fdfg_op):
     expected_graph.add_edge(expected_graph_binary_op_node_name, expected_graph_sink_node_name, data=Edge(c, 0, 0))
 
     fdfg.add_node(binary_op_node_name, binary_op_node)
-    fdfg.add_edge(fdfg.source_node_name, binary_op_node_name, a, 0, 0)
-    fdfg.add_edge(fdfg.source_node_name, binary_op_node_name, b, 1, 1)
-    fdfg.add_edge(binary_op_node_name, fdfg.sink_node_name, c, 0, 0)
+    fdfg.add_edge(fdfg.source_node_name, binary_op_node_name, 0, 0, symbol_name=a)
+    fdfg.add_edge(fdfg.source_node_name, binary_op_node_name, 1, 1, symbol_name=b)
+    fdfg.add_edge(binary_op_node_name, fdfg.sink_node_name, 0, 0, symbol_name=c)
 
     assert_expected_expression_graph(fdfg.graph, expected_graph)
 
@@ -161,9 +161,9 @@ def test_basic_function_call_graph():
     op_node_name = Identifier("op")
     op_node = PrimitiveNode(fdfg_op.add_op)
     function_fdfg.add_node(op_node_name, op_node)
-    function_fdfg.add_edge(function_fdfg.source_node_name, op_node_name, a, 0, 0)
-    function_fdfg.add_edge(function_fdfg.source_node_name, op_node_name, b, 1, 1)
-    function_fdfg.add_edge(op_node_name, function_fdfg.sink_node_name, c, 0, 0)
+    function_fdfg.add_edge(function_fdfg.source_node_name, op_node_name, 0, 0, symbol_name=a)
+    function_fdfg.add_edge(function_fdfg.source_node_name, op_node_name, 1, 1, symbol_name=b)
+    function_fdfg.add_edge(op_node_name, function_fdfg.sink_node_name, 0, 0, symbol_name=c)
     fdfg = FDFG()
     x = Identifier("x")
     y = Identifier("y")
@@ -172,9 +172,9 @@ def test_basic_function_call_graph():
     function_name = Identifier("function")
     function_node = FunctionNode(function_name, fdfg=function_fdfg)
     fdfg.add_node(function_node_name, function_node)
-    fdfg.add_edge(fdfg.source_node_name, function_node_name, x, 0, 0)
-    fdfg.add_edge(fdfg.source_node_name, function_node_name, y, 1, 1)
-    fdfg.add_edge(function_node_name, fdfg.sink_node_name, z, 0, 0)
+    fdfg.add_edge(fdfg.source_node_name, function_node_name, 0, 0, symbol_name=x)
+    fdfg.add_edge(fdfg.source_node_name, function_node_name, 1, 1, symbol_name=y)
+    fdfg.add_edge(function_node_name, fdfg.sink_node_name, 0, 0, symbol_name=z)
     expected_function_graph_source_node_name, expected_function_graph_sink_node_name, expected_function_graph = create_default_expected_fdfg()
     expected_function_graph_op_node_name = Identifier("op")
     expected_function_graph.add_node(expected_function_graph_op_node_name, data=PrimitiveNode(fdfg_op.add_op))
@@ -189,4 +189,3 @@ def test_basic_function_call_graph():
     expected_graph.add_edge(expected_graph_function_node_name, expected_graph_sink_node_name, data=Edge(z, 0, 0))
 
     assert_expected_expression_graph(fdfg.graph, expected_graph)
-

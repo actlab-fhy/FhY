@@ -1,3 +1,4 @@
+"""Fractalized Data-Flow Graph (f-DFG)."""
 from .node import (
     Node,
     SourceNode,

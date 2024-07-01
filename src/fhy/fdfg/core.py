@@ -1,3 +1,4 @@
+"""f-DFG."""
 from abc import ABC
 from typing import Any
 import networkx as nx
@@ -71,9 +72,9 @@ class FDFG(object):
         self,
         source_node_name: Identifier,
         sink_node_name: Identifier,
-        symbol_name: Identifier,
         source_arg_index: int,
-        destination_arg_index: int
+        destination_arg_index: int,
+        symbol_name: Identifier | None = None,
     ) -> None:
         self._graph.add_edge(source_node_name, sink_node_name, data=Edge(symbol_name, source_arg_index, destination_arg_index))
 
