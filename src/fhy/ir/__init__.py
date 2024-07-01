@@ -43,10 +43,11 @@ from .table import (
     VariableSymbolTableFrame,
 )
 from .type import (
-    DataType,
     IndexType,
     NumericalType,
+    Primitive,
     PrimitiveDataType,
+    Template,
     TupleType,
     Type,
     TypeQualifier,

@@ -11,11 +11,12 @@ from typing import TypeVar
 
 import pytest
 from fhy.ir import (
-    DataType,
     Identifier,
     IndexType,
     NumericalType,
+    Primitive,
     PrimitiveDataType,
+    Template,
     TupleType,
     TypeQualifier,
 )
@@ -154,15 +155,15 @@ def build_numerical_type() -> (
             cls_name="NumericalType",
             attributes=dict(
                 data_type=dict(
-                    cls_name="DataType",
-                    attributes=dict(primitive_data_type=primitive.value),
+                    cls_name="Primitive",
+                    attributes=dict(data_type=primitive.value),
                 ),
                 shape=shape_objs,
             ),
         )
 
         numerical = NumericalType(
-            data_type=DataType(primitive_data_type=primitive), shape=shape_cls
+            data_type=Primitive(data_type=primitive), shape=shape_cls
         )
 
         return obj, numerical
@@ -612,6 +613,29 @@ def operation(
     )
 
     return obj, op
+
+
+@add_fixture_node
+@pytest.fixture
+def procedure_with_templates(construct_id) -> tuple[dict, Procedure]:
+    text: str = "proc mumu<T>() {\n\n}"
+    name_id_obj, name_id = construct_id("mumu")
+    tobj, tid = construct_id("T")
+
+    obj = dict(
+        cls_name="Procedure",
+        attributes=dict(
+            name=name_id_obj,
+            templates=[dict(cls_name="Template", attributes=dict(data_type=tobj))],
+            args=[],
+            body=[],
+        ),
+    )
+    proc = Procedure(
+        span=None, name=name_id, templates=[Template(data_type=tid)], args=[], body=[]
+    )
+
+    return obj, proc
 
 
 @add_fixture_node

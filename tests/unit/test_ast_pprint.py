@@ -1,9 +1,9 @@
 """Unit Test the Pretty Print Module."""
 
 from fhy.ir import (
-    DataType,
     Identifier,
     NumericalType,
+    Primitive,
     PrimitiveDataType,
     TypeQualifier,
 )
@@ -30,7 +30,7 @@ def test_empty_operation():
                 args=[],
                 return_type=QualifiedType(
                     type_qualifier=TypeQualifier.OUTPUT,
-                    base_type=NumericalType(DataType(PrimitiveDataType.INT32), []),
+                    base_type=NumericalType(Primitive(PrimitiveDataType.INT32), []),
                 ),
                 body=[],
             )
@@ -200,6 +200,14 @@ def test_procedure(procedure):
     )
     result = pformat_ast(node)
 
+    assert result == expected, "Unexpected Formatting"
+
+
+def test_procedure_with_templates(procedure_with_templates):
+    obj, node = procedure_with_templates
+    expected: str = "proc mumu<T>() {\n\n}"
+
+    result = pformat_ast(node)
     assert result == expected, "Unexpected Formatting"
 
 

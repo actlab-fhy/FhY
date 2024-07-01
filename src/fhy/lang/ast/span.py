@@ -68,7 +68,6 @@ class Slice:
         return f"{self.start:,d}:{self.stop:,d}"
 
 
-# TODO: Jason: Create Source object that can track the source file
 class Source:
     """Defines source file or namespace.
 
