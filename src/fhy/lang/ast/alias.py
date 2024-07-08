@@ -47,7 +47,7 @@ ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
 CoreASTNodes = core.Statement | core.Function | core.Expression
 Core = TypeVar("Core", bound=CoreASTNodes)
 
-OtherTypes = _ir.Identifier | _ir.DataType | _ir.TypeQualifier | _ir.PrimitiveDataType
+OtherTypes = _ir.Identifier | _ir.type.DataType | _ir.TypeQualifier | _ir.CoreDataType
 
 Spans = Span | Source
 
@@ -56,4 +56,4 @@ ASTObject = TypeVar("ASTObject", bound=_ASTObject)
 
 
 class ASTNodes(Generic[ASTObject]):
-    """Bound generic AST nodes."""
+    """Bound generic AST node."""

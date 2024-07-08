@@ -33,6 +33,7 @@
 
 from abc import ABC
 
+from fhy.ir.identifier import Identifier as _Identifier
 from fhy.utils.enumeration import StrEnum
 
 from .expression import Expression
@@ -42,8 +43,12 @@ class Type(ABC):
     """Abstract node defining data type."""
 
 
-class PrimitiveDataType(StrEnum):
-    """Supported primitive data types."""
+class DataType(ABC):
+    """Abstract data type class."""
+
+
+class CoreDataType(StrEnum):
+    """Supported core data type primitives."""
 
     INT = "int"
     FLOAT = "float"
@@ -55,33 +60,45 @@ class PrimitiveDataType(StrEnum):
     FLOAT64 = "float64"
 
 
-class DataType:
-    """Data type defines core type primitive, but of flexible Bit Width.
-
-    Note:
-        Currently, only supports primitive data types and does not support
-        template types.
+class PrimitiveDataType(DataType):
+    """Define core data type primitive.
 
     Args:
-        primitive_data_type (PrimitiveType):
+        data_type (CoreDataType):
 
     """
 
-    _primitive_data_type: PrimitiveDataType
+    _data_type: CoreDataType
 
-    def __init__(
-        self,
-        primitive_data_type: PrimitiveDataType,
-    ) -> None:
-        self._primitive_data_type = primitive_data_type
+    def __init__(self, data_type: CoreDataType) -> None:
+        self._data_type = data_type
 
     @property
-    def primitive_data_type(self) -> PrimitiveDataType:
-        """Primitive data type."""
-        return self._primitive_data_type
+    def primitive_data_type(self) -> CoreDataType:
+        """PrimitiveDataType data type."""
+        return self._data_type
 
-    def __repr__(self) -> str:
-        return f"DataType({self._primitive_data_type})"
+
+class TemplateDataType(DataType):
+    """Define template struct type.
+
+    Args:
+        data_type (Identifier): template type identifier
+        widths (list[int], optional): fixed bit size width of type
+
+    """
+
+    _data_type: _Identifier
+    widths: list[int] | None
+
+    def __init__(self, data_type: _Identifier, widths: list[int] | None = None) -> None:
+        self._data_type = data_type
+        self.widths = widths
+
+    @property
+    def template_type(self) -> _Identifier:
+        """Template Identifier."""
+        return self._data_type
 
 
 class NumericalType(Type):

@@ -401,10 +401,16 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(span=self.visit_Span(node.span), value=result),
         )
 
-    def visit_DataType(self, node: ir.DataType) -> AlmostJson:
+    def visit_PrimitiveDataType(self, node: ir.PrimitiveDataType) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(node),
-            attributes=dict(primitive_data_type=node.primitive_data_type.value),
+            attributes=dict(data_type=node.primitive_data_type.value),
+        )
+
+    def visit_TemplateDataType(self, node: ir.TemplateDataType) -> AlmostJson:
+        return AlmostJson(
+            cls_name=visitor.get_cls_name(node),
+            attributes=dict(data_type=self.visit(node.template_type)),
         )
 
     def visit_QualifiedType(self, node: ast.QualifiedType) -> AlmostJson:
@@ -420,7 +426,7 @@ class ASTtoJSON(visitor.BasePass):
         )
 
     def visit_NumericalType(self, numerical_type: ir.NumericalType) -> AlmostJson:
-        dtype: AlmostJson = self.visit_DataType(numerical_type.data_type)
+        dtype: AlmostJson = self.visit(numerical_type.data_type)
         shape: list[AlmostJson] = self.visit_sequence(numerical_type.shape)
 
         return AlmostJson(
@@ -519,7 +525,9 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
-        templates: list[ir.Identifier] = self.visit_sequence(values.get("templates"))
+        templates: list[ir.TemplateDataType] = self.visit_sequence(
+            values.get("templates")
+        )
         args: list[ast.Argument] = self.visit_sequence(values.get("args"))
         body: list[ast.Statement] = self.visit_sequence(values.get("body"))
         name: ir.Identifier = self.visit_Identifier(values.get("name"))
@@ -542,7 +550,9 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
-        templates: list[ir.Identifier] = self.visit_sequence(values.get("templates"))
+        templates: list[ir.TemplateDataType] = self.visit_sequence(
+            values.get("templates")
+        )
         args: list[ast.Argument] = self.visit_sequence(values.get("args"))
         body: list[ast.Statement] = self.visit_sequence(values.get("body"))
         name: ir.Identifier = self.visit_Identifier(values.get("name"))
@@ -788,15 +798,21 @@ class JSONtoAST(visitor.BasePass):
 
         return ast.ComplexLiteral(span=span, value=result)
 
-    def visit_DataType(self, node: AlmostJson | None) -> ir.DataType:
+    def visit_PrimitiveDataType(self, node: AlmostJson | None) -> ir.PrimitiveDataType:
         if node is None:
             raise ValueError("Invalid DataType")
 
-        primitive = ir.PrimitiveDataType(
-            str(node.attributes.get("primitive_data_type"))
-        )
+        primitive = ir.CoreDataType(str(node.attributes.get("data_type")))
 
-        return ir.DataType(primitive_data_type=primitive)
+        return ir.PrimitiveDataType(data_type=primitive)
+
+    def visit_TemplateDataType(self, node: AlmostJson | None) -> ir.TemplateDataType:
+        if node is None:
+            raise ValueError("Invalid DataType")
+
+        template = self.visit(node.attributes.get("data_type"))
+
+        return ir.TemplateDataType(data_type=template)
 
     def visit_QualifiedType(self, node: AlmostJson | None) -> ast.QualifiedType:
         if node is None:
@@ -820,7 +836,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid numerical_type")
 
         values: dict = numerical_type.attributes
-        dtype: ir.DataType = self.visit_DataType(values.get("data_type"))
+        dtype: ir.type.DataType = self.visit(values.get("data_type"))
         shape: list[ir.Expression] = self.visit_sequence(values.get("shape"))
 
         return ir.NumericalType(data_type=dtype, shape=shape)

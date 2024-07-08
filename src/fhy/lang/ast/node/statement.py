@@ -40,6 +40,7 @@ Statement ASTNodes:
 
 from dataclasses import dataclass, field
 
+from fhy.ir import TemplateDataType
 from fhy.ir.identifier import Identifier as IRIdentifier
 
 from .base import ASTNode
@@ -56,10 +57,10 @@ class Import(Statement):
     """Import statement node.
 
     Args:
-        name (IRIdentifier): Name of imported object.
+        name (ir.Identifier): Name of imported object.
 
     Attributes:
-        name (IRIdentifier): Name of imported object
+        name (ir.Identifier): Name of imported object
 
     """
 
@@ -77,11 +78,11 @@ class Argument(ASTNode):
     """Function argument node.
 
     Args:
-        name (IRIdentifier): Variable name of the argument.
+        name (ir.Identifier): Variable name of the argument.
         qualified_type (QualifiedType): Type of the argument.
 
     Attributes:
-        name (IRIdentifier): Variable name of the argument.
+        name (ir.Identifier): Variable name of the argument.
         qualified_type (QualifiedType): Type of the argument.
 
     """
@@ -101,18 +102,18 @@ class Procedure(Function):
     """FhY procedure AST node.
 
     Args:
-        templates (List[ir.Identifier], optional): Template types.
+        templates (List[TemplateDataType]): Template data types.
         args (List[Argument], optional): Arguments of the procedure.
         body (List[Statement], optional): Body of the procedure.
 
     Attributes:
-        templates (List[IRIdentifier]): Template types.
+        templates (List[TemplateDataType]): Template data types.
         args (List[Argument]): Arguments of the procedure.
         body (List[Statement]): Body of the procedure.
 
     """
 
-    templates: list[IRIdentifier] = field(default_factory=list)
+    templates: list[TemplateDataType] = field(default_factory=list)
     args: list[Argument] = field(default_factory=list)
     body: list[Statement] = field(default_factory=list)
 
@@ -128,20 +129,20 @@ class Operation(Function):
     """FhY operation AST node.
 
     Args:
-        templates (List[ir.Identifier], optional): Template types.
-        args (List[Argument], optional): Arguments of the operation.
-        body (List[Statement], optional): Body of the operation.
+        templates (List[TemplateDataType]): Template data types.
+        args (List[Argument]): Arguments of the operation.
+        body (List[Statement]): Body of the operation.
         return_type (QualifiedType): Return type of the operation.
 
     Attributes:
-        templates (List[ir.Identifier]): Template types.
+        templates (List[TemplateDataType]): Template data types.
         args (List[Argument]): Arguments of the operation.
         body (List[Statement]): Body of the operation.
-        ret_type (QualifiedType): Return type of the operation.
+        return_type (QualifiedType): Return type of the operation.
 
     """
 
-    templates: list[IRIdentifier] = field(default_factory=list)
+    templates: list[TemplateDataType] = field(default_factory=list)
     args: list[Argument] = field(default_factory=list)
     body: list[Statement] = field(default_factory=list)
     return_type: QualifiedType
@@ -158,7 +159,7 @@ class Native(Function):
     """FhY native AST node.
 
     Args:
-        args (List[Argument], optional): Arguments of the native function.
+        args (List[Argument]): Arguments of the native function.
 
     Attributes:
         args (List[Argument]): Arguments of the native function.
@@ -179,15 +180,14 @@ class DeclarationStatement(Statement):
     """Declaration statement AST node.
 
     Args:
-        variable_name (IRIdentifier): Name of the declared variable.
+        variable_name (ir.Identifier): Name of the declared variable.
         variable_type (QualifiedType): Type of the declared variable.
-        expression (Optional[Expression], optional): Expression to assign to
-            the variable.
+        expression (Expression, optional): Expression to assign to the variable.
 
     Attributes:
         variable_name (IRIdentifier): Name of the declared variable.
         variable_type (QualifiedType): Type of the declared variable.
-        expression (Optional[Expression]): Expression to assign to the variable.
+        expression (Expression, optional): Expression to assign to the variable.
 
     """
 
@@ -207,11 +207,11 @@ class ExpressionStatement(Statement):
     """Expression statement AST node.
 
     Args:
-        left (Optional[Expression], optional): Expression assigned to.
+        left (Expression, optional): Expression assigned to.
         right (Expression): Expression to be evaluated.
 
     Attributes:
-        left (Optional[Expression]): Expression assigned to.
+        left (Expression, optional): Expression assigned to.
         right (Expression): Expression to be evaluated.
 
     """
@@ -232,7 +232,7 @@ class ForAllStatement(Statement):
 
     Args:
         index (Expression): Loop index to iterate through.
-        body (List[Statement], optional): Body of the ForAll statement.
+        body (List[Statement]): Body of the ForAll statement.
 
     Attributes:
         index (Expression): Loop index to iterate through.
@@ -256,8 +256,8 @@ class SelectionStatement(Statement):
 
     Args:
         condition (Expression): Condition to evaluate.
-        true_body (List[Statement], optional): Statements to evaluate if true.
-        false_body (List[Statement], optional): Statements to evaluate if false.
+        true_body (List[Statement]): Statements to evaluate if true.
+        false_body (List[Statement]): Statements to evaluate if false.
 
     Attributes:
         condition (Expression): Condition to evaluate.

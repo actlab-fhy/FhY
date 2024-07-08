@@ -44,10 +44,11 @@ from copy import copy
 from typing import Any
 
 from fhy.ir.identifier import Identifier as IRIdentifier
-from fhy.ir.type import DataType as IRDataType
+from fhy.ir.type import CoreDataType as IRCoreDataType
 from fhy.ir.type import IndexType as IRIndexType
 from fhy.ir.type import NumericalType as IRNumericalType
 from fhy.ir.type import PrimitiveDataType as IRPrimitiveDataType
+from fhy.ir.type import TemplateDataType as IRTemplateDataType
 from fhy.ir.type import Type as IRType
 from fhy.ir.type import TypeQualifier as IRTypeQualifier
 from fhy.lang.ast.alias import ASTObject
@@ -359,7 +360,7 @@ class Visitor(BasePass):
         """Visit a numerical type.
 
         Args:
-            numerical_type (IRNumericalType): Numerical type to visit.
+            numerical_type (ir.NumericalType): Numerical type to visit.
 
         """
         self.visit(numerical_type.data_type)
@@ -369,7 +370,7 @@ class Visitor(BasePass):
         """Visit an index type.
 
         Args:
-            index_type (IRIndexType): Index type to visit.
+            index_type (ir.IndexType): Index type to visit.
 
         """
         self.visit(index_type.lower_bound)
@@ -377,28 +378,37 @@ class Visitor(BasePass):
         if index_type.stride is not None:
             self.visit(index_type.stride)
 
-    def visit_DataType(self, data_type: IRDataType) -> None:
-        """Visit a data type.
+    def visit_PrimitiveDataType(self, node: IRPrimitiveDataType) -> None:
+        """Visit a primitive data type.
 
         Args:
-            data_type (IRDataType): Data type to visit.
+            node (ir.PrimitiveDataType): Data type to visit.
 
         """
-        self.visit(data_type.primitive_data_type)
+        self.visit(node.primitive_data_type)
+
+    def visit_TemplateDataType(self, node: IRTemplateDataType) -> None:
+        """Visit a template data type.
+
+        Args:
+            node (ir.TemplateDataType): Template data type to visit.
+
+        """
+        self.visit(node.template_type)
 
     def visit_TypeQualifier(self, type_qualifier: IRTypeQualifier) -> None:
         """Visit a type qualifier.
 
         Args:
-            type_qualifier (IRTypeQualifier): Type qualifier to visit.
+            type_qualifier (ir.TypeQualifier): Type qualifier to visit.
 
         """
 
-    def visit_PrimitiveDataType(self, primitive: IRPrimitiveDataType) -> None:
+    def visit_CoreDataType(self, primitive: IRCoreDataType) -> None:
         """Visit a primitive data type.
 
         Args:
-            primitive (IRPrimitiveDataType): Primitive data type to visit.
+            primitive (ir.CoreDataType): PrimitiveDataType data type to visit.
 
         """
 
@@ -406,7 +416,7 @@ class Visitor(BasePass):
         """Visit an identifier.
 
         Args:
-            identifier (IRIdentifier): Identifier to visit.
+            identifier (ir.Identifier): Identifier to visit.
 
         """
 
@@ -829,7 +839,7 @@ class Transformer(BasePass):
             numerical_type (ir.NumericalType): NumericalType node to transform.
 
         """
-        new_data_type = self.visit_DataType(numerical_type.data_type)
+        new_data_type = self.visit(numerical_type.data_type)
         new_shape = [self.visit(j) for j in numerical_type.shape]
 
         return IRNumericalType(data_type=new_data_type, shape=new_shape)
@@ -855,18 +865,29 @@ class Transformer(BasePass):
             stride=new_stride,
         )
 
-    def visit_DataType(self, data_type: IRDataType) -> IRDataType:
-        """Transform a data type node.
+    def visit_PrimitiveDataType(self, node: IRPrimitiveDataType) -> IRPrimitiveDataType:
+        """Transform a primitive type node.
 
         Args:
-            data_type (ir.DataType): DataType node to transform.
+            node (ir.PrimitiveDataType): PrimitiveDataType data type node to transform.
 
         """
-        new_primitive_data_type: IRPrimitiveDataType = self.visit_PrimitiveDataType(
-            data_type.primitive_data_type
+        new_primitive_data_type: IRCoreDataType = self.visit_CoreDataType(
+            node.primitive_data_type
         )
 
-        return IRDataType(primitive_data_type=new_primitive_data_type)
+        return IRPrimitiveDataType(data_type=new_primitive_data_type)
+
+    def visit_TemplateDataType(self, node: IRTemplateDataType) -> IRTemplateDataType:
+        """Transform a template data type node.
+
+        Args:
+            node (ir.TemplateDataType): Template data type node to transform.
+
+        """
+        new_primitive_data_type = self.visit(node.template_type)
+
+        return IRTemplateDataType(data_type=new_primitive_data_type)
 
     def visit_TypeQualifier(self, type_qualifier: IRTypeQualifier) -> IRTypeQualifier:
         """Transform a type qualifier node.
@@ -877,13 +898,11 @@ class Transformer(BasePass):
         """
         return copy(type_qualifier)
 
-    def visit_PrimitiveDataType(
-        self, primitive: IRPrimitiveDataType
-    ) -> IRPrimitiveDataType:
+    def visit_CoreDataType(self, primitive: IRCoreDataType) -> IRCoreDataType:
         """Transform a primitive data type node.
 
         Args:
-            primitive (ir.PrimitiveDataType): PrimitiveDataType node to transform.
+            primitive (ir.CoreDataType): CoreDataType node to transform.
 
         """
         return copy(primitive)
