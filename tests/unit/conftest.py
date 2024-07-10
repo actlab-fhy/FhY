@@ -146,7 +146,7 @@ def build_numerical_type() -> (
     ]
 ):
     def inner(
-        primitive: CoreDataType,
+        core: CoreDataType,
         shape_objs: list[dict],
         shape_cls: list[Expression],
     ) -> tuple[dict, NumericalType]:
@@ -156,14 +156,14 @@ def build_numerical_type() -> (
             attributes=dict(
                 data_type=dict(
                     cls_name="PrimitiveDataType",
-                    attributes=dict(data_type=primitive.value),
+                    attributes=dict(core_data_type=core.value),
                 ),
                 shape=shape_objs,
             ),
         )
 
         numerical = NumericalType(
-            data_type=PrimitiveDataType(data_type=primitive), shape=shape_cls
+            data_type=PrimitiveDataType(core_data_type=core), shape=shape_cls
         )
 
         return obj, numerical

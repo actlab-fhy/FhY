@@ -264,7 +264,7 @@ class ASTPrettyFormatter(BasePass):
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
     def visit_PrimitiveDataType(self, node: ir.PrimitiveDataType) -> str:
-        return str(node.primitive_data_type.value)
+        return str(node.core_data_type.value)
 
     def visit_TemplateDataType(self, node: ir.TemplateDataType) -> str:
         return self.visit_Identifier(node.template_type)

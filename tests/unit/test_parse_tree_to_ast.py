@@ -207,11 +207,9 @@ def _assert_is_expected_numerical_type(
         ir.NumericalType, numerical_type
     )
 
-    assert (
-        numerical_type.data_type.primitive_data_type == expected_primitive_data_type
-    ), (
+    assert numerical_type.data_type.core_data_type == expected_primitive_data_type, (
         f'Expected primitive data type to be "{expected_primitive_data_type}", got '
-        + f'"{numerical_type.data_type.primitive_data_type}"'
+        + f'"{numerical_type.data_type.core_data_type}"'
     )
 
     assert all(isinstance(expr, ast.Expression) for expr in numerical_type.shape), (

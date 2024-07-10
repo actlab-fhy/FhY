@@ -385,7 +385,7 @@ class Visitor(BasePass):
             node (ir.PrimitiveDataType): Data type to visit.
 
         """
-        self.visit(node.primitive_data_type)
+        self.visit(node.core_data_type)
 
     def visit_TemplateDataType(self, node: IRTemplateDataType) -> None:
         """Visit a template data type.
@@ -872,11 +872,11 @@ class Transformer(BasePass):
             node (ir.PrimitiveDataType): PrimitiveDataType data type node to transform.
 
         """
-        new_primitive_data_type: IRCoreDataType = self.visit_CoreDataType(
-            node.primitive_data_type
+        new_core_data_type: IRCoreDataType = self.visit_CoreDataType(
+            node.core_data_type
         )
 
-        return IRPrimitiveDataType(data_type=new_primitive_data_type)
+        return IRPrimitiveDataType(core_data_type=new_core_data_type)
 
     def visit_TemplateDataType(self, node: IRTemplateDataType) -> IRTemplateDataType:
         """Transform a template data type node.

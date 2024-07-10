@@ -404,7 +404,7 @@ class ASTtoJSON(visitor.BasePass):
     def visit_PrimitiveDataType(self, node: ir.PrimitiveDataType) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(node),
-            attributes=dict(data_type=node.primitive_data_type.value),
+            attributes=dict(core_data_type=node.core_data_type.value),
         )
 
     def visit_TemplateDataType(self, node: ir.TemplateDataType) -> AlmostJson:
@@ -802,9 +802,9 @@ class JSONtoAST(visitor.BasePass):
         if node is None:
             raise ValueError("Invalid DataType")
 
-        primitive = ir.CoreDataType(str(node.attributes.get("data_type")))
+        core = ir.CoreDataType(str(node.attributes.get("core_data_type")))
 
-        return ir.PrimitiveDataType(data_type=primitive)
+        return ir.PrimitiveDataType(core_data_type=core)
 
     def visit_TemplateDataType(self, node: AlmostJson | None) -> ir.TemplateDataType:
         if node is None:

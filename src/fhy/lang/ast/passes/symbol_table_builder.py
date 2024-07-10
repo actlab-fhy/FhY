@@ -191,7 +191,7 @@ class SymbolTableBuilder(Visitor):
                     var_frame = ir.VariableSymbolTableFrame(
                         name=dimension,
                         type=ir.NumericalType(
-                            ir.PrimitiveDataType(ir.CoreDataType.INT)
+                            ir.PrimitiveDataType(ir.CoreDataType.UINT64)
                         ),
                         type_qualifier=ir.TypeQualifier.PARAM,
                     )
