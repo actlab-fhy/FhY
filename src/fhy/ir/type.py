@@ -291,7 +291,7 @@ class IndexType(Type):
     Args:
         lower_bound (Expression): Start index [inclusive].
         upper_bound (Expression): End index [inclusive].
-        stride (Optional[Expression]): Step size.
+        stride (Expression, optional): Step size.
 
     Notes:
         * Grammatically similar to a python slice or range(start, stop, step)
@@ -370,10 +370,7 @@ def promote_type_qualifiers(
         TypeQualifier: Common type to which both type qualifiers can be promoted.
 
     """
-    if (
-        type_qualifier1 == TypeQualifier.PARAM
-        and type_qualifier2 == TypeQualifier.PARAM
-    ):
+    if type_qualifier1 == type_qualifier2 == TypeQualifier.PARAM:
         return TypeQualifier.PARAM
     else:
         return TypeQualifier.TEMP

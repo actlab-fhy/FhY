@@ -46,7 +46,7 @@ class Lattice(Generic[T]):
     def __init__(self):
         self._poset = PartiallyOrderedSet[T]()
 
-    def add_element(self, element: T):
+    def add_element(self, element: T) -> None:
         """Add an element to the lattice.
 
         Args:
@@ -55,7 +55,7 @@ class Lattice(Generic[T]):
         """
         self._poset.add_element(element)
 
-    def add_order(self, lower: T, upper: T):
+    def add_order(self, lower: T, upper: T) -> None:
         """Add an order relation between two elements.
 
         Args:
@@ -80,8 +80,8 @@ class Lattice(Generic[T]):
             x: The first element.
             y: The second element.
 
-        Returns (bool): True if x and y have a greatest lower bound,
-            False otherwise.
+        Returns (bool):
+            True if x and y have a greatest lower bound, False otherwise.
         """
         return self.get_meet(x, y) is not None
 
@@ -92,7 +92,8 @@ class Lattice(Generic[T]):
             x: The first element.
             y: The second element.
 
-        Returns (bool): True if x and y have a least upper bound,
+        Returns (bool):
+            True if x and y have a least upper bound, False otherwise.
 
         """
         return self.get_join(x, y) is not None
@@ -104,7 +105,8 @@ class Lattice(Generic[T]):
             x: The first element.
             y: The second element.
 
-        Returns (T): The least upper bound of x and y.
+        Returns (T):
+            The least upper bound of x and y.
 
         """
         join = self.get_join(x, y)
@@ -121,8 +123,8 @@ class Lattice(Generic[T]):
             x: The first element.
             y: The second element.
 
-        Returns (T | None): The greatest lower bound of x and y,
-            or None if it does not exist.
+        Returns (T | None):
+            The greatest lower bound of x and y, or None if it does not exist.
 
         """
         meet = None
@@ -139,8 +141,8 @@ class Lattice(Generic[T]):
             x: The first element.
             y: The second element.
 
-        Returns (T | None): The least upper bound of x and y,
-            or None if it does not exist.
+        Returns (T | None):
+            The least upper bound of x and y, or None if it does not exist.
 
         """
         join = None
