@@ -82,7 +82,7 @@ def is_primitive_expression_equal(expr1: ast.Expression, expr2: ast.Expression) 
 def _assert_is_expected_module(node: ast.ASTNode, expected_num_statements: int) -> None:
     assert isinstance(node, ast.Module), wrong_node_babe(ast.Module, node)
 
-    assert all(map(lambda x: isinstance(x, ast.Statement), node.statements)), (
+    assert all(isinstance(x, ast.Statement) for x in node.statements), (
         'Expected all statements to be "Statement" AST nodes, got '
         + f'"{list_to_types(node.statements)}"'
     )
@@ -200,18 +200,16 @@ def _assert_is_expected_argument(
 
 def _assert_is_expected_numerical_type(
     numerical_type: ir.NumericalType,
-    expected_primitive_data_type: ir.PrimitiveDataType,
+    expected_primitive_data_type: ir.CoreDataType,
     expected_shape: list[ast.Expression],
 ) -> None:
     assert isinstance(numerical_type, ir.NumericalType), wrong_node_babe(
         ir.NumericalType, numerical_type
     )
 
-    assert (
-        numerical_type.data_type.primitive_data_type == expected_primitive_data_type
-    ), (
+    assert numerical_type.data_type.core_data_type == expected_primitive_data_type, (
         f'Expected primitive data type to be "{expected_primitive_data_type}", got '
-        + f'"{numerical_type.data_type.primitive_data_type}"'
+        + f'"{numerical_type.data_type.core_data_type}"'
     )
 
     assert all(isinstance(expr, ast.Expression) for expr in numerical_type.shape), (
@@ -427,7 +425,7 @@ def test_empty_procedure_with_qualified_argument(construct_ast, name: str):
         arg_qualified_type, ir.TypeQualifier.INPUT, ir.NumericalType
     )
     arg_base_type = arg_qualified_type.base_type
-    _assert_is_expected_numerical_type(arg_base_type, ir.PrimitiveDataType.INT32, [])
+    _assert_is_expected_numerical_type(arg_base_type, ir.CoreDataType.INT32, [])
 
 
 def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
@@ -470,7 +468,7 @@ def test_empty_operation(construct_ast, source: str):
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.statements[0]
+    operation: ast.Operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 0, 0)
 
 
@@ -480,7 +478,7 @@ def test_empty_operation_return_type(construct_ast):
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
-    operation = _ast.statements[0]
+    operation: ast.Operation = _ast.statements[0]
     _assert_is_expected_operation(operation, "foo", 1, 0)
 
     arg = operation.args[0]
@@ -493,7 +491,7 @@ def test_empty_operation_return_type(construct_ast):
     arg_base_type: ir.Type = arg_qualified_type.base_type
     _assert_is_expected_numerical_type(
         arg_base_type,
-        ir.PrimitiveDataType.INT32,
+        ir.CoreDataType.INT32,
         [
             ast.IdentifierExpression(identifier=ir.Identifier("n")),
             ast.IdentifierExpression(identifier=ir.Identifier("m")),
@@ -521,7 +519,6 @@ def test_empty_operation_return_type(construct_ast):
 def test_operation_template_types(construct_ast, templates: list[str]):
     """Test that an Empty Operation with a Return Type is Converted Correctly."""
     source: str = "op foo<%s>(input int32[n, m] x) -> output int32[n, m] {}"
-    print(source % ", ".join(templates))
     _ast = construct_ast(source % ", ".join(templates))
     _assert_is_expected_module(_ast, 1)
 
@@ -532,8 +529,38 @@ def test_operation_template_types(construct_ast, templates: list[str]):
         templates
     ), "Expected Same Number of Template Types."
     for j, k in zip(operation.templates, templates):
-        assert isinstance(j, ir.Identifier), wrong_node_babe(ir.Identifier, j)
-        assert j.name_hint == k, f"Expected Same Identifier Name: {j.name_hint}"
+        assert isinstance(j, ir.TemplateDataType), wrong_node_babe(
+            ir.TemplateDataType, j
+        )
+        (
+            j._data_type.name_hint == k,
+            f"Expected Same Identifier Name: {j._data_type.name_hint}",
+        )
+
+
+def test_operation_template_type_body(construct_ast):
+    """Test that an Template type Identifier IDs are equivalent."""
+    source: str = "op foo<T>(input T[n, m] x) -> output int32[n, m] {temp T[n, m] A;}"
+    _ast = construct_ast(source)
+    _assert_is_expected_module(_ast, 1)
+
+    operation: ast.Operation = _ast.statements[0]
+    _assert_is_expected_operation(operation, "foo", 1, 1)
+
+    template = operation.templates[0]
+    assert isinstance(template, ir.TemplateDataType), wrong_node_babe(
+        ir.TemplateDataType, template
+    )
+
+    statement: ast.Statement = operation.body[0]
+    assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
+        ast.DeclarationStatement, statement
+    )
+
+    numerical: ir.NumericalType = statement.variable_type.base_type
+    assert (
+        numerical.data_type._data_type.id == template._data_type.id
+    ), "Expected same TemplateDataType Identifier ID."
 
 
 # ==========
@@ -693,6 +720,9 @@ def test_binary_expressions(construct_ast, operator: ast.BinaryOperation):
     )
 
     expression = statement.expression
+    assert isinstance(expression, ast.BinaryExpression), wrong_node_babe(
+        ast.BinaryExpression, expression
+    )
     assert (
         expression.operation == operator
     ), f'Expected "{operator}" operation. Received: "{expression.operation}"'
@@ -844,6 +874,51 @@ def test_function_expression_as_expression_statement(construct_ast, source: str)
     )
 
 
+def test_function_expression_with_templates(construct_ast):
+    """Test Function Call Expression within as an Expression Statement."""
+    _ast: ast.Module = construct_ast("proc foo<T>(input T[m,n] A) { bar<T>(); }")
+    _assert_is_expected_module(_ast, 1)
+
+    proc = _ast.statements[0]
+    assert isinstance(proc, ast.Procedure), wrong_node_babe(ast.Procedure, proc)
+    template = proc.templates[0]
+    assert isinstance(template, ir.TemplateDataType), wrong_node_babe(
+        ir.TemplateDataType, template
+    )
+
+    statement = proc.body[0]
+    assert isinstance(statement, ast.ExpressionStatement), wrong_node_babe(
+        ast.ExpressionStatement, statement
+    )
+
+    # Check argument too.
+    arg = proc.args[0]
+    assert isinstance(arg, ast.Argument), wrong_node_babe(ast.Argument, arg)
+    assert isinstance(arg.qualified_type.base_type, ir.NumericalType), wrong_node_babe(
+        ir.NumericalType, arg.qualified_type.base_type
+    )
+    arg_temp = arg.qualified_type.base_type.data_type
+    assert isinstance(arg_temp, ir.TemplateDataType), wrong_node_babe(
+        ir.TemplateDataType, arg_temp
+    )
+    assert (
+        template._data_type.id == arg_temp._data_type.id
+    ), "Expected same TemplateDataType Identifier ID."
+
+    function = statement.right
+    assert isinstance(function, ast.FunctionExpression), wrong_node_babe(
+        ast.FunctionExpression, function
+    )
+    ftemp = function.template_types[0]
+    assert isinstance(ftemp, ir.TemplateDataType), wrong_node_babe(
+        ir.TemplateDataType, ftemp
+    )
+
+    assert (
+        template._data_type.id == ftemp._data_type.id
+    ), "Expected same TemplateDataType Identifier ID."
+
+
 def test_tensor_access_expression(construct_ast):
     """Test construction of a Tensor Access Expression."""
     source: str = "A[i] = 1;"  # Semantically Invalid
@@ -921,20 +996,19 @@ def test_tuple_type(construct_ast, source: str):
     _assert_is_expected_qualified_type(
         statement.variable_type, ir.TypeQualifier.OUTPUT, ir.TupleType
     )
-    # TODO: Jason -> this test's assertions need to be expanded
 
     _tuple: ir.TupleType = statement.variable_type.base_type
     assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
     t1, t2 = _tuple._types
     _assert_is_expected_numerical_type(
         t1,
-        ir.PrimitiveDataType.INT32,
+        ir.CoreDataType.INT32,
         [
             ast.IdentifierExpression(identifier=ir.Identifier("m")),
             ast.IdentifierExpression(identifier=ir.Identifier("n")),
         ],
     )
-    _assert_is_expected_numerical_type(t2, ir.PrimitiveDataType.INT32, [])
+    _assert_is_expected_numerical_type(t2, ir.CoreDataType.INT32, [])
 
 
 @pytest.mark.parametrize(

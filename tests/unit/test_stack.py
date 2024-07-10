@@ -70,9 +70,7 @@ def test_stack_iteration(text_stack):
         assert text_stack._iter_index == index, "Unexpected Index"
         assert element == value, "Unexpected Value."
 
-    assert (
-        len([i for i in text_stack]) == 2
-    ), "Should be able to iterate over stack again."
+    assert len(list(text_stack)) == 2, "Should be able to iterate over stack again."
 
 
 def test_stack_next(text_stack):

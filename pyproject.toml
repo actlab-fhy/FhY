@@ -57,6 +57,10 @@ addopts = "-n auto -rA"
 parallel = true
 branch = true
 source = ["fhy"]
+disable_warnings = [
+   "no-data-collected",
+   "module-not-imported"
+]
 
 [tool.coverage.paths]
 source = ["src", "*/.tox/py*/**/site-packages"]
@@ -73,7 +77,8 @@ omit = [
 ]
 exclude_also = [
    "def __repr__",
-   'if __name__ == "__main__"'
+   'if __name__ == "__main__"',
+   "except KeyboardInterrupt",
 ]
 
 [tool.mypy]
@@ -149,7 +154,7 @@ select = [
    "D",  # PyDocstyle
    "W",  # Warning
    "PL",  # Pylint
-   # "C",  # Convention
+   "C",  # Convention
    "PYI",  # flake8-pyi
    "UP",  # pyupgrade
    "RUF",  # ruff

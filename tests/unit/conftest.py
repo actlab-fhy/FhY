@@ -11,11 +11,12 @@ from typing import TypeVar
 
 import pytest
 from fhy.ir import (
-    DataType,
+    CoreDataType,
     Identifier,
     IndexType,
     NumericalType,
     PrimitiveDataType,
+    TemplateDataType,
     TupleType,
     TypeQualifier,
 )
@@ -137,7 +138,7 @@ def literals(span_node) -> Callable[[int | float | complex], tuple[dict, TLitera
 def build_numerical_type() -> (
     Generator[
         Callable[
-            [PrimitiveDataType, list[dict], list[Expression]],
+            [CoreDataType, list[dict], list[Expression]],
             tuple[dict, NumericalType],
         ],
         None,
@@ -145,7 +146,7 @@ def build_numerical_type() -> (
     ]
 ):
     def inner(
-        primitive: PrimitiveDataType,
+        core: CoreDataType,
         shape_objs: list[dict],
         shape_cls: list[Expression],
     ) -> tuple[dict, NumericalType]:
@@ -154,15 +155,15 @@ def build_numerical_type() -> (
             cls_name="NumericalType",
             attributes=dict(
                 data_type=dict(
-                    cls_name="DataType",
-                    attributes=dict(primitive_data_type=primitive.value),
+                    cls_name="PrimitiveDataType",
+                    attributes=dict(core_data_type=core.value),
                 ),
                 shape=shape_objs,
             ),
         )
 
         numerical = NumericalType(
-            data_type=DataType(primitive_data_type=primitive), shape=shape_cls
+            data_type=PrimitiveDataType(core_data_type=core), shape=shape_cls
         )
 
         return obj, numerical
@@ -201,7 +202,7 @@ def tuple_type(construct_id, build_numerical_type) -> tuple[dict, TupleType]:
     text = "tuple ( int32[m], )"
     shape_1_obj, shape_1_id = construct_id("m")
     num_obj, numerical = build_numerical_type(
-        PrimitiveDataType.INT32, [shape_1_obj], [shape_1_id]
+        CoreDataType.INT32, [shape_1_obj], [shape_1_id]
     )
 
     obj = dict(cls_name="TupleType", attributes=dict(types=[num_obj]))
@@ -221,7 +222,7 @@ def qualified(
     shape_1_obj, shape_1_id = construct_id("m")
     shape_2_obj, shape_2_id = construct_id("n")
     num_obj, num_cls = build_numerical_type(
-        PrimitiveDataType.INT32, [shape_1_obj, shape_2_obj], [shape_1_id, shape_2_id]
+        CoreDataType.INT32, [shape_1_obj, shape_2_obj], [shape_1_id, shape_2_id]
     )
 
     obj = dict(
@@ -612,6 +613,35 @@ def operation(
     )
 
     return obj, op
+
+
+@add_fixture_node
+@pytest.fixture
+def procedure_with_templates(construct_id) -> tuple[dict, Procedure]:
+    text: str = "proc mumu<T>() {\n\n}"
+    name_id_obj, name_id = construct_id("mumu")
+    tobj, tid = construct_id("T")
+
+    obj = dict(
+        cls_name="Procedure",
+        attributes=dict(
+            name=name_id_obj,
+            templates=[
+                dict(cls_name="TemplateDataType", attributes=dict(data_type=tobj))
+            ],
+            args=[],
+            body=[],
+        ),
+    )
+    proc = Procedure(
+        span=None,
+        name=name_id,
+        templates=[TemplateDataType(data_type=tid)],
+        args=[],
+        body=[],
+    )
+
+    return obj, proc
 
 
 @add_fixture_node

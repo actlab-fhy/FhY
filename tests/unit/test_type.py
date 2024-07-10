@@ -1,27 +1,50 @@
 import pytest
 from fhy.ir.type import (
-    PrimitiveDataType,
+    CoreDataType,
     TypeQualifier,
-    promote_primitive_data_types,
+    promote_core_data_types,
     promote_type_qualifiers,
 )
 
 
 @pytest.mark.parametrize(
-    ("primitive_data_type1", "primitive_data_type2", "expected_primitive_data_type"),
+    ("core_data_type1", "core_data_type2", "expected_core_data_type"),
     [
-        (PrimitiveDataType.UINT8, PrimitiveDataType.UINT8, PrimitiveDataType.UINT8),
-        (PrimitiveDataType.UINT8, PrimitiveDataType.UINT16, PrimitiveDataType.UINT16),
-        (PrimitiveDataType.UINT16, PrimitiveDataType.UINT8, PrimitiveDataType.UINT16),
-        (PrimitiveDataType.INT32, PrimitiveDataType.INT64, PrimitiveDataType.INT64),
-        (PrimitiveDataType.FLOAT16, PrimitiveDataType.FLOAT32, PrimitiveDataType.FLOAT32),
-        (PrimitiveDataType.FLOAT64, PrimitiveDataType.FLOAT16, PrimitiveDataType.FLOAT64),
-        (PrimitiveDataType.COMPLEX32, PrimitiveDataType.COMPLEX64, PrimitiveDataType.COMPLEX64),
-        (PrimitiveDataType.FLOAT32, PrimitiveDataType.COMPLEX32, PrimitiveDataType.COMPLEX64),
-    ]
+        (CoreDataType.UINT8, CoreDataType.UINT8, CoreDataType.UINT8),
+        (CoreDataType.UINT8, CoreDataType.UINT16, CoreDataType.UINT16),
+        (CoreDataType.UINT16, CoreDataType.UINT8, CoreDataType.UINT16),
+        (CoreDataType.INT32, CoreDataType.INT64, CoreDataType.INT64),
+        (
+            CoreDataType.FLOAT16,
+            CoreDataType.FLOAT32,
+            CoreDataType.FLOAT32,
+        ),
+        (
+            CoreDataType.FLOAT64,
+            CoreDataType.FLOAT16,
+            CoreDataType.FLOAT64,
+        ),
+        (
+            CoreDataType.COMPLEX32,
+            CoreDataType.COMPLEX64,
+            CoreDataType.COMPLEX64,
+        ),
+        (
+            CoreDataType.FLOAT32,
+            CoreDataType.COMPLEX32,
+            CoreDataType.COMPLEX64,
+        ),
+    ],
 )
-def test_promote_primitive_data_type(primitive_data_type1, primitive_data_type2, expected_primitive_data_type):
-    assert promote_primitive_data_types(primitive_data_type1, primitive_data_type2) == expected_primitive_data_type, f"Expected the promotion of {primitive_data_type1} and {primitive_data_type2} to be {expected_primitive_data_type}."
+def test_promote_primitive_data_type(
+    core_data_type1, core_data_type2, expected_core_data_type
+):
+    error_message: str = f"Expected the promotion of {core_data_type1} "
+    error_message += f"and {core_data_type2} to be {expected_core_data_type}."
+    assert (
+        promote_core_data_types(core_data_type1, core_data_type2)
+        == expected_core_data_type
+    ), error_message
 
 
 @pytest.mark.parametrize(
@@ -31,7 +54,14 @@ def test_promote_primitive_data_type(primitive_data_type1, primitive_data_type2,
         (TypeQualifier.STATE, TypeQualifier.PARAM, TypeQualifier.TEMP),
         (TypeQualifier.PARAM, TypeQualifier.TEMP, TypeQualifier.TEMP),
         (TypeQualifier.PARAM, TypeQualifier.PARAM, TypeQualifier.PARAM),
-    ]
+    ],
 )
-def test_promote_type_qualifiers(type_qualifer1, type_qualifer2, expected_type_qualifer):
-    assert promote_type_qualifiers(type_qualifer1, type_qualifer2) == expected_type_qualifer, f"Expected the promotion of {type_qualifer1} and {type_qualifer2} to be {expected_type_qualifer}."
+def test_promote_type_qualifiers(
+    type_qualifer1, type_qualifer2, expected_type_qualifer
+):
+    error_message: str = f"Expected the promotion of {type_qualifer1} "
+    error_message += f"and {type_qualifer2} to be {expected_type_qualifer}."
+    assert (
+        promote_type_qualifiers(type_qualifer1, type_qualifer2)
+        == expected_type_qualifer
+    ), error_message

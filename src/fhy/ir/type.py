@@ -34,6 +34,7 @@
 from abc import ABC
 
 from fhy.error import FhYTypeError
+from fhy.ir.identifier import Identifier
 from fhy.utils import Lattice
 from fhy.utils.enumeration import StrEnum
 
@@ -44,8 +45,12 @@ class Type(ABC):
     """Abstract node defining data type."""
 
 
-class PrimitiveDataType(StrEnum):
-    """Supported primitive data types."""
+class DataType(ABC):
+    """Abstract data type class."""
+
+
+class CoreDataType(StrEnum):
+    """Supported core data type primitives."""
 
     UINT8 = "uint8"
     UINT16 = "uint16"
@@ -63,16 +68,16 @@ class PrimitiveDataType(StrEnum):
     COMPLEX128 = "complex128"
 
 
-def _define_uint_data_type_lattice() -> Lattice[PrimitiveDataType]:
-    lattice = Lattice[PrimitiveDataType]()
-    lattice.add_element(PrimitiveDataType.UINT8)
-    lattice.add_element(PrimitiveDataType.UINT16)
-    lattice.add_element(PrimitiveDataType.UINT32)
-    lattice.add_element(PrimitiveDataType.UINT64)
+def _define_uint_data_type_lattice() -> Lattice[CoreDataType]:
+    lattice = Lattice[CoreDataType]()
+    lattice.add_element(CoreDataType.UINT8)
+    lattice.add_element(CoreDataType.UINT16)
+    lattice.add_element(CoreDataType.UINT32)
+    lattice.add_element(CoreDataType.UINT64)
 
-    lattice.add_order(PrimitiveDataType.UINT8, PrimitiveDataType.UINT16)
-    lattice.add_order(PrimitiveDataType.UINT16, PrimitiveDataType.UINT32)
-    lattice.add_order(PrimitiveDataType.UINT32, PrimitiveDataType.UINT64)
+    lattice.add_order(CoreDataType.UINT8, CoreDataType.UINT16)
+    lattice.add_order(CoreDataType.UINT16, CoreDataType.UINT32)
+    lattice.add_order(CoreDataType.UINT32, CoreDataType.UINT64)
 
     if not lattice.is_lattice():
         raise RuntimeError("Unsigned integer lattice is not a lattice.")
@@ -80,16 +85,16 @@ def _define_uint_data_type_lattice() -> Lattice[PrimitiveDataType]:
     return lattice
 
 
-def _define_int_data_type_lattice() -> Lattice[PrimitiveDataType]:
-    lattice = Lattice[PrimitiveDataType]()
-    lattice.add_element(PrimitiveDataType.INT8)
-    lattice.add_element(PrimitiveDataType.INT16)
-    lattice.add_element(PrimitiveDataType.INT32)
-    lattice.add_element(PrimitiveDataType.INT64)
+def _define_int_data_type_lattice() -> Lattice[CoreDataType]:
+    lattice = Lattice[CoreDataType]()
+    lattice.add_element(CoreDataType.INT8)
+    lattice.add_element(CoreDataType.INT16)
+    lattice.add_element(CoreDataType.INT32)
+    lattice.add_element(CoreDataType.INT64)
 
-    lattice.add_order(PrimitiveDataType.INT8, PrimitiveDataType.INT16)
-    lattice.add_order(PrimitiveDataType.INT16, PrimitiveDataType.INT32)
-    lattice.add_order(PrimitiveDataType.INT32, PrimitiveDataType.INT64)
+    lattice.add_order(CoreDataType.INT8, CoreDataType.INT16)
+    lattice.add_order(CoreDataType.INT16, CoreDataType.INT32)
+    lattice.add_order(CoreDataType.INT32, CoreDataType.INT64)
 
     if not lattice.is_lattice():
         raise RuntimeError("Integer lattice is not a lattice.")
@@ -97,22 +102,22 @@ def _define_int_data_type_lattice() -> Lattice[PrimitiveDataType]:
     return lattice
 
 
-def _define_float_complex_data_type_lattice() -> Lattice[PrimitiveDataType]:
-    lattice = Lattice[PrimitiveDataType]()
-    lattice.add_element(PrimitiveDataType.FLOAT16)
-    lattice.add_element(PrimitiveDataType.FLOAT32)
-    lattice.add_element(PrimitiveDataType.FLOAT64)
-    lattice.add_element(PrimitiveDataType.COMPLEX32)
-    lattice.add_element(PrimitiveDataType.COMPLEX64)
-    lattice.add_element(PrimitiveDataType.COMPLEX128)
+def _define_float_complex_data_type_lattice() -> Lattice[CoreDataType]:
+    lattice = Lattice[CoreDataType]()
+    lattice.add_element(CoreDataType.FLOAT16)
+    lattice.add_element(CoreDataType.FLOAT32)
+    lattice.add_element(CoreDataType.FLOAT64)
+    lattice.add_element(CoreDataType.COMPLEX32)
+    lattice.add_element(CoreDataType.COMPLEX64)
+    lattice.add_element(CoreDataType.COMPLEX128)
 
-    lattice.add_order(PrimitiveDataType.FLOAT16, PrimitiveDataType.FLOAT32)
-    lattice.add_order(PrimitiveDataType.FLOAT32, PrimitiveDataType.FLOAT64)
-    lattice.add_order(PrimitiveDataType.FLOAT16, PrimitiveDataType.COMPLEX32)
-    lattice.add_order(PrimitiveDataType.FLOAT32, PrimitiveDataType.COMPLEX64)
-    lattice.add_order(PrimitiveDataType.FLOAT64, PrimitiveDataType.COMPLEX128)
-    lattice.add_order(PrimitiveDataType.COMPLEX32, PrimitiveDataType.COMPLEX64)
-    lattice.add_order(PrimitiveDataType.COMPLEX64, PrimitiveDataType.COMPLEX128)
+    lattice.add_order(CoreDataType.FLOAT16, CoreDataType.FLOAT32)
+    lattice.add_order(CoreDataType.FLOAT32, CoreDataType.FLOAT64)
+    lattice.add_order(CoreDataType.FLOAT16, CoreDataType.COMPLEX32)
+    lattice.add_order(CoreDataType.FLOAT32, CoreDataType.COMPLEX64)
+    lattice.add_order(CoreDataType.FLOAT64, CoreDataType.COMPLEX128)
+    lattice.add_order(CoreDataType.COMPLEX32, CoreDataType.COMPLEX64)
+    lattice.add_order(CoreDataType.COMPLEX64, CoreDataType.COMPLEX128)
 
     if not lattice.is_lattice():
         raise RuntimeError("Floating point and complex lattice is not a lattice.")
@@ -125,117 +130,124 @@ _INT_DATA_TYPE_LATTICE = _define_int_data_type_lattice()
 _FLOAT_COMPLEX_DATA_TYPE_LATTICE = _define_float_complex_data_type_lattice()
 
 
-def promote_primitive_data_types(
-    primitive_data_type1: PrimitiveDataType, primitive_data_type2: PrimitiveDataType
-) -> PrimitiveDataType:
-    """Promote two primitive data types to a common type.
+def promote_core_data_types(
+    core_data_type1: CoreDataType, core_data_type2: CoreDataType
+) -> CoreDataType:
+    """Promote two core data types to a common type.
 
     Args:
-        primitive_data_type1 (PrimitiveDataType): First primitive data type.
-        primitive_data_type2 (PrimitiveDataType): Second primitive data type.
+        core_data_type1 (CoreDataType): First core data type.
+        core_data_type2 (CoreDataType): Second core data type.
 
     Returns:
-        PrimitiveDataType: Common type to which both primitive data types can
-            be promoted.
+        CoreDataType: Common type to which both core data types can be promoted.
 
     Raises:
         FhYTypeError: If the promotion is not supported.
 
     """
     _UINT_DATA_TYPES = {
-        PrimitiveDataType.UINT8,
-        PrimitiveDataType.UINT16,
-        PrimitiveDataType.UINT32,
-        PrimitiveDataType.UINT64,
+        CoreDataType.UINT8,
+        CoreDataType.UINT16,
+        CoreDataType.UINT32,
+        CoreDataType.UINT64,
     }
     _INT_DATA_TYPES = {
-        PrimitiveDataType.INT8,
-        PrimitiveDataType.INT16,
-        PrimitiveDataType.INT32,
-        PrimitiveDataType.INT64,
+        CoreDataType.INT8,
+        CoreDataType.INT16,
+        CoreDataType.INT32,
+        CoreDataType.INT64,
     }
     _FLOAT_COMPLEX_DATA_TYPES = {
-        PrimitiveDataType.FLOAT16,
-        PrimitiveDataType.FLOAT32,
-        PrimitiveDataType.FLOAT64,
-        PrimitiveDataType.COMPLEX32,
-        PrimitiveDataType.COMPLEX64,
-        PrimitiveDataType.COMPLEX128,
+        CoreDataType.FLOAT16,
+        CoreDataType.FLOAT32,
+        CoreDataType.FLOAT64,
+        CoreDataType.COMPLEX32,
+        CoreDataType.COMPLEX64,
+        CoreDataType.COMPLEX128,
     }
 
-    if (
-        primitive_data_type1 in _UINT_DATA_TYPES
-        and primitive_data_type2 in _UINT_DATA_TYPES
-    ):
+    if core_data_type1 in _UINT_DATA_TYPES and core_data_type2 in _UINT_DATA_TYPES:
         return _UINT_DATA_TYPE_LATTICE.get_least_upper_bound(
-            primitive_data_type1, primitive_data_type2
+            core_data_type1, core_data_type2
         )
-    elif (
-        primitive_data_type1 in _INT_DATA_TYPES
-        and primitive_data_type2 in _INT_DATA_TYPES
-    ):
+    elif core_data_type1 in _INT_DATA_TYPES and core_data_type2 in _INT_DATA_TYPES:
         return _INT_DATA_TYPE_LATTICE.get_least_upper_bound(
-            primitive_data_type1, primitive_data_type2
+            core_data_type1, core_data_type2
         )
     elif (
-        primitive_data_type1 in _FLOAT_COMPLEX_DATA_TYPES
-        and primitive_data_type2 in _FLOAT_COMPLEX_DATA_TYPES
+        core_data_type1 in _FLOAT_COMPLEX_DATA_TYPES
+        and core_data_type2 in _FLOAT_COMPLEX_DATA_TYPES
     ):
         return _FLOAT_COMPLEX_DATA_TYPE_LATTICE.get_least_upper_bound(
-            primitive_data_type1, primitive_data_type2
+            core_data_type1, core_data_type2
         )
     else:
         error_message: str = "Unsupported primitive data type promotion: "
-        error_message += f"{primitive_data_type1}, {primitive_data_type2}"
+        error_message += f"{core_data_type1}, {core_data_type2}"
         raise FhYTypeError(error_message)
 
 
-class DataType:
-    """Data type defines core type primitive, but of flexible Bit Width.
-
-    Note:
-        Currently, only supports primitive data types and does not support
-        template types.
+class PrimitiveDataType(DataType):
+    """Primitive data type.
 
     Args:
-        primitive_data_type (PrimitiveType): Primitive data type.
+        core_data_type (CoreDataType): Core data type of the primitive data type.
 
     """
 
-    _primitive_data_type: PrimitiveDataType
+    _core_data_type: CoreDataType
 
-    def __init__(
-        self,
-        primitive_data_type: PrimitiveDataType,
-    ) -> None:
-        self._primitive_data_type = primitive_data_type
+    def __init__(self, core_data_type: CoreDataType) -> None:
+        self._core_data_type = core_data_type
 
     @property
-    def primitive_data_type(self) -> PrimitiveDataType:
-        """Primitive data type."""
-        return self._primitive_data_type
-
-    def __repr__(self) -> str:
-        return f"DataType({self._primitive_data_type})"
+    def core_data_type(self) -> CoreDataType:
+        """Core data type."""
+        return self._core_data_type
 
 
-def promote_data_types(data_type1: DataType, data_type2: DataType) -> DataType:
-    """Promote two data types to a common type.
+class TemplateDataType(DataType):
+    """Define template struct type.
 
     Args:
-        data_type1 (DataType): First data type.
-        data_type2 (DataType): Second data type.
+        data_type (Identifier): template type identifier
+        widths (list[int], optional): fixed bit size width of type
+
+    """
+
+    _data_type: Identifier
+    widths: list[int] | None
+
+    def __init__(self, data_type: Identifier, widths: list[int] | None = None) -> None:
+        self._data_type = data_type
+        self.widths = widths
+
+    @property
+    def template_type(self) -> Identifier:
+        """Template Identifier."""
+        return self._data_type
+
+
+def promote_primitive_data_types(
+    primitive_data_type1: PrimitiveDataType, primitive_data_type2: PrimitiveDataType
+) -> PrimitiveDataType:
+    """Promote two primitive data types to a common type.
+
+    Args:
+        primitive_data_type1 (DataType): First primitive data type.
+        primitive_data_type2 (DataType): Second primitive data type.
 
     Returns:
-        DataType: Common type to which both data types can be promoted.
+        DataType: Common type to which both primitive data types can be promoted.
 
     Raises:
         FhYTypeError: If the promotion is not supported.
 
     """
-    return DataType(
-        promote_primitive_data_types(
-            data_type1.primitive_data_type, data_type2.primitive_data_type
+    return PrimitiveDataType(
+        promote_core_data_types(
+            primitive_data_type1.core_data_type, primitive_data_type2.core_data_type
         )
     )
 
@@ -269,6 +281,7 @@ class NumericalType(Type):
 
     def __repr__(self) -> str:
         shape = ",".join(repr(s) for s in self._shape)
+
         return f"NumericalType({self._data_type}, [{shape}])"
 
 

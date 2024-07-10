@@ -44,8 +44,6 @@ from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import Visitor
 
 
-# TODO: The following pass should use a Listener pattern instead, but is blocked
-#       by current implementation of listener.
 class IdentifierCollector(Visitor):
     """Collect all identifiers in the AST for any given node."""
 
@@ -67,4 +65,5 @@ def collect_identifiers(node: ASTObject) -> set[ir.Identifier]:
     """Return a set of identifier objects from a given AST node object."""
     collector = IdentifierCollector()
     collector(node)
+
     return collector.identifiers

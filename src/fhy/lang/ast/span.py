@@ -68,7 +68,6 @@ class Slice:
         return f"{self.start:,d}:{self.stop:,d}"
 
 
-# TODO: Jason: Create Source object that can track the source file
 class Source:
     """Defines source file or namespace.
 
@@ -135,4 +134,5 @@ class Span:
         if self.source is not None:
             text += f"{self.source} "
         text += f"Lines {self.line} Columns: {self.column}"
+
         return text
