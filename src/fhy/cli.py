@@ -42,9 +42,10 @@ from typing import Annotated, Optional, TypeVar
 import typer
 import typer.core
 
-from fhy import __version__, ir
+from fhy import __version__
 from fhy.driver import CompilationOptions, Workspace, compile_fhy
 from fhy.driver.file_reader import standard_path
+from fhy.ir.program import Program as IRProgram
 from fhy.lang.ast.pprint import pformat_ast
 from fhy.lang.ast.serialization import SerializationOptions
 from fhy.lang.ast.serialization.to_json import dump
@@ -104,7 +105,7 @@ class Status(IntEnum):
 class CompilationResult:
     """Results of compilation."""
 
-    program: ir.Program
+    program: IRProgram
     logger: logging.Logger
     status: Status
 
@@ -187,7 +188,7 @@ def compile_fhy_source(
     options = CompilationOptions(verbose=verbose)
 
     try:
-        program: ir.Program = compile_fhy(workspace, options, log)
+        program: IRProgram = compile_fhy(workspace, options, log)
 
     except KeyboardInterrupt as e:
         status = Status.INTERRUPTED

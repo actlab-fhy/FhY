@@ -42,7 +42,10 @@ from pathlib import Path
 
 import networkx as nx  # type: ignore[import-untyped]
 
-from fhy import error, ir
+from fhy import error
+from fhy.ir.identifier import Identifier
+from fhy.ir.program import Program as IRProgram
+from fhy.ir.table import SymbolTable, SymbolTableFrame
 from fhy.lang import collect_imported_identifiers
 from fhy.lang.ast.passes import build_symbol_table, replace_identifiers
 
@@ -99,7 +102,7 @@ class ASTProgramBuilder:
         """Source code directory."""
         return self._workspace.source
 
-    def build(self) -> ir.Program:
+    def build(self) -> IRProgram:
         """Build an ir.Program composed of (multiple) modules."""
         unresolved_asts: list[SourceFileAST] = self._build_source_file_asts()
         paths: set[Path] = {i.path for i in unresolved_asts}
@@ -107,7 +110,7 @@ class ASTProgramBuilder:
         resolved_asts: list[SourceFileAST] = self._resolve_imports(
             unresolved_asts, module_tree
         )
-        ast_program: ir.Program = self._build_program(resolved_asts)
+        ast_program: IRProgram = self._build_program(resolved_asts)
 
         return ast_program
 
@@ -136,7 +139,7 @@ class ASTProgramBuilder:
             ast_source: SourceFileAST = build_source_file_ast(filepath, self.log)
             source_file_asts.append(ast_source)
 
-            imported_identifiers: set[ir.Identifier] = collect_imported_identifiers(
+            imported_identifiers: set[Identifier] = collect_imported_identifiers(
                 ast_source.ast
             )
             qualname: set[str] = {
@@ -249,8 +252,8 @@ class ASTProgramBuilder:
         return self._get_module_by_name(tree, route)
 
     def _confirm_import_exists(
-        self, name_hint: str, reference_table: ir.Table
-    ) -> ir.Identifier | None:
+        self, name_hint: str, reference_table: dict[Identifier, SymbolTableFrame]
+    ) -> Identifier | None:
         for symbol in reference_table.keys():
             if symbol.name_hint == name_hint:
                 return symbol
@@ -274,8 +277,8 @@ class ASTProgramBuilder:
             _rel_path = self._get_module_name_from_source_file_path(source.path)
             self.log.debug("Resolving Imports: %s", _rel_path)
 
-            id_map: dict[ir.Identifier, ir.Identifier] = {}
-            import_ids: set[ir.Identifier] = collect_imported_identifiers(source.ast)
+            id_map: dict[Identifier, Identifier] = {}
+            import_ids: set[Identifier] = collect_imported_identifiers(source.ast)
             for iid in import_ids:
                 relevant_module = self._get_module_by_name(module_tree, iid.name_hint)
 
@@ -293,8 +296,10 @@ class ASTProgramBuilder:
                     raise Exception("Make a Better Module not Found Error.")
 
                 # Build symbol tables to properly handle identifier scope
-                table_from: ir.SymbolTable = build_symbol_table(source_imported.ast)
-                module_context: ir.Table = next(iter(table_from.values()))
+                table_from: SymbolTable = build_symbol_table(source_imported.ast)
+                module_context: dict[Identifier, SymbolTableFrame] = (
+                    table_from.get_namespace(source_imported.ast.name)
+                )
 
                 # Confirm Identifiers derived from use of given Import within source
                 _, name = get_imported_symbol_module_components_and_name(iid.name_hint)
@@ -324,18 +329,20 @@ class ASTProgramBuilder:
 
         return resolved_sources
 
-    def _build_program(self, source_file_asts: list[SourceFileAST]) -> ir.Program:
-        # TODO: Chris will change this later
-        program = ir.Program()
+    def _build_program(self, source_file_asts: list[SourceFileAST]) -> IRProgram:
+        program = IRProgram()
         for source_file_ast in source_file_asts:
             program._components[source_file_ast.ast.name] = source_file_ast.ast
+            # TODO: don't redo this...
+            symbol_table = build_symbol_table(source_file_ast.ast)
+            program._symbol_table.update_namespaces(symbol_table)
 
         return program
 
 
 def build_ast_program(
     workspace: Workspace, options: CompilationOptions, log: logging.Logger = _log
-) -> ir.Program:
+) -> IRProgram:
     """Build an ir.Program.
 
     Args:

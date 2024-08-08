@@ -12,6 +12,7 @@ from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.utils import get_imported_symbol_module_components_and_name
 from fhy.driver.workspace import Workspace
+from fhy.ir.program import Program as IRProgram
 from fhy.lang.ast.passes import collect_identifiers, collect_imported_identifiers
 
 
@@ -51,7 +52,7 @@ def test_separation(symbol: str, expected: tuple[list[str], str]):
 
 def test_program_instantiation():
     """Simple ir.Program Instantiation Check."""
-    program = ir.Program()
+    program = IRProgram()
     assert hasattr(
         program, "_components"
     ), 'Expected "_components" Attribute to ir.Program.'
@@ -197,4 +198,4 @@ def test_program_build(unidirectional_import, config):
     builder = ASTProgramBuilder(unidirectional_import, config)
     program = builder.build()
 
-    assert isinstance(program, ir.Program), "Expected an ir.Program to be built."
+    assert isinstance(program, IRProgram), "Expected an Program to be built."
