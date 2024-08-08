@@ -34,6 +34,7 @@ from fhy.lang.ast import (
     ForAllStatement,
     FunctionExpression,
     IdentifierExpression,
+    Import,
     IntLiteral,
     Module,
     Operation,
@@ -574,6 +575,18 @@ def return_state(span_node, unary) -> tuple[dict, ReturnStatement]:
     )
 
     return obj, statement
+
+
+@add_fixture_node
+@pytest.fixture
+def import_node(span_node, construct_id) -> tuple[dict, Import]:
+    text: str = "import x.y;"
+    span_obj, span_cls = span_node
+    id_obj, id_cls = construct_id("x.y")
+    obj = dict(cls_name="Import", attributes=dict(span=span_obj, name=id_obj))
+    import_statement = Import(span=span_cls, name=id_cls)
+
+    return obj, import_statement
 
 
 # FUNCTIONS
