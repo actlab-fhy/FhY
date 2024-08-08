@@ -3,16 +3,12 @@ from typing import TypeVar
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fhy.ir.identifier import Identifier as IRIdentifier
 from fhy.ir.type import CoreDataType, PrimitiveDataType
 from fhy.ir.type import NumericalType as IRNumericalType
 from fhy.lang.ast import (
     ComplexLiteral,
     ExpressionStatement,
     IntLiteral,
-    Module,
-    Operation,
-    Procedure,
     TupleAccessExpression,
     TupleExpression,
     visitor,
@@ -23,37 +19,13 @@ from fhy.lang.ast.visitor import BasePass, Visitor
 BP = TypeVar("BP", bound=BasePass)
 
 
-@pytest.fixture(scope="module")
-def module_node():
-    operation_node = Operation(
-        span=None,
-        name=IRIdentifier("operation_name"),
-        args=[],
-        return_type=None,
-        body=[],
-    )
-    procedure_node = Procedure(
-        span=None, name=IRIdentifier("procedure_name"), args=[], body=[]
-    )
-    return Module(
-        span=None,
-        name=IRIdentifier("module_name"),
-        statements=[operation_node, procedure_node],
-    )
-
-
-def test_visitor_initialization():
-    """Check if the Visitor class can be instantiated."""
+@patch.object(Visitor, "default")
+def test_unsupported_node_reaches_default(mock_method: MagicMock):
+    """Test that unsupported node dispatches to default method."""
     visitor = Visitor()
-    assert visitor is not None, "Visitor instance should not be None"
-
-
-def test_visitor_visit_module(module_node):
-    """Verify the Visitor class processes a Module node correctly."""
-    visitor = Visitor()
-    visitor.visit_Module = MagicMock(name="visit_Module")
-    visitor.visit(module_node)
-    visitor.visit_Module.assert_called_once_with(module_node)
+    unsupported_node = MagicMock(name="UnsupportedNode")
+    visitor.visit(unsupported_node)
+    mock_method.assert_called_once_with(unsupported_node)
 
 
 def test_visitor_unimplemented_visit_method():
@@ -83,6 +55,10 @@ def test_visitor_transform_expression_statement():
     result = transformer.visit_ExpressionStatement(expression_statement_node)
     assert isinstance(result, ExpressionStatement)
     assert result.right.value == 1
+    assert id(expression_statement_node) != id(result), "Expected Shallow Copy"
+    assert id(expression_statement_node.right) != id(
+        result.right
+    ), "Expected Shallow Copy"
 
 
 def test_visitor_transform_tuple_expression():
@@ -94,6 +70,11 @@ def test_visitor_transform_tuple_expression():
     result = transformer.visit_TupleExpression(tuple_expression_node)
     assert isinstance(result, TupleExpression)
     assert result.expressions[0].value == 1
+
+    assert id(tuple_expression_node) != id(result), "Expected Shallow Copy"
+    assert id(tuple_expression_node.expressions[0]) != id(
+        result.expressions[0]
+    ), "Expected Shallow Copy"
 
 
 def test_visitor_transform_tuple_access_expression():
