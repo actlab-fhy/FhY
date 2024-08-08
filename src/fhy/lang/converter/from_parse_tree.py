@@ -48,6 +48,7 @@ from antlr4 import ParserRuleContext  # type: ignore[import-untyped]
 
 from fhy import ir
 from fhy.error import FhYASTBuildError, FhYSyntaxError
+from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS
 from fhy.lang import ast
 from fhy.lang.ast import Source, Span
 from fhy.lang.ast.alias import Expressions
@@ -80,9 +81,7 @@ def _source_position(span: Span | None) -> str:
 
 
 def _initialize_builtin_identifiers() -> dict[str, ir.Identifier]:
-    return {
-        "sum": ir.Identifier("sum"),
-    }
+    return BUILTIN_LANG_IDENTIFIERS.copy()
 
 
 def _grab_identifier(name: str, scope: ChainMap[str, ir.Identifier]) -> ir.Identifier:
@@ -706,13 +705,14 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Numerical_typeContext
     ) -> ir.NumericalType:
         data_type: ir.type.DataType = self.visitDtype(ctx.dtype())
-        shape: Sequence[Expressions] = []
+        shape: Sequence[Expressions] = ()
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
 
+        # TODO: use the IR expressions when implemented
         return ir.NumericalType(
             data_type=data_type,
-            shape=list(shape),
+            shape=list(shape),  # type: ignore
         )
 
     def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.type.DataType:
@@ -742,7 +742,12 @@ class ParseTreeConverter(FhYVisitor):
     def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> ir.IndexType:
         low, high, stride = self.visitRange(ctx.range_())
 
-        return ir.IndexType(lower_bound=low, upper_bound=high, stride=stride)
+        # TODO: use the IR expressions when implemented
+        return ir.IndexType(
+            lower_bound=low,  # type: ignore
+            upper_bound=high,  # type: ignore
+            stride=stride,  # type: ignore
+        )
 
     def visitRange(
         self, ctx: FhYParser.RangeContext

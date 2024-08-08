@@ -33,7 +33,7 @@
 
 from copy import copy
 
-from fhy import ir
+from fhy.ir.identifier import Identifier
 from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import Transformer
 
@@ -47,18 +47,18 @@ class IdentifierReplacer(Transformer):
 
     """
 
-    _identifier_map: dict[ir.Identifier, ir.Identifier]
+    _identifier_map: dict[Identifier, Identifier]
 
-    def __init__(self, identifier_map: dict[ir.Identifier, ir.Identifier]):
+    def __init__(self, identifier_map: dict[Identifier, Identifier]):
         super().__init__()
         self._identifier_map = identifier_map
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> ir.Identifier:
+    def visit_Identifier(self, identifier: Identifier) -> Identifier:
         return copy(self._identifier_map.get(identifier, identifier))
 
 
 def replace_identifiers(
-    node: ASTObject, identifier_map: dict[ir.Identifier, ir.Identifier]
+    node: ASTObject, identifier_map: dict[Identifier, Identifier]
 ) -> ASTObject:
     """Replace identifiers within AST.
 
@@ -71,4 +71,4 @@ def replace_identifiers(
         (ASTObject): node with identifiers replaced as prescribed by mapping.
 
     """
-    return IdentifierReplacer(identifier_map).visit(node)
+    return IdentifierReplacer(identifier_map)(node)
