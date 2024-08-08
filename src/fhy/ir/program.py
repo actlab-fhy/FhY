@@ -29,16 +29,21 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Program Root Node."""
+"""FhY program."""
 
-# from fhy.lang.ast.core import Module as ASTModule
+from typing import Any
+
+from fhy.ir.identifier import Identifier
+
+# from fhy.lang.ast.node.core import Module as ASTModule
 from .table import SymbolTable
 
 
 class Program:
-    """Program object."""
+    """FhY program."""
 
-    _components: dict  # Dict[Identifier, Union[ASTModule]]
+    # TODO: Resolve the import issues to get the type of this
+    _components: dict[Identifier, Any]
     _symbol_table: SymbolTable
 
     def __init__(self) -> None:

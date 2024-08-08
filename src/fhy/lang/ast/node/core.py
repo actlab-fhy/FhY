@@ -100,8 +100,4 @@ class Function(Statement, ABC):
 
 
 class Expression(ASTNode, IRExpression, ABC):
-    """Abstract expression AST node.
-
-    Also is an expression from the IR to enable use in symbol table fields.
-
-    """
+    """Abstract expression AST node."""
