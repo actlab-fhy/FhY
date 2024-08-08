@@ -89,14 +89,28 @@ def test_visitor_transform_tuple_access_expression():
     assert isinstance(result, TupleAccessExpression)
     assert result.element_index.value == 0
 
+    assert id(tuple_access_expression_node) != id(result), "Expected Shallow copy."
+    assert id(tuple_access_expression_node.tuple_expression) != id(
+        result.tuple_expression
+    ), "Expected Shallow copy."
+    assert id(tuple_access_expression_node.element_index) != id(
+        result.element_index
+    ), "Expected Shallow copy."
+
 
 def test_visitor_transform_complex_literal():
     """Verifys the Transformer class transforms a ComplexLiteral node correctly."""
     transformer = visitor.Transformer()
-    complex_literal_node = ComplexLiteral(span=None, value=complex(1, 1))
+    value = complex(1025, 4097)
+    complex_literal_node = ComplexLiteral(span=None, value=value)
     result = transformer.visit_ComplexLiteral(complex_literal_node)
     assert isinstance(result, ComplexLiteral)
-    assert result.value == complex(1, 1)
+    assert result.value == value
+
+    assert id(complex_literal_node) != id(result), "Expected Shallow copy."
+
+    # NOTE: The value will be identical, since this is a shallow copy
+    assert id(complex_literal_node.value) == id(result.value), "Expected Shallow copy."
 
 
 def test_visitor_transform_type():
