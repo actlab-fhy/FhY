@@ -174,6 +174,13 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
+    def visit_Import(self, node: ast.Import) -> AlmostJson:
+        identifier: AlmostJson = self.visit_Identifier(node.name)
+        return AlmostJson(
+            cls_name=visitor.get_cls_name(node),
+            attributes=dict(span=self.visit_Span(node.span), name=identifier),
+        )
+
     def visit_Argument(self, node: ast.Argument) -> AlmostJson:
         qtype: AlmostJson = self.visit_QualifiedType(node.qualified_type)
         name: AlmostJson | None = (
@@ -560,6 +567,16 @@ class JSONtoAST(visitor.BasePass):
         return ast.Procedure(
             span=span, name=name, templates=templates, args=args, body=body
         )
+
+    def visit_Import(self, node: AlmostJson | None) -> ast.Import:
+        if node is None:
+            raise ValueError("Invalid Import statement")
+
+        values: dict = node.attributes
+        span: Span | None = self.visit_Span(values.get("span"))
+        name: ir.Identifier = self.visit_Identifier(values.get("name"))
+
+        return ast.Import(span=span, name=name)
 
     def visit_Argument(self, node: AlmostJson | None) -> ast.Argument:
         if node is None:
