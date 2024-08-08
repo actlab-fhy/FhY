@@ -29,12 +29,13 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""The base table mapping and frame definitions comprise the core SymbolTable."""
+"""Built-in identifiers for FhY reductions."""
 
-from .symbol_table import (
-    FunctionSymbolTableFrame,
-    ImportSymbolTableFrame,
-    SymbolTable,
-    SymbolTableFrame,
-    VariableSymbolTableFrame,
-)
+from fhy.ir.identifier import Identifier
+
+BUILTIN_REDUCTION_FUNCTION_IDENTIFIERS: dict[str, Identifier] = {
+    "sum": Identifier("sum"),
+    "prod": Identifier("prod"),
+    "min": Identifier("min"),
+    "max": Identifier("max"),
+}

@@ -29,12 +29,8 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""The base table mapping and frame definitions comprise the core SymbolTable."""
+"""Pre-defined built-ins namespace."""
 
-from .symbol_table import (
-    FunctionSymbolTableFrame,
-    ImportSymbolTableFrame,
-    SymbolTable,
-    SymbolTableFrame,
-    VariableSymbolTableFrame,
-)
+from fhy.ir.identifier import Identifier
+
+BUILTINS_NAMESPACE_NAME = Identifier("builtins")

@@ -862,7 +862,12 @@ class JSONtoAST(visitor.BasePass):
                 )
             )
 
-        return ir.IndexType(lower_bound=lower, upper_bound=upper, stride=stride)
+        # TODO: use the IR expressions when implemented
+        return ir.IndexType(
+            lower_bound=lower,  # type: ignore
+            upper_bound=upper,  # type: ignore
+            stride=stride,  # type: ignore
+        )
 
     def visit_TupleType(self, tuple_type: AlmostJson | None) -> ir.TupleType:
         if tuple_type is None:
