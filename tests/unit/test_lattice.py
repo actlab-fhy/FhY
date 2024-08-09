@@ -1,3 +1,5 @@
+"""Tests the lattice utility module."""
+
 from typing import Any
 
 import pytest
@@ -64,120 +66,92 @@ def subsets_of_xyz_lattice():
 
 
 def test_empty_lattice_is_lattice(empty_lattice: Lattice[Any]):
-    assert empty_lattice.is_lattice() is True, "Empty lattice is a lattice."
+    """Test that an empty lattice is a lattice."""
+    assert empty_lattice.is_lattice() is True
 
 
 def test_singleton_lattice_meet_is_element(singleton_lattice: Lattice[int]):
-    assert (
-        singleton_lattice.get_meet(1, 1) == 1
-    ), "Meet of a singleton lattice is the element itself."
+    """Test that the meet of a singleton lattice is the element itself."""
+    assert singleton_lattice.get_meet(1, 1) == 1
 
 
 def test_singleton_lattice_join_is_element(singleton_lattice: Lattice[int]):
-    assert (
-        singleton_lattice.get_join(1, 1) == 1
-    ), "Join of a singleton lattice is the element itself."
+    """Test that the join of a singleton lattice is the element itself."""
+    assert singleton_lattice.get_join(1, 1) == 1
 
 
 def test_singleton_lattice_is_lattice(singleton_lattice: Lattice[int]):
-    assert singleton_lattice.is_lattice() is True, "Singleton lattice is a lattice."
+    """Test that a singleton lattice is a lattice."""
+    assert singleton_lattice.is_lattice() is True
 
 
 def test_two_element_lattice_meet(two_element_lattice: Lattice[int]):
-    assert (
-        two_element_lattice.get_meet(1, 1) == 1
-    ), "Meet of lower element in two element lattice is the element itself."
-    assert (
-        two_element_lattice.get_meet(2, 2) == 2
-    ), "Meet of upper element in two element lattice is the element itself."
-    assert (
-        two_element_lattice.get_meet(1, 2) == 1
-    ), "Meet of two elements in two element lattice is the lower element."
+    """Test that the meet of a two element lattice is the lower element."""
+    assert two_element_lattice.get_meet(1, 1) == 1
+    assert two_element_lattice.get_meet(2, 2) == 2
+    assert two_element_lattice.get_meet(1, 2) == 1
 
 
 def test_two_element_lattice_join(two_element_lattice: Lattice[int]):
-    assert (
-        two_element_lattice.get_join(1, 1) == 1
-    ), "Join of lower element in two element lattice is the element itself."
-    assert (
-        two_element_lattice.get_join(2, 2) == 2
-    ), "Join of upper element in two element lattice is the element itself."
-    assert (
-        two_element_lattice.get_join(1, 2) == 2
-    ), "Join of two elements in two element lattice is the upper element."
+    """Test that the join of a two element lattice is the upper element."""
+    assert two_element_lattice.get_join(1, 1) == 1
+    assert two_element_lattice.get_join(2, 2) == 2
+    assert two_element_lattice.get_join(1, 2) == 2
 
 
 def test_two_element_lattice_is_lattice(two_element_lattice: Lattice[int]):
-    assert two_element_lattice.is_lattice() is True, "Two element lattice is a lattice."
+    """Test that a two element lattice is a lattice."""
+    assert two_element_lattice.is_lattice() is True
 
 
 def test_positive_integer_lattice_meet(positive_integer_lattice: Lattice[int]):
-    assert (
-        positive_integer_lattice.get_meet(3, 5) == 3
-    ), "Meet of 3 and 5 in positive integer lattice is 3."
-    assert (
-        positive_integer_lattice.get_meet(4, 6) == 4
-    ), "Meet of 4 and 6 in positive integer lattice is 4."
+    """Test that the meet of a positive integer lattice is the minimum of the
+    two elements.
+    """
+    assert positive_integer_lattice.get_meet(3, 5) == 3
+    assert positive_integer_lattice.get_meet(4, 6) == 4
 
 
 def test_positive_integer_lattice_join(positive_integer_lattice: Lattice[int]):
-    assert (
-        positive_integer_lattice.get_join(3, 5) == 5
-    ), "Join of 3 and 5 in positive integer lattice is 5."
-    assert (
-        positive_integer_lattice.get_join(4, 6) == 6
-    ), "Join of 4 and 6 in positive integer lattice is 6."
+    """Test that the join of a positive integer lattice is the maximum of the
+    two elements.
+    """
+    assert positive_integer_lattice.get_join(3, 5) == 5
+    assert positive_integer_lattice.get_join(4, 6) == 6
 
 
 def test_positive_integer_lattice_is_lattice(positive_integer_lattice: Lattice[int]):
-    assert (
-        positive_integer_lattice.is_lattice() is True
-    ), "Positive integer lattice is a lattice."
+    """Test that a positive integer lattice is a lattice."""
+    assert positive_integer_lattice.is_lattice() is True
 
 
 def test_subsets_of_xyz_lattice_meet(subsets_of_xyz_lattice: Lattice[str]):
-    assert (
-        subsets_of_xyz_lattice.get_meet("x", "y") == "0"
-    ), "Meet of x and y in subsets of XYZ lattice is empty set."
-    assert (
-        subsets_of_xyz_lattice.get_meet("x", "xy") == "x"
-    ), "Meet of x and xy in subsets of XYZ lattice is x."
-    assert (
-        subsets_of_xyz_lattice.get_meet("x", "z") == "0"
-    ), "Meet of x and z in subsets of XYZ lattice is empty set."
-    assert (
-        subsets_of_xyz_lattice.get_meet("xz", "yz") == "z"
-    ), "Meet of xz and yz in subsets of XYZ lattice is z."
-    assert (
-        subsets_of_xyz_lattice.get_meet("xy", "xyz") == "xy"
-    ), "Meet of xy and xyz in subsets of XYZ lattice is xy."
+    """Test that the meet of subsets of XYZ lattice is the intersection of the
+    two sets.
+    """
+    assert subsets_of_xyz_lattice.get_meet("x", "y") == "0"
+    assert subsets_of_xyz_lattice.get_meet("x", "xy") == "x"
+    assert subsets_of_xyz_lattice.get_meet("x", "z") == "0"
+    assert subsets_of_xyz_lattice.get_meet("xz", "yz") == "z"
+    assert subsets_of_xyz_lattice.get_meet("xy", "xyz") == "xy"
 
 
 def test_subsets_of_xyz_lattice_join(subsets_of_xyz_lattice: Lattice[str]):
-    assert (
-        subsets_of_xyz_lattice.get_join("x", "y") == "xy"
-    ), "Join of x and y in subsets of XYZ lattice is xy."
-    assert (
-        subsets_of_xyz_lattice.get_join("x", "xy") == "xy"
-    ), "Join of x and xy in subsets of XYZ lattice is xy."
-    assert (
-        subsets_of_xyz_lattice.get_join("x", "z") == "xz"
-    ), "Join of x and z in subsets of XYZ lattice is xz."
-    assert (
-        subsets_of_xyz_lattice.get_join("xz", "yz") == "xyz"
-    ), "Join of xz and yz in subsets of XYZ lattice is xyz."
-    assert (
-        subsets_of_xyz_lattice.get_join("xy", "xyz") == "xyz"
-    ), "Join of xy and xyz in subsets of XYZ lattice is xyz."
+    """Test that the join of subsets of XYZ lattice is the union of the two sets."""
+    assert subsets_of_xyz_lattice.get_join("x", "y") == "xy"
+    assert subsets_of_xyz_lattice.get_join("x", "xy") == "xy"
+    assert subsets_of_xyz_lattice.get_join("x", "z") == "xz"
+    assert subsets_of_xyz_lattice.get_join("xz", "yz") == "xyz"
+    assert subsets_of_xyz_lattice.get_join("xy", "xyz") == "xyz"
 
 
 def test_subsets_of_xyz_lattice_is_lattice(subsets_of_xyz_lattice: Lattice[str]):
-    assert (
-        subsets_of_xyz_lattice.is_lattice() is True
-    ), "Subsets of XYZ lattice is a lattice."
+    """Test that subsets of XYZ lattice is a lattice."""
+    assert subsets_of_xyz_lattice.is_lattice() is True
 
 
 def test_basic_non_lattice_poset():
+    """Test that a basic non-lattice poset is not a lattice."""
     lattice = Lattice[int]()
     lattice.add_element(1)
     lattice.add_element(2)
@@ -187,4 +161,4 @@ def test_basic_non_lattice_poset():
     lattice.add_order(1, 4)
     lattice.add_order(2, 3)
     lattice.add_order(2, 4)
-    assert lattice.is_lattice() is False, "Basic non-lattice poset is not a lattice."
+    assert lattice.is_lattice() is False
