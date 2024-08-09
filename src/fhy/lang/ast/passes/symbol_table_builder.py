@@ -45,6 +45,7 @@ from fhy.error import FhYSemanticsError
 from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS, BUILTINS_NAMESPACE_NAME
 from fhy.ir.identifier import Identifier
 from fhy.ir.table import (
+    FunctionKeyword,
     FunctionSymbolTableFrame,
     ImportSymbolTableFrame,
     SymbolTable,
@@ -164,6 +165,7 @@ class SymbolTableBuilder(Visitor):
         self._assert_symbol_not_defined(node.name)
         proc_frame = FunctionSymbolTableFrame(
             name=node.name,
+            keyword=FunctionKeyword.PROCEDURE,
             signature=[
                 (arg.qualified_type.type_qualifier, arg.qualified_type.base_type)
                 for arg in node.args
@@ -178,6 +180,7 @@ class SymbolTableBuilder(Visitor):
         self._assert_symbol_not_defined(node.name)
         op_frame = FunctionSymbolTableFrame(
             name=node.name,
+            keyword=FunctionKeyword.OPERATION,
             signature=[
                 (arg.qualified_type.type_qualifier, arg.qualified_type.base_type)
                 for arg in node.args
