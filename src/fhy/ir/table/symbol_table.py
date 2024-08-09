@@ -44,6 +44,7 @@ from typing import Any, NoReturn
 
 from fhy.ir.identifier import Identifier
 from fhy.ir.type import Type, TypeQualifier
+from fhy.utils.enumeration import StrEnum
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,17 +83,27 @@ class VariableSymbolTableFrame(SymbolTableFrame):
     type_qualifier: TypeQualifier
 
 
+class FunctionKeyword(StrEnum):
+    """Function keyword enumeration."""
+
+    PROCEDURE = "proc"
+    OPERATION = "op"
+    NATIVE = "native"
+
+
 @dataclass(frozen=True, kw_only=True)
 class FunctionSymbolTableFrame(SymbolTableFrame):
     """Functions are cataloged by their argument ID and signature.
 
     Args:
         name (Identifier): Variable (symbol) name and ID
-        signature (List[Tuple[TypeQualifier, Type]]): list of arguments defined by their
+        keyword (FunctionKeyword): Keyword describing the kind of function.
+        signature (list[Tuple[TypeQualifier, Type]]): List of arguments defined by their
             type qualifier and type, that is accepted by the function.
 
     """
 
+    keyword: FunctionKeyword
     signature: list[tuple[TypeQualifier, Type]] = field(default_factory=list)
 
 
@@ -221,8 +232,7 @@ class SymbolTable:
         """Retrieve a frame from the symbol table.
 
         Args:
-            namespace_name (Identifier): Name of the namespace to retrieve the frame
-                from.
+            namespace_name (Identifier): Name of the current namespace.
             symbol_name (Identifier): Name of the symbol to retrieve the frame for.
 
         Returns:
@@ -239,6 +249,7 @@ class SymbolTable:
                 return None, False
 
         def raise_symbol_not_found() -> NoReturn:
+            # TODO: Change this to some sort of FhY error for not symbol not found
             raise RuntimeError(
                 f"Symbol {symbol_name} not found in namespace {namespace_name}."
             )
