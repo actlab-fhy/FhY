@@ -6,6 +6,12 @@ from fhy.utils.poset import PartiallyOrderedSet
 
 @pytest.fixture
 def basic_poset():
+    """Uses the PartiallyOrderedSet class internals to create a poset with two
+    elements.
+
+    poset: ({1, 2}, <=)
+
+    """
     poset = PartiallyOrderedSet[int]()
     poset._graph.add_node(1)
     poset._graph.add_node(2)

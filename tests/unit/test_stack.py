@@ -6,6 +6,14 @@ from fhy.utils.stack import Stack
 
 @pytest.fixture
 def text_stack() -> Stack:
+    """Use the Stack class internals to create a stack with two elements.
+
+    |- stack - |
+    |  "test"  |
+    |  "fhy"   |
+    | -------- |
+
+    """
     stack = Stack[str]()
     stack._stack.append("fhy")
     stack._stack.append("test")
