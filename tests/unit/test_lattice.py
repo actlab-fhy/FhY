@@ -8,24 +8,150 @@ from fhy.utils.lattice import Lattice
 
 @pytest.fixture()
 def empty_lattice():
+    """Return an empty lattice."""
     lattice = Lattice[Any]()
     return lattice
 
 
 @pytest.fixture()
 def singleton_lattice():
+    """Uses the Lattice class internals to create a lattice with one element.
+
+    lattice: ({1}, <=)
+
+    """
     lattice = Lattice[int]()
-    lattice.add_element(1)
+    lattice._poset.add_element(1)
     return lattice
 
 
 @pytest.fixture()
 def two_element_lattice():
+    """Uses the Lattice class internals to create a lattice with two elements.
+
+    lattice: ({1, 2}, <=)
+
+    """
+    lattice = Lattice[int]()
+    lattice._poset.add_element(1)
+    lattice._poset.add_element(2)
+    lattice._poset.add_order(1, 2)
+    return lattice
+
+
+def test_empty_lattice_contains_no_elements(empty_lattice: Lattice[Any]):
+    """Test that an empty lattice contains no elements."""
+    assert 1 not in empty_lattice
+
+
+def test_singleton_lattice_contains_element(singleton_lattice: Lattice[int]):
+    """Test that a singleton lattice contains the element."""
+    assert 1 in singleton_lattice
+
+
+def test_add_element_to_empty_lattice(empty_lattice: Lattice[Any]):
+    """Test that an element can be added to an empty lattice."""
+    empty_lattice.add_element(1)
+    assert 1 in empty_lattice
+
+
+def test_add_duplicate_element_to_lattice(singleton_lattice: Lattice[int]):
+    """Test that adding a duplicate element to a lattice raises an error."""
+    with pytest.raises(ValueError):
+        singleton_lattice.add_element(1)
+
+
+def test_singleton_lattice_meet_is_element(singleton_lattice: Lattice[int]):
+    """Test that the meet of a singleton lattice is the element itself."""
+    assert singleton_lattice.get_meet(1, 1) == 1
+
+
+def test_singleton_lattice_has_meet(singleton_lattice: Lattice[int]):
+    """Test that a singleton lattice has a meet."""
+    assert singleton_lattice.has_meet(1, 1) is True
+
+
+def test_singleton_lattice_join_is_element(singleton_lattice: Lattice[int]):
+    """Test that the join of a singleton lattice is the element itself."""
+    assert singleton_lattice.get_join(1, 1) == 1
+
+
+def test_singleton_lattice_has_join(singleton_lattice: Lattice[int]):
+    """Test that a singleton lattice has a join."""
+    assert singleton_lattice.has_join(1, 1) is True
+
+
+def test_two_element_lattice_meet(two_element_lattice: Lattice[int]):
+    """Test that the meet of a two element lattice is the lower element."""
+    assert two_element_lattice.get_meet(1, 1) == 1
+    assert two_element_lattice.get_meet(2, 2) == 2
+    assert two_element_lattice.get_meet(1, 2) == 1
+
+
+def test_two_element_lattice_has_meet(two_element_lattice: Lattice[int]):
+    """Test that a two element lattice has a meet."""
+    assert two_element_lattice.has_meet(1, 1) is True
+    assert two_element_lattice.has_meet(2, 2) is True
+    assert two_element_lattice.has_meet(1, 2) is True
+
+
+def test_two_element_lattice_join(two_element_lattice: Lattice[int]):
+    """Test that the join of a two element lattice is the upper element."""
+    assert two_element_lattice.get_join(1, 1) == 1
+    assert two_element_lattice.get_join(2, 2) == 2
+    assert two_element_lattice.get_join(1, 2) == 2
+
+
+def test_two_element_lattice_has_join(two_element_lattice: Lattice[int]):
+    """Test that a two element lattice has a join."""
+    assert two_element_lattice.has_join(1, 1) is True
+    assert two_element_lattice.has_join(2, 2) is True
+    assert two_element_lattice.has_join(1, 2) is True
+
+
+def test_empty_lattice_meet(empty_lattice: Lattice[Any]):
+    """Test that the meet of an empty lattice is None."""
+    assert empty_lattice.get_meet(1, 1) is None
+
+
+def test_empty_lattice_join(empty_lattice: Lattice[Any]):
+    """Test that the join of an empty lattice is None."""
+    assert empty_lattice.get_join(1, 1) is None
+
+
+def test_add_order_to_lattice():
+    """Test that an order can be added to a lattice."""
     lattice = Lattice[int]()
     lattice.add_element(1)
     lattice.add_element(2)
     lattice.add_order(1, 2)
-    return lattice
+    assert lattice.get_meet(1, 2) == 1
+    assert lattice.get_join(1, 2) == 2
+
+
+def test_add_invalid_order_to_lattice():
+    """Test that adding an invalid order to a lattice raises an error."""
+    lattice = Lattice[int]()
+    lattice.add_element(1)
+    lattice.add_element(2)
+    lattice.add_order(1, 2)
+    with pytest.raises(RuntimeError):
+        lattice.add_order(2, 1)
+
+
+def test_empty_lattice_is_lattice(empty_lattice: Lattice[Any]):
+    """Test that an empty lattice is a lattice."""
+    assert empty_lattice.is_lattice() is True
+
+
+def test_singleton_lattice_is_lattice(singleton_lattice: Lattice[int]):
+    """Test that a singleton lattice is a lattice."""
+    assert singleton_lattice.is_lattice() is True
+
+
+def test_two_element_lattice_is_lattice(two_element_lattice: Lattice[int]):
+    """Test that a two element lattice is a lattice."""
+    assert two_element_lattice.is_lattice() is True
 
 
 @pytest.fixture()
@@ -63,45 +189,6 @@ def subsets_of_xyz_lattice():
     lattice.add_order("xz", "xyz")
     lattice.add_order("yz", "xyz")
     return lattice
-
-
-def test_empty_lattice_is_lattice(empty_lattice: Lattice[Any]):
-    """Test that an empty lattice is a lattice."""
-    assert empty_lattice.is_lattice() is True
-
-
-def test_singleton_lattice_meet_is_element(singleton_lattice: Lattice[int]):
-    """Test that the meet of a singleton lattice is the element itself."""
-    assert singleton_lattice.get_meet(1, 1) == 1
-
-
-def test_singleton_lattice_join_is_element(singleton_lattice: Lattice[int]):
-    """Test that the join of a singleton lattice is the element itself."""
-    assert singleton_lattice.get_join(1, 1) == 1
-
-
-def test_singleton_lattice_is_lattice(singleton_lattice: Lattice[int]):
-    """Test that a singleton lattice is a lattice."""
-    assert singleton_lattice.is_lattice() is True
-
-
-def test_two_element_lattice_meet(two_element_lattice: Lattice[int]):
-    """Test that the meet of a two element lattice is the lower element."""
-    assert two_element_lattice.get_meet(1, 1) == 1
-    assert two_element_lattice.get_meet(2, 2) == 2
-    assert two_element_lattice.get_meet(1, 2) == 1
-
-
-def test_two_element_lattice_join(two_element_lattice: Lattice[int]):
-    """Test that the join of a two element lattice is the upper element."""
-    assert two_element_lattice.get_join(1, 1) == 1
-    assert two_element_lattice.get_join(2, 2) == 2
-    assert two_element_lattice.get_join(1, 2) == 2
-
-
-def test_two_element_lattice_is_lattice(two_element_lattice: Lattice[int]):
-    """Test that a two element lattice is a lattice."""
-    assert two_element_lattice.is_lattice() is True
 
 
 def test_positive_integer_lattice_meet(positive_integer_lattice: Lattice[int]):
@@ -150,8 +237,8 @@ def test_subsets_of_xyz_lattice_is_lattice(subsets_of_xyz_lattice: Lattice[str])
     assert subsets_of_xyz_lattice.is_lattice() is True
 
 
-def test_basic_non_lattice_poset():
-    """Test that a basic non-lattice poset is not a lattice."""
+@pytest.fixture()
+def basic_non_lattice_poset():
     lattice = Lattice[int]()
     lattice.add_element(1)
     lattice.add_element(2)
@@ -161,4 +248,9 @@ def test_basic_non_lattice_poset():
     lattice.add_order(1, 4)
     lattice.add_order(2, 3)
     lattice.add_order(2, 4)
-    assert lattice.is_lattice() is False
+    return lattice
+
+
+def test_basic_non_lattice_poset(basic_non_lattice_poset: Lattice[int]):
+    """Test that a basic non-lattice poset is not a lattice."""
+    assert basic_non_lattice_poset.is_lattice() is False
