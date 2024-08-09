@@ -121,7 +121,6 @@ class Lattice(Generic[T]):
             The least upper bound of x and y.
 
         Raises:
-            ValueError: If either x or y is not in the lattice.
             RuntimeError: If the least upper bound does not exist.
 
         """

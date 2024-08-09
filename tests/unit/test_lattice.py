@@ -81,6 +81,11 @@ def test_singleton_lattice_has_join(singleton_lattice: Lattice[int]):
     assert singleton_lattice.has_join(1, 1) is True
 
 
+def test_singleton_lattice_get_least_upper_bound(singleton_lattice: Lattice[int]):
+    """Test that the least upper bound of a singleton lattice is the element."""
+    assert singleton_lattice.get_least_upper_bound(1, 1) == 1
+
+
 def test_two_element_lattice_meet(two_element_lattice: Lattice[int]):
     """Test that the meet of a two element lattice is the lower element."""
     assert two_element_lattice.get_meet(1, 1) == 1
@@ -107,6 +112,13 @@ def test_two_element_lattice_has_join(two_element_lattice: Lattice[int]):
     assert two_element_lattice.has_join(1, 1) is True
     assert two_element_lattice.has_join(2, 2) is True
     assert two_element_lattice.has_join(1, 2) is True
+
+
+def test_two_element_lattice_get_least_upper_bound(two_element_lattice: Lattice[int]):
+    """Test that the least upper bound of a two element lattice is the element."""
+    assert two_element_lattice.get_least_upper_bound(1, 1) == 1
+    assert two_element_lattice.get_least_upper_bound(2, 2) == 2
+    assert two_element_lattice.get_least_upper_bound(1, 2) == 2
 
 
 def test_empty_lattice_meet(empty_lattice: Lattice[Any]):
@@ -254,3 +266,13 @@ def basic_non_lattice_poset():
 def test_basic_non_lattice_poset(basic_non_lattice_poset: Lattice[int]):
     """Test that a basic non-lattice poset is not a lattice."""
     assert basic_non_lattice_poset.is_lattice() is False
+
+
+def test_basic_non_lattice_has_no_least_upper_bound(
+    basic_non_lattice_poset: Lattice[int],
+):
+    """Test that a basic non-lattice poset has no least upper bound for certain
+    elements.
+    """
+    with pytest.raises(RuntimeError):
+        basic_non_lattice_poset.get_least_upper_bound(3, 4)
