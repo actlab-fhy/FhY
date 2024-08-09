@@ -53,21 +53,21 @@ class Stack(Generic[T]):
             # Instantiate the class, defining the expected type within the stack
             stack = Stack[str]()
 
-            # Add an elements to the stack
+            # Add an element to the stack
             stack.push("fhy")
             stack.push("test")
 
             # View current element
             current: str = stack.peek()
-            assert current == "test", "Expected `test` string in current position"
+            assert current == "test"
 
-            # Remove current Element
+            # Remove current element
             removed: str = stack.pop()
-            assert removed == current == "test", "Unexpected Element Removed!"
+            assert removed == current == "test"
 
             next_item = stack.peek()
             second_removed = stack.pop()
-            assert next_item == second_removed == "fhy", "Unexpected Item Removed!"
+            assert next_item == second_removed == "fhy"
 
             # Attempts to access or remove items from an empty stack will error
             stack.peek() # IndexError
@@ -88,11 +88,16 @@ class Stack(Generic[T]):
         self._iter_index = 0
 
     def push(self, item: T) -> None:
-        """Add an item to the stack."""
+        """Add an item to the stack.
+
+        Args:
+            item: The item to add to the stack.
+
+        """
         self._stack.append(item)
 
     def pop(self) -> T:
-        """Removes a single element (right-hand) from the stack.
+        """Removes a single element from the top of the stack.
 
         Raises:
             IndexError: When function is called on an empty stack.
@@ -105,7 +110,7 @@ class Stack(Generic[T]):
             raise IndexError("Cannot pop from an empty stack.") from e
 
     def peek(self) -> T:
-        """View current (right-hand) element from the stack.
+        """View the element at the top of the stack.
 
         Raises:
             IndexError: When function is called on an empty stack.
