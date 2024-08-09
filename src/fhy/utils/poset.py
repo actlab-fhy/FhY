@@ -46,6 +46,9 @@ class PartiallyOrderedSet(Generic[T]):
     def __init__(self):
         self._graph = nx.DiGraph()
 
+    def __contains__(self, element: T) -> bool:
+        return self._graph.has_node(element)
+
     def __iter__(self):
         return iter(nx.topological_sort(self._graph))
 
@@ -58,7 +61,11 @@ class PartiallyOrderedSet(Generic[T]):
         Args:
             element: The element to add.
 
+        Raises:
+            ValueError: If the element is already a member of the poset.
+
         """
+        self._check_element_not_in_poset(element)
         self._graph.add_node(element)
 
     def add_order(self, lower: T, upper: T) -> None:
@@ -68,16 +75,17 @@ class PartiallyOrderedSet(Generic[T]):
             lower: The lesser element.
             upper: The greater element.
 
+        Raises:
+            ValueError: If either lower or upper is not a member of the poset.
+            RuntimeError: If an order relation already exists between lower and upper.
+
         """
-        if not self._graph.has_node(lower) or not self._graph.has_node(upper):
-            raise RuntimeError(
-                "Expected nodes to be added to the poset before adding an order."
-            )
+        self._check_element_in_poset(lower)
+        self._check_element_in_poset(upper)
         if nx.has_path(self._graph, upper, lower):
-            error_message: str = f"Expected {lower} to be less than {upper} "
-            error_message += "in the poset, but there is already a path "
-            error_message += f"{upper} to {lower}."
-            raise RuntimeError(error_message)
+            raise RuntimeError(
+                f"Expected no order between {lower} and {upper}, but found one."
+            )
         self._graph.add_edge(lower, upper)
 
     def is_less_than(self, lower: T, upper: T) -> bool:
@@ -90,7 +98,12 @@ class PartiallyOrderedSet(Generic[T]):
         Returns:
             bool: True if lower is less than upper, False otherwise.
 
+        Raises:
+            ValueError: If either lower or upper is not a member of the poset.
+
         """
+        self._check_element_in_poset(lower)
+        self._check_element_in_poset(upper)
         return nx.has_path(self._graph, lower, upper)
 
     def is_greater_than(self, lower: T, upper: T) -> bool:
@@ -103,5 +116,22 @@ class PartiallyOrderedSet(Generic[T]):
         Returns:
             bool: True if lower is greater than upper, False otherwise.
 
+        Raises:
+            ValueError: If either lower or upper is not a member of the poset.
+
         """
+        self._check_element_in_poset(lower)
+        self._check_element_in_poset(upper)
         return nx.has_path(self._graph, upper, lower)
+
+    def _check_element_not_in_poset(self, element: T) -> None:
+        if element in self:
+            raise ValueError(
+                f"Expected {element} to not be a member of the poset, but it is."
+            )
+
+    def _check_element_in_poset(self, element: T) -> None:
+        if element not in self:
+            raise ValueError(
+                f"Expected {element} to be a member of the poset, but it is not."
+            )
