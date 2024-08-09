@@ -96,9 +96,9 @@ class FunctionSymbolTableFrame(SymbolTableFrame):
     """Functions are cataloged by their argument ID and signature.
 
     Args:
-        name (Identifier): Variable (symbol) Name and ID
+        name (Identifier): Variable (symbol) name and ID
         keyword (FunctionKeyword): Keyword describing the kind of function.
-        signature (List[Tuple[TypeQualifier, Type]]): List of arguments defined by their
+        signature (list[Tuple[TypeQualifier, Type]]): List of arguments defined by their
             type qualifier and type, that is accepted by the function.
 
     """
