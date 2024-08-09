@@ -24,7 +24,7 @@ def test_stack_length(text_stack):
     assert len(text_stack) == 2
 
 
-def test_stack_push():
+def test_push():
     """Test that elements are correctly pushed to the stack."""
     stack = Stack[str]()
     stack.push("fhy")
@@ -33,7 +33,7 @@ def test_stack_push():
     assert len(stack) == 2
 
 
-def test_stack_peek(text_stack):
+def test_peek(text_stack):
     """Test that peek method reveals the correct element and does not mutate the
     stack.
     """
@@ -44,7 +44,7 @@ def test_stack_peek(text_stack):
 but the length changed to {current_length}."
 
 
-def test_stack_peek_error():
+def test_peek_error():
     """Test that stack raises an IndexError when peek is called on an empty stack."""
     stack = Stack[str]()
 
@@ -52,7 +52,7 @@ def test_stack_peek_error():
         stack.peek()
 
 
-def test_stack_pop(text_stack):
+def test_pop(text_stack):
     """Test that pop method removes the correct element from the stack."""
     first = text_stack.pop()
     assert first == "test"
@@ -63,7 +63,7 @@ def test_stack_pop(text_stack):
     assert len(text_stack) == 0
 
 
-def test_stack_pop_error():
+def test_pop_error():
     """Test that stack raises an IndexError when pop is called on an empty stack."""
     stack = Stack[str]()
 
@@ -71,13 +71,13 @@ def test_stack_pop_error():
         stack.pop()
 
 
-def test_stack_clear(text_stack):
+def test_clear(text_stack):
     """Test that clear method removes all elements from the stack."""
     text_stack.clear()
     assert len(text_stack) == 0
 
 
-def test_stack_iteration(text_stack):
+def test_iter(text_stack):
     """Test that we can iterate over the stack and retrieve elements."""
     for element, expected_element in zip(text_stack, ("fhy", "test")):
         assert element == expected_element
@@ -86,7 +86,7 @@ def test_stack_iteration(text_stack):
 stack again."
 
 
-def test_stack_next(text_stack):
+def test_next(text_stack):
     """Test use of next on a generator of the stack to retrieve elements."""
     generator = (i for i in text_stack)
 
