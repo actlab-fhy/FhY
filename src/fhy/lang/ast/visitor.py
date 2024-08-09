@@ -50,6 +50,7 @@ from fhy.ir.type import IndexType as IRIndexType
 from fhy.ir.type import NumericalType as IRNumericalType
 from fhy.ir.type import PrimitiveDataType as IRPrimitiveDataType
 from fhy.ir.type import TemplateDataType as IRTemplateDataType
+from fhy.ir.type import TupleType as IRTupleType
 from fhy.ir.type import Type as IRType
 from fhy.ir.type import TypeQualifier as IRTypeQualifier
 from fhy.lang.ast.alias import ASTObject
@@ -396,6 +397,15 @@ class Visitor(BasePass):
         self.visit(index_type.upper_bound)
         if index_type.stride is not None:
             self.visit(index_type.stride)
+
+    def visit_TupleType(self, tuple_type: IRTupleType) -> None:
+        """Visit a tuple type.
+
+        Args:
+            tuple_type (ir.TupleType): Tuple type to visit.
+
+        """
+        self.visit(tuple_type.types)
 
     def visit_PrimitiveDataType(self, node: IRPrimitiveDataType) -> None:
         """Visit a primitive data type.
@@ -926,6 +936,8 @@ class Transformer(BasePass):
             return self.visit_NumericalType(node)
         elif isinstance(node, IRIndexType):
             return self.visit_IndexType(node)
+        elif isinstance(node, IRTupleType):
+            return self.visit_TupleType(node)
         else:
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
@@ -977,6 +989,17 @@ class Transformer(BasePass):
             upper_bound=new_upper_bound,
             stride=new_stride,
         )
+
+    def visit_TupleType(self, tuple_type: IRTupleType) -> IRTupleType:
+        """Transform a tuple type node.
+
+        Args:
+            tuple_type (ir.TupleType): TupleType node to transform.
+
+        """
+        new_types = self.visit_Types(tuple_type.types)
+
+        return IRTupleType(types=new_types)
 
     def visit_PrimitiveDataType(
         self, primitive_data_type: IRPrimitiveDataType
