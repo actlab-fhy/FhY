@@ -118,43 +118,21 @@ class ParseTreeConverter(FhYVisitor):
 
     source: Source | None
     _scopes: ChainMap[str, ir.Identifier]
-    _types: ChainMap[str, ir.Identifier]
 
     def __init__(self, source: Source | None = None) -> None:
         self.source = source
-        self._scopes = ChainMap(_initialize_builtin_identifiers())
-        self._types = ChainMap(_initialize_builtin_types())
+        self._scopes = ChainMap(
+            _initialize_builtin_identifiers(), _initialize_builtin_types()
+        )
 
     def _open_scope(self) -> None:
         self._scopes = self._scopes.new_child()
-        self._types = self._types.new_child()
 
     def _close_scope(self) -> None:
         self._scopes = self._scopes.parents
-        self._types = self._types.parents
 
     def _get_identifier(self, name_hint: str) -> ir.Identifier:
         return _grab_identifier(name_hint, self._scopes)
-
-    def _update_templates(
-        self, nodes: list[Expressions]
-    ) -> list[Expressions | ir.type.DataType]:
-        templates: list[Expressions | ir.type.DataType] = []
-        for e in nodes:
-            if isinstance(e, ast.IdentifierExpression):
-                self._types[e.identifier.name_hint] = e.identifier
-                templates.append(ir.TemplateDataType(data_type=e.identifier))
-            elif isinstance(e, ir.Identifier):
-                self._types[e.name_hint] = e
-                templates.append(ir.TemplateDataType(data_type=e))
-            else:
-                templates.append(e)
-
-        return templates
-
-    def _get_type(self, node):
-        """Retrieve type within scope (accounting for available template types)."""
-        return _grab_identifier(node, self._types)
 
     def _get_span(self, ctx: ParserRuleContext) -> Span | None:
         return _get_source_info(ctx, self.source)
@@ -276,12 +254,11 @@ class ParseTreeConverter(FhYVisitor):
 
         self._open_scope()
 
-        # NOTE: Transform Identifiers into TemplateDataType DataTypes
-        template: list[ir.TemplateDataType] = []
+        templates: list[ir.TemplateDataType] = []
         if ctx.function_template_types is not None:
             template_ctx: FhYParser.Identifier_listContext = ctx.identifier_list()
             initial = self.visitIdentifier_list(template_ctx)
-            template.extend(self._update_templates(initial))
+            templates.extend(ir.TemplateDataType(t) for t in initial)
 
         # TODO: Implement Support for Function indices
         indices: list[ast.Argument] = []
@@ -296,7 +273,7 @@ class ParseTreeConverter(FhYVisitor):
         if (return_type_ctx := ctx.qualified_type()) is not None:
             return_type = self.visitQualified_type(return_type_ctx)
 
-        return keyword, name, template, indices, args, return_type
+        return keyword, name, templates, indices, args, return_type
 
     def visitFunction_args(
         self, ctx: FhYParser.Function_argsContext
@@ -542,7 +519,8 @@ class ParseTreeConverter(FhYVisitor):
             return ast.TupleAccessExpression(
                 span=span,
                 tuple_expression=expression,
-                element_index=int(index_text[1:]),
+                # TODO: Need to get the span of the element index.
+                element_index=ast.IntLiteral(span=None, value=int(index_text[1:])),
             )
 
         elif ctx.function_expression is not None:
@@ -553,10 +531,9 @@ class ParseTreeConverter(FhYVisitor):
                 function_expression_ctx
             )
 
-            template_types: list[ast.Expression | ir.type.DataType] = []
+            template_types: list[ir.type.DataType] = []
             if ctx.dtype_list() is not None:
-                initial = self.visitDtype_list(ctx.dtype_list())
-                template_types = self._update_templates(initial)
+                template_types = self.visitDtype_list(ctx.dtype_list())
 
             expression_list_counter: int = 0
             indices: list[ast.Expression] = []
@@ -721,14 +698,14 @@ class ParseTreeConverter(FhYVisitor):
         if ctx.expression_list() is not None:
             # res = list(self.visitExpression_list(ctx.expression_list()))
             raise NotImplementedError(
-                "TemplateDataType Type Expressions not yet Supported."
+                "Template types with custom parameters are not yet supported."
             )
 
         try:
             return ir.PrimitiveDataType(ir.CoreDataType(text))
 
         except (KeyError, ValueError):
-            return ir.TemplateDataType(self._get_type(text))
+            return ir.TemplateDataType(self._get_identifier(text))
 
     def visitDtype_list(
         self, ctx: FhYParser.Dtype_listContext

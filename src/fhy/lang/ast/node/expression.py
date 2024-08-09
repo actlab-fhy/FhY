@@ -57,7 +57,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 
 from fhy.ir.identifier import Identifier as IRIdentifier
-from fhy.ir.type import Type as IRType
+from fhy.ir.type import DataType as IRDataType
 from fhy.utils.enumeration import StrEnum
 
 from .core import Expression
@@ -245,21 +245,21 @@ class FunctionExpression(Expression):
 
     Args:
         function (Expression): Expression defining the function to call.
-        template_types (List[IRType], optional): Types for template arguments.
+        template_types (List[IRDataType], optional): Data types for template arguments.
         indices (List[Expression], optional): Reduced indices for a reduction
             operation.
         args (List[Expression], optional): Provided arguments to function call.
 
     Attributes:
         function (Expression): Expression defining the function to call.
-        template_types (List[IRType]): Types for template arguments.
+        template_types (List[IRDataType]): Types for template arguments.
         indices (List[Expression]): Reduced indices for a reduction operation.
         args (List[Expression]): Provided arguments to function call.
 
     """
 
     function: Expression
-    template_types: list[IRType] = field(default_factory=list)
+    template_types: list[IRDataType] = field(default_factory=list)
     indices: list[Expression] = field(default_factory=list)
     args: list[Expression] = field(default_factory=list)
 

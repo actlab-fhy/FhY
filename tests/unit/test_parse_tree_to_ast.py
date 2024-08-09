@@ -410,7 +410,7 @@ def test_empty_procedure(construct_ast, source: str):
 )
 def test_empty_procedure_with_qualified_argument(construct_ast, name: str):
     """Test an empty procedure with a single qualified argument and argument names."""
-    source: str = "proc foo(input int32 %s){}" % name
+    source: str = f"proc foo(input int32 {name}){{}}"
     _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -518,8 +518,10 @@ def test_empty_operation_return_type(construct_ast):
 )
 def test_operation_template_types(construct_ast, templates: list[str]):
     """Test that an Empty Operation with a Return Type is Converted Correctly."""
-    source: str = "op foo<%s>(input int32[n, m] x) -> output int32[n, m] {}"
-    _ast = construct_ast(source % ", ".join(templates))
+    source: str = f"op foo<{', '.join(templates)}>(input int32[n, m] x) \
+-> output int32[n, m] {{}}"
+
+    _ast = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
     operation: ast.Operation = _ast.statements[0]
@@ -561,6 +563,78 @@ def test_operation_template_type_body(construct_ast):
     assert (
         numerical.data_type._data_type.id == template._data_type.id
     ), "Expected same TemplateDataType Identifier ID."
+
+
+def test_operation_template_type_call(construct_ast):
+    """Test that a template type can be instantiated."""
+    source: str = """
+    op foo<T>(input T[N, M] a) -> output T[N, M] {
+        temp T[N, M] b;
+        return a;
+    }
+
+    proc bar() {
+        temp int32[N, M] c;
+        temp int32[N, M] d = foo<int32>(c);
+    }
+"""
+    _ast = construct_ast(source)
+    _assert_is_expected_module(_ast, 2)
+
+    operation: ast.Operation = _ast.statements[0]
+    _assert_is_expected_operation(operation, "foo", 1, 2)
+
+    template = operation.templates[0]
+    assert isinstance(template, ir.TemplateDataType), wrong_node_babe(
+        ir.TemplateDataType, template
+    )
+
+    statement: ast.Statement = operation.body[0]
+    assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
+        ast.DeclarationStatement, statement
+    )
+
+    numerical: ir.NumericalType = statement.variable_type.base_type
+    assert isinstance(numerical, ir.NumericalType), wrong_node_babe(
+        ir.NumericalType, numerical
+    )
+
+    assert isinstance(numerical.data_type, ir.TemplateDataType), wrong_node_babe(
+        ir.TemplateDataType, numerical.data_type
+    )
+    assert (
+        numerical.data_type._data_type.id == template._data_type.id
+    ), "Expected same TemplateDataType identifier ID."
+
+    procedure: ast.Procedure = _ast.statements[1]
+    _assert_is_expected_procedure(procedure, "bar", 0, 2)
+
+    statement = procedure.body[1]
+    assert isinstance(statement, ast.DeclarationStatement), wrong_node_babe(
+        ast.DeclarationStatement, statement
+    )
+
+    function = statement.expression
+    assert isinstance(function, ast.FunctionExpression), wrong_node_babe(
+        ast.FunctionExpression, function
+    )
+
+    assert isinstance(function.function, ast.IdentifierExpression), wrong_node_babe(
+        ast.IdentifierExpression, function.function
+    )
+
+    assert function.function.identifier.name_hint == "foo", (
+        'Expected function name hint to be "foo", got '
+        + f'"{function.function.identifier.name_hint}"'
+    )
+
+    assert len(function.template_types) == 1, "Expected 1 Template Type."
+    assert isinstance(
+        function.template_types[0], ir.PrimitiveDataType
+    ), wrong_node_babe(ir.PrimitiveDataType, function.template_types[0])
+    assert (
+        function.template_types[0].core_data_type == ir.CoreDataType.INT32
+    ), "Expected Template Type to be INT32."
 
 
 # ==========
@@ -687,7 +761,7 @@ def test_return_statement(construct_ast):
 @pytest.mark.parametrize(["operator"], [(j,) for j in ast.UnaryOperation])
 def test_unary_expression(construct_ast, operator: ast.UnaryOperation):
     """Test Construction of Unary Expression with correct Operator."""
-    source: str = "temp int32 i = %s5;" % operator.value
+    source: str = f"temp int32 i = {operator.value}5;"
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -757,7 +831,7 @@ def test_ternary_expressions(construct_ast):
 @pytest.mark.parametrize(["name"], [("A",), ("A1",), ("A_",)])
 def test_tuple_access_expression(construct_ast, name: str):
     """Test a Tuple Access Expression."""
-    source: str = "x = %s.1;" % name
+    source: str = f"x = {name}.1;"
     _ast: ast.Module = construct_ast(source)
     _assert_is_expected_module(_ast, 1)
 
@@ -768,7 +842,7 @@ def test_tuple_access_expression(construct_ast, name: str):
         ast.IdentifierExpression(identifier=ir.Identifier("x")),
         ast.TupleAccessExpression(
             tuple_expression=ast.IdentifierExpression(identifier=ir.Identifier(name)),
-            element_index=1,
+            element_index=ast.IntLiteral(value=1),
         ),
     )
 
@@ -787,7 +861,7 @@ def test_tuple_access_function_expression(construct_ast):
             tuple_expression=ast.FunctionExpression(
                 function=ast.IdentifierExpression(identifier=ir.Identifier("f"))
             ),
-            element_index=1,
+            element_index=ast.IntLiteral(value=1),
         ),
     )
 
