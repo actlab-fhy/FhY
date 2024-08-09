@@ -183,6 +183,7 @@ class Visitor(BasePass):
 
         """
         self.visit(node.name)
+        self.visit(node.templates)
         self.visit(node.args)
         self.visit(node.return_type)
         self.visit(node.body)
@@ -195,6 +196,7 @@ class Visitor(BasePass):
 
         """
         self.visit(node.name)
+        self.visit(node.templates)
         self.visit(node.args)
         self.visit(node.body)
 
@@ -582,6 +584,7 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
         new_return_type: QualifiedType = self.visit_QualifiedType(node.return_type)
         new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
@@ -589,6 +592,7 @@ class Transformer(BasePass):
         return Operation(
             span=span,
             name=new_name,
+            templates=new_templates,
             args=new_args,
             return_type=new_return_type,
             body=new_body,
@@ -603,10 +607,17 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
         new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
 
-        return Procedure(span=span, name=new_name, args=new_args, body=new_body)
+        return Procedure(
+            span=span,
+            name=new_name,
+            templates=new_templates,
+            args=new_args,
+            body=new_body,
+        )
 
     def visit_Arguments(self, nodes: list[Argument]) -> list[Argument]:
         """Transform a list of argument nodes.
@@ -804,7 +815,7 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_function: Expression = self.visit(node.function)
-        new_template_types: list[IRType] = self.visit_Types(node.template_types)
+        new_template_types: list[IRDataType] = self.visit_sequence(node.template_types)
         new_indices: list[Expression] = self.visit_sequence(node.indices)
         new_args: list[Expression] = self.visit_sequence(node.args)
 
@@ -953,6 +964,17 @@ class Transformer(BasePass):
 
         return IRNumericalType(data_type=new_data_type, shape=new_shape)
 
+    def visit_TupleType(self, tuple_type: IRTupleType) -> IRTupleType:
+        """Transform a tuple type node.
+
+        Args:
+            tuple_type (ir.TupleType): TupleType node to transform.
+
+        """
+        new_types = self.visit_Types(tuple_type.types)
+
+        return IRTupleType(types=new_types)
+
     def visit_DataType(self, data_type: IRDataType) -> IRDataType:
         """Transform a data type node.
 
@@ -989,17 +1011,6 @@ class Transformer(BasePass):
             upper_bound=new_upper_bound,
             stride=new_stride,
         )
-
-    def visit_TupleType(self, tuple_type: IRTupleType) -> IRTupleType:
-        """Transform a tuple type node.
-
-        Args:
-            tuple_type (ir.TupleType): TupleType node to transform.
-
-        """
-        new_types = self.visit_Types(tuple_type.types)
-
-        return IRTupleType(types=new_types)
 
     def visit_PrimitiveDataType(
         self, primitive_data_type: IRPrimitiveDataType

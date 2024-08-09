@@ -713,7 +713,7 @@ class JSONtoAST(visitor.BasePass):
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
         function: ast.Expression = self.visit(values.get("function"))
-        template: list[ir.Type] = self.visit_sequence(values.get("template_types"))
+        template: list[ir.DataType] = self.visit_sequence(values.get("template_types"))
         index: list[ast.Expression] = self.visit_sequence(values.get("indices"))
         args: list[ast.Expression] = self.visit_sequence(values.get("args"))
 

@@ -45,6 +45,7 @@ from .table import (
 )
 from .type import (
     CoreDataType,
+    DataType,
     IndexType,
     NumericalType,
     PrimitiveDataType,
