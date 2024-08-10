@@ -72,7 +72,7 @@ def add_fixture_node(f: T) -> T:
 
 @pytest.fixture
 def construct_ast() -> Callable[[str], ASTNode]:
-    """Construct an Abstract Syntax Tree (AST) from a raw text file source."""
+    """Construct a FhY abstract ayntax tree (AST) from raw text."""
 
     def _inner(source: str) -> ASTNode:
         return fhy_source(source, log=log)

@@ -1,4 +1,4 @@
-"""Test the Identifier Collector AST Pass."""
+"""Test the identifier collector pass."""
 
 from collections.abc import Callable, Generator
 

@@ -104,14 +104,15 @@ def get_cls_name(obj: ASTObject | Sequence[ASTObject]) -> str:
 class BasePass(ABC):
     """Abstract visitor pattern AST nodes and structures."""
 
-    def __call__(self, node: Any) -> Any:
-        return self.visit(node)
+    def __call__(self, node: Any, **kwargs: Any) -> Any:
+        return self.visit(node, **kwargs)
 
-    def visit(self, node: Any) -> Any:
+    def visit(self, node: Any, **kwargs: Any) -> Any:
         """Visit a node or structure based on its class name.
 
         Args:
             node (Any): AST node or structure to visit.
+            **kwargs: Arbitrary keyword arguments
 
         Returns:
             Any: Result of visiting the node.
@@ -120,13 +121,14 @@ class BasePass(ABC):
         name = f"visit_{get_cls_name(node)}"
         method: Callable[[Any], Any] = getattr(self, name, self.default)
 
-        return method(node)
+        return method(node, **kwargs)
 
-    def default(self, node: Any) -> Any:
+    def default(self, node: Any, **kwargs: Any) -> Any:
         """Visit a node that is not supported.
 
         Args:
-            node (Any): AST node or structure to visit.
+            node: AST node or structure to visit.
+            **kwargs: Arbitrary keyword arguments
 
         Returns:
             Any: Result of visiting the node.
