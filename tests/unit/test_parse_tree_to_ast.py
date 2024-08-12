@@ -1,4 +1,4 @@
-"""Test conversion of FhY cource code from CST to AST.
+"""Test conversion of FhY source code from CST to AST.
 
 Assumes that the source code to CST conversion is correct.
 """
