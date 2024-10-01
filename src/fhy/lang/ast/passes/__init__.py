@@ -29,17 +29,7 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Visitor Passes to validate and analyze AST Semantics.
-
-Modules:
-    identifier_collector:
-    symbol_table_builder:
-
-Passes
-    collect_identifiers:
-    build_symbol_table:
-
-"""
+"""Visitor passes to validate and analyze AST semantics."""
 
 from .identifier_collector import collect_identifiers
 from .identifier_replacer import replace_identifiers

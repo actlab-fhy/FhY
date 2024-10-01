@@ -41,14 +41,16 @@ Classes:
 from abc import ABC
 from collections.abc import Callable, Sequence
 from copy import copy
-from typing import Any
+from typing import Any, TypeVar
 
 from fhy.ir.identifier import Identifier as IRIdentifier
 from fhy.ir.type import CoreDataType as IRCoreDataType
+from fhy.ir.type import DataType as IRDataType
 from fhy.ir.type import IndexType as IRIndexType
 from fhy.ir.type import NumericalType as IRNumericalType
 from fhy.ir.type import PrimitiveDataType as IRPrimitiveDataType
 from fhy.ir.type import TemplateDataType as IRTemplateDataType
+from fhy.ir.type import TupleType as IRTupleType
 from fhy.ir.type import Type as IRType
 from fhy.ir.type import TypeQualifier as IRTypeQualifier
 from fhy.lang.ast.alias import ASTObject
@@ -83,7 +85,16 @@ from .span import Source, Span
 
 
 def get_cls_name(obj: ASTObject | Sequence[ASTObject]) -> str:
-    """Retrieve the class name of an object."""
+    """Retrieve the class name of an object.
+
+    Args:
+        obj (ASTObject | Sequence[ASTObject]): Object to retrieve the class name
+            of.
+
+    Returns:
+        str: Class name of the object.
+
+    """
     if not hasattr(obj, "get_key_name"):
         return obj.__class__.__name__
 
@@ -127,6 +138,15 @@ class BasePass(ABC):
         raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
 
+def _check_ast_node_type(
+    node: Any, ast_node_type: type, ast_node_type_name: str, pass_name: str
+) -> None:
+    if not isinstance(node, ast_node_type):
+        error_message: str = f"{pass_name} expects AST {ast_node_type_name}, "
+        error_message += f"but got {type(node)}."
+        raise RuntimeError(error_message)
+
+
 class Visitor(BasePass):
     """AST node visitor."""
 
@@ -163,6 +183,7 @@ class Visitor(BasePass):
 
         """
         self.visit(node.name)
+        self.visit(node.templates)
         self.visit(node.args)
         self.visit(node.return_type)
         self.visit(node.body)
@@ -175,6 +196,7 @@ class Visitor(BasePass):
 
         """
         self.visit(node.name)
+        self.visit(node.templates)
         self.visit(node.args)
         self.visit(node.body)
 
@@ -378,6 +400,15 @@ class Visitor(BasePass):
         if index_type.stride is not None:
             self.visit(index_type.stride)
 
+    def visit_TupleType(self, tuple_type: IRTupleType) -> None:
+        """Visit a tuple type.
+
+        Args:
+            tuple_type (ir.TupleType): Tuple type to visit.
+
+        """
+        self.visit(tuple_type.types)
+
     def visit_PrimitiveDataType(self, node: IRPrimitiveDataType) -> None:
         """Visit a primitive data type.
 
@@ -449,17 +480,47 @@ class Visitor(BasePass):
         """
 
 
+class ExpressionVisitor(Visitor):
+    """Visitor for expression nodes."""
+
+    def __call__(self, node: Expression) -> Any:
+        _check_ast_node_type(node, Expression, "expression", self.__class__.__name__)
+        return super().__call__(node)
+
+
+Statements = Statement | list[Statement]
+T = TypeVar("T")
+
+
 class Transformer(BasePass):
     """AST node transformer."""
 
-    def visit_sequence(self, nodes: Sequence[ASTObject]) -> list[ASTObject]:
+    def visit_sequence(self, nodes: list[T], is_length_same: bool = True) -> list[T]:
         """Visit a list of nodes or structures.
 
         Args:
-            nodes (list[ASTObject]): Nodes or structures to visit.
+            nodes (list[T]): Nodes or structures to visit.
+            is_length_same (bool): Whether the length of the transformed nodes or
+                structures should be the same as the input nodes or structures.
+
+        Returns:
+            list[T]: Transformed nodes or structures.
 
         """
-        return [self.visit(node) for node in nodes]
+        if is_length_same:
+            return [self.visit(node) for node in nodes]
+        else:
+            new_nodes: list[T] = []
+            for node in nodes:
+                new_node = self.visit(node)
+                # TODO: Implement returning "None" to remove the element.
+                # if new_node is None:
+                #     continue
+                if isinstance(new_node, list):
+                    new_nodes.extend(new_node)
+                else:
+                    new_nodes.append(new_node)
+            return new_nodes
 
     def visit_Module(self, node: Module) -> Module:
         """Transform a module node.
@@ -470,9 +531,37 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_name: IRIdentifier = self.visit_Identifier(node.name)
-        new_statements: list[Statement] = self.visit_sequence(node.statements)
+        new_statements: list[Statement] = self.visit_sequence(
+            node.statements, is_length_same=False
+        )
 
         return Module(span=span, name=new_name, statements=new_statements)
+
+    def visit_Statement(self, node: Statement) -> Statements:
+        """Transform a statement.
+
+        Args:
+            node (Statement): Statement to transform.
+
+        """
+        if isinstance(node, Import):
+            return self.visit_Import(node)
+        elif isinstance(node, Operation):
+            return self.visit_Operation(node)
+        elif isinstance(node, Procedure):
+            return self.visit_Procedure(node)
+        elif isinstance(node, DeclarationStatement):
+            return self.visit_DeclarationStatement(node)
+        elif isinstance(node, ExpressionStatement):
+            return self.visit_ExpressionStatement(node)
+        elif isinstance(node, SelectionStatement):
+            return self.visit_SelectionStatement(node)
+        elif isinstance(node, ForAllStatement):
+            return self.visit_ForAllStatement(node)
+        elif isinstance(node, ReturnStatement):
+            return self.visit_ReturnStatement(node)
+        else:
+            raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
     def visit_Import(self, node: Import) -> Import:
         """Transform an import node.
@@ -495,13 +584,15 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
         new_return_type: QualifiedType = self.visit_QualifiedType(node.return_type)
-        new_body: list[Statement] = self.visit_sequence(node.body)
+        new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
 
         return Operation(
             span=span,
             name=new_name,
+            templates=new_templates,
             args=new_args,
             return_type=new_return_type,
             body=new_body,
@@ -516,10 +607,17 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
-        new_body: list[Statement] = self.visit_sequence(node.body)
+        new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
 
-        return Procedure(span=span, name=new_name, args=new_args, body=new_body)
+        return Procedure(
+            span=span,
+            name=new_name,
+            templates=new_templates,
+            args=new_args,
+            body=new_body,
+        )
 
     def visit_Arguments(self, nodes: list[Argument]) -> list[Argument]:
         """Transform a list of argument nodes.
@@ -528,7 +626,7 @@ class Transformer(BasePass):
             nodes (list[Argument]): List of Argument nodes to transform.
 
         """
-        return [self.visit_Argument(node) for node in nodes]
+        return self.visit_sequence(nodes)
 
     def visit_Argument(self, node: Argument) -> Argument:
         """Transform an argument node.
@@ -549,9 +647,7 @@ class Transformer(BasePass):
 
         return Argument(span=span, qualified_type=new_qualified_type, name=new_name)
 
-    def visit_DeclarationStatement(
-        self, node: DeclarationStatement
-    ) -> DeclarationStatement:
+    def visit_DeclarationStatement(self, node: DeclarationStatement) -> Statements:
         """Transform a declaration statement node.
 
         Args:
@@ -562,8 +658,9 @@ class Transformer(BasePass):
         new_variable_name: IRIdentifier = self.visit_Identifier(node.variable_name)
         new_variable_type: QualifiedType = self.visit_QualifiedType(node.variable_type)
         new_expression: Expression | None
+
         if node.expression is not None:
-            new_expression = self.visit(node.expression)
+            new_expression = self.visit_Expression(node.expression)
         else:
             new_expression = None
 
@@ -574,9 +671,7 @@ class Transformer(BasePass):
             expression=new_expression,
         )
 
-    def visit_ExpressionStatement(
-        self, node: ExpressionStatement
-    ) -> ExpressionStatement:
+    def visit_ExpressionStatement(self, node: ExpressionStatement) -> Statements:
         """Transform an expression statement node.
 
         Args:
@@ -586,14 +681,14 @@ class Transformer(BasePass):
         span: Span | None = self.visit_Span(node.span)
         new_left: Expression | None
         if node.left is not None:
-            new_left = self.visit(node.left)
+            new_left = self.visit_Expression(node.left)
         else:
             new_left = None
-        new_right = self.visit(node.right)
+        new_right = self.visit_Expression(node.right)
 
         return ExpressionStatement(span=span, left=new_left, right=new_right)
 
-    def visit_SelectionStatement(self, node: SelectionStatement) -> SelectionStatement:
+    def visit_SelectionStatement(self, node: SelectionStatement) -> Statements:
         """Transform a selection statement node.
 
         Args:
@@ -601,9 +696,13 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_condition: Expression = self.visit(node.condition)
-        new_true_body: list[Statement] = self.visit_sequence(node.true_body)
-        new_false_body: list[Statement] = self.visit_sequence(node.false_body)
+        new_condition: Expression = self.visit_Expression(node.condition)
+        new_true_body: list[Statement] = self.visit_sequence(
+            node.true_body, is_length_same=False
+        )
+        new_false_body: list[Statement] = self.visit_sequence(
+            node.false_body, is_length_same=False
+        )
 
         return SelectionStatement(
             span=span,
@@ -612,7 +711,7 @@ class Transformer(BasePass):
             false_body=new_false_body,
         )
 
-    def visit_ForAllStatement(self, node: ForAllStatement) -> ForAllStatement:
+    def visit_ForAllStatement(self, node: ForAllStatement) -> Statements:
         """Transform an iteration statement node.
 
         Args:
@@ -620,12 +719,12 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_index: Expression = self.visit(node.index)
-        new_body: list[Statement] = self.visit_sequence(node.body)
+        new_index: Expression = self.visit_Expression(node.index)
+        new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
 
         return ForAllStatement(span=span, index=new_index, body=new_body)
 
-    def visit_ReturnStatement(self, node: ReturnStatement) -> ReturnStatement:
+    def visit_ReturnStatement(self, node: ReturnStatement) -> Statements:
         """Transform a return statement node.
 
         Args:
@@ -633,11 +732,36 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_expression: Expression = self.visit(node.expression)
+        new_expression: Expression = self.visit_Expression(node.expression)
 
         return ReturnStatement(span=span, expression=new_expression)
 
-    def visit_UnaryExpression(self, node: UnaryExpression) -> UnaryExpression:
+    # ruff: noqa: C901
+    def visit_Expression(self, node: Expression) -> Expression:
+        if isinstance(node, UnaryExpression):
+            return self.visit_UnaryExpression(node)
+        elif isinstance(node, BinaryExpression):
+            return self.visit_BinaryExpression(node)
+        elif isinstance(node, TernaryExpression):
+            return self.visit_TernaryExpression(node)
+        elif isinstance(node, FunctionExpression):
+            return self.visit_FunctionExpression(node)
+        elif isinstance(node, ArrayAccessExpression):
+            return self.visit_ArrayAccessExpression(node)
+        elif isinstance(node, TupleExpression):
+            return self.visit_TupleExpression(node)
+        elif isinstance(node, TupleAccessExpression):
+            return self.visit_TupleAccessExpression(node)
+        elif isinstance(node, IdentifierExpression):
+            return self.visit_IdentifierExpression(node)
+        elif isinstance(node, IntLiteral):
+            return self.visit_IntLiteral(node)
+        elif isinstance(node, FloatLiteral):
+            return self.visit_FloatLiteral(node)
+        else:
+            raise NotImplementedError(f'Node "{type(node)}" is not supported.')
+
+    def visit_UnaryExpression(self, node: UnaryExpression) -> Expression:
         """Transform a unary expression node.
 
         Args:
@@ -645,13 +769,13 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_expression: Expression = self.visit(node.expression)
+        new_expression: Expression = self.visit_Expression(node.expression)
 
         return UnaryExpression(
             span=span, operation=node.operation, expression=new_expression
         )
 
-    def visit_BinaryExpression(self, node: BinaryExpression) -> BinaryExpression:
+    def visit_BinaryExpression(self, node: BinaryExpression) -> Expression:
         """Transform a binary expression node.
 
         Args:
@@ -659,14 +783,14 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_left: Expression = self.visit(node.left)
-        new_right: Expression = self.visit(node.right)
+        new_left: Expression = self.visit_Expression(node.left)
+        new_right: Expression = self.visit_Expression(node.right)
 
         return BinaryExpression(
             span=span, operation=node.operation, left=new_left, right=new_right
         )
 
-    def visit_TernaryExpression(self, node: TernaryExpression) -> TernaryExpression:
+    def visit_TernaryExpression(self, node: TernaryExpression) -> Expression:
         """Transform a ternary expression node.
 
         Args:
@@ -674,15 +798,15 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_condition: Expression = self.visit(node.condition)
-        new_true: Expression = self.visit(node.true)
-        new_false: Expression = self.visit(node.false)
+        new_condition: Expression = self.visit_Expression(node.condition)
+        new_true: Expression = self.visit_Expression(node.true)
+        new_false: Expression = self.visit_Expression(node.false)
 
         return TernaryExpression(
             span=span, condition=new_condition, true=new_true, false=new_false
         )
 
-    def visit_FunctionExpression(self, node: FunctionExpression) -> FunctionExpression:
+    def visit_FunctionExpression(self, node: FunctionExpression) -> Expression:
         """Transform a function expression node.
 
         Args:
@@ -691,7 +815,7 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_function: Expression = self.visit(node.function)
-        new_template_types: list[IRType] = self.visit_Types(node.template_types)
+        new_template_types: list[IRDataType] = self.visit_sequence(node.template_types)
         new_indices: list[Expression] = self.visit_sequence(node.indices)
         new_args: list[Expression] = self.visit_sequence(node.args)
 
@@ -703,9 +827,7 @@ class Transformer(BasePass):
             args=list(new_args),
         )
 
-    def visit_ArrayAccessExpression(
-        self, node: ArrayAccessExpression
-    ) -> ArrayAccessExpression:
+    def visit_ArrayAccessExpression(self, node: ArrayAccessExpression) -> Expression:
         """Transform an array access expression node.
 
         Args:
@@ -713,14 +835,14 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_array_expresssion: Expression = self.visit(node.array_expression)
+        new_array_expresssion: Expression = self.visit_Expression(node.array_expression)
         new_indices: list[Expression] = self.visit_sequence(node.indices)
 
         return ArrayAccessExpression(
             span=span, array_expression=new_array_expresssion, indices=new_indices
         )
 
-    def visit_TupleExpression(self, node: TupleExpression) -> TupleExpression:
+    def visit_TupleExpression(self, node: TupleExpression) -> Expression:
         """Transform a tuple expression node.
 
         Args:
@@ -732,9 +854,7 @@ class Transformer(BasePass):
 
         return TupleExpression(span=span, expressions=list(new_expressions))
 
-    def visit_TupleAccessExpression(
-        self, node: TupleAccessExpression
-    ) -> TupleAccessExpression:
+    def visit_TupleAccessExpression(self, node: TupleAccessExpression) -> Expression:
         """Transform a tuple access expression node.
 
         Args:
@@ -742,7 +862,7 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_tuple_expression: Expression = self.visit(node.tuple_expression)
+        new_tuple_expression: Expression = self.visit_Expression(node.tuple_expression)
         new_element_index: IntLiteral = self.visit_IntLiteral(node.element_index)
 
         return TupleAccessExpression(
@@ -751,9 +871,7 @@ class Transformer(BasePass):
             element_index=new_element_index,
         )
 
-    def visit_IdentifierExpression(
-        self, node: IdentifierExpression
-    ) -> IdentifierExpression:
+    def visit_IdentifierExpression(self, node: IdentifierExpression) -> Expression:
         """Transform an identifier expression node.
 
         Args:
@@ -829,6 +947,8 @@ class Transformer(BasePass):
             return self.visit_NumericalType(node)
         elif isinstance(node, IRIndexType):
             return self.visit_IndexType(node)
+        elif isinstance(node, IRTupleType):
+            return self.visit_TupleType(node)
         else:
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
@@ -839,10 +959,35 @@ class Transformer(BasePass):
             numerical_type (ir.NumericalType): NumericalType node to transform.
 
         """
-        new_data_type = self.visit(numerical_type.data_type)
+        new_data_type = self.visit_DataType(numerical_type.data_type)
         new_shape = [self.visit(j) for j in numerical_type.shape]
 
         return IRNumericalType(data_type=new_data_type, shape=new_shape)
+
+    def visit_TupleType(self, tuple_type: IRTupleType) -> IRTupleType:
+        """Transform a tuple type node.
+
+        Args:
+            tuple_type (ir.TupleType): TupleType node to transform.
+
+        """
+        new_types = self.visit_Types(tuple_type.types)
+
+        return IRTupleType(types=new_types)
+
+    def visit_DataType(self, data_type: IRDataType) -> IRDataType:
+        """Transform a data type node.
+
+        Args:
+            data_type (ir.DataType): DataType node to transform.
+
+        """
+        if isinstance(data_type, IRPrimitiveDataType):
+            return self.visit_PrimitiveDataType(data_type)
+        elif isinstance(data_type, IRTemplateDataType):
+            return self.visit_TemplateDataType(data_type)
+        else:
+            raise NotImplementedError(f'Node "{type(data_type)}" is not supported.')
 
     def visit_IndexType(self, index_type: IRIndexType) -> IRIndexType:
         """Transform a numerical type node.
@@ -851,9 +996,11 @@ class Transformer(BasePass):
             index_type (ir.IndexType): IndexType node to transform.
 
         """
+        # TODO: Change these to visit_Expression when the type is not an AST
+        #       expression but rather an IR expression
         new_lower_bound = self.visit(index_type.lower_bound)
         new_upper_bound = self.visit(index_type.upper_bound)
-        new_stride: Expression | None
+        # new_stride: Expression | None
         if index_type.stride is not None:
             new_stride = self.visit(index_type.stride)
         else:
@@ -865,18 +1012,28 @@ class Transformer(BasePass):
             stride=new_stride,
         )
 
-    def visit_PrimitiveDataType(self, node: IRPrimitiveDataType) -> IRPrimitiveDataType:
-        """Transform a primitive type node.
+    def visit_PrimitiveDataType(
+        self, primitive_data_type: IRPrimitiveDataType
+    ) -> IRPrimitiveDataType:
+        """Transform a primitive data type node.
 
         Args:
-            node (ir.PrimitiveDataType): PrimitiveDataType data type node to transform.
+            primitive_data_type (ir.PrimitiveDataType): DataType node to transform.
 
         """
         new_core_data_type: IRCoreDataType = self.visit_CoreDataType(
-            node.core_data_type
+            primitive_data_type.core_data_type
         )
-
         return IRPrimitiveDataType(core_data_type=new_core_data_type)
+
+    def visit_CoreDataType(self, core_data_type: IRCoreDataType) -> IRCoreDataType:
+        """Transform a core data type node.
+
+        Args:
+            core_data_type (ir.CoreDataType): CoreDataType node to transform.
+
+        """
+        return copy(core_data_type)
 
     def visit_TemplateDataType(self, node: IRTemplateDataType) -> IRTemplateDataType:
         """Transform a template data type node.
@@ -897,15 +1054,6 @@ class Transformer(BasePass):
 
         """
         return copy(type_qualifier)
-
-    def visit_CoreDataType(self, primitive: IRCoreDataType) -> IRCoreDataType:
-        """Transform a primitive data type node.
-
-        Args:
-            primitive (ir.CoreDataType): CoreDataType node to transform.
-
-        """
-        return copy(primitive)
 
     def visit_Identifier(self, identifier: IRIdentifier) -> IRIdentifier:
         """Transform an identifier node.

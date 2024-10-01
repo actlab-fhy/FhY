@@ -31,8 +31,11 @@
 
 """The base table mapping and frame definitions comprise the core SymbolTable."""
 
-from .base import Table
+# TODO: This package should be refactored into a symbol table package if there
+# are going to be no more tables implemented other than the symbol table.
+
 from .symbol_table import (
+    FunctionKeyword,
     FunctionSymbolTableFrame,
     ImportSymbolTableFrame,
     SymbolTable,

@@ -174,6 +174,13 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
+    def visit_Import(self, node: ast.Import) -> AlmostJson:
+        identifier: AlmostJson = self.visit_Identifier(node.name)
+        return AlmostJson(
+            cls_name=visitor.get_cls_name(node),
+            attributes=dict(span=self.visit_Span(node.span), name=identifier),
+        )
+
     def visit_Argument(self, node: ast.Argument) -> AlmostJson:
         qtype: AlmostJson = self.visit_QualifiedType(node.qualified_type)
         name: AlmostJson | None = (
@@ -561,6 +568,16 @@ class JSONtoAST(visitor.BasePass):
             span=span, name=name, templates=templates, args=args, body=body
         )
 
+    def visit_Import(self, node: AlmostJson | None) -> ast.Import:
+        if node is None:
+            raise ValueError("Invalid Import statement")
+
+        values: dict = node.attributes
+        span: Span | None = self.visit_Span(values.get("span"))
+        name: ir.Identifier = self.visit_Identifier(values.get("name"))
+
+        return ast.Import(span=span, name=name)
+
     def visit_Argument(self, node: AlmostJson | None) -> ast.Argument:
         if node is None:
             raise ValueError("Invalid Argument")
@@ -696,7 +713,7 @@ class JSONtoAST(visitor.BasePass):
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
         function: ast.Expression = self.visit(values.get("function"))
-        template: list[ir.Type] = self.visit_sequence(values.get("template_types"))
+        template: list[ir.DataType] = self.visit_sequence(values.get("template_types"))
         index: list[ast.Expression] = self.visit_sequence(values.get("indices"))
         args: list[ast.Expression] = self.visit_sequence(values.get("args"))
 
@@ -862,7 +879,12 @@ class JSONtoAST(visitor.BasePass):
                 )
             )
 
-        return ir.IndexType(lower_bound=lower, upper_bound=upper, stride=stride)
+        # TODO: use the IR expressions when implemented
+        return ir.IndexType(
+            lower_bound=lower,  # type: ignore
+            upper_bound=upper,  # type: ignore
+            stride=stride,  # type: ignore
+        )
 
     def visit_TupleType(self, tuple_type: AlmostJson | None) -> ir.TupleType:
         if tuple_type is None:
