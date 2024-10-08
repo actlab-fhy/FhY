@@ -13,7 +13,7 @@ from typing import TypeVar
 
 import pytest
 from fhy.ir import (
-    PrimitiveDataType,
+    CoreDataType,
 )
 from fhy.lang.ast import (
     ComplexLiteral,
@@ -76,7 +76,7 @@ def test_ast_node_to_json(node_name, function, request):
 @pytest.mark.parametrize("function", [_test_to_json, _test_from_json])
 def test_shapeless_numerical_type(function, build_numerical_type):
     """Test Construction and Loading of Shapeless Numerical Type Node Json Object."""
-    obj, numerical = build_numerical_type(PrimitiveDataType.FLOAT32, [], [])
+    obj, numerical = build_numerical_type(CoreDataType.FLOAT32, [], [])
     function(obj, numerical)
 
 
@@ -133,6 +133,20 @@ def test_json_load(module):
     assert result == expected_obj, "Expected AlmostJson Objects to be Equal"
 
 
+@pytest.mark.parametrize(
+    ["method"], [(i,) for i in dir(JSONtoAST) if i.startswith("visit_")]
+)
+def test_to_ast_none_nodes(method):
+    """Confirm visit methods raise value error when node supplied is None."""
+    if method in ("visit_Span", "visit_sequence", "visit_Source"):
+        ...
+    else:
+        serial = JSONtoAST()
+        function = getattr(serial, method)
+        with pytest.raises(ValueError):
+            function(None)
+
+
 def test_load_json_to_ast(module):
     """Test Serialization of AST Node and reloading that text returns same Object.
 
@@ -185,6 +199,5 @@ def test_empty_module(construct_ast):
 
     result: AlmostJson = ASTtoJSON().visit(ast)
     data = result.data()
-    print(data)
 
     assert data == expected, "Unexpected Object."

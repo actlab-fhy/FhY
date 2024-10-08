@@ -33,6 +33,7 @@ current paradigm of domain-specific languages to enable cross-domain multi-accel
   - [Install *FhY* from PyPi](#install-fhy-from-pypi)
   - [Build *FhY* from Source Code](#build-fhy-from-source-code)
 - [Using *FhY* from the Command Line](#using-fhy-from-the-command-line)
+- [Contributing - For Developers](#contributing---for-developers)
 - [FhY License](#fhy-license)
 - [Dependencies](#dependencies)
 
@@ -107,6 +108,11 @@ or on subcommands:
 fhy --help
 fhy serialize --help
 ```
+
+## Contributing - For Developers
+Want to start contributing the *FhY*? Please take a look at our
+[contribution guide](CONTRIBUTING.md)
+
 
 ## FhY License
 

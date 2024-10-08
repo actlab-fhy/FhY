@@ -28,6 +28,17 @@ def test_version():
     assert code == Status.OK, "Expected Successful Response."
 
 
+def test_clean():
+    # First create directory (assuming cli has never been called)
+    access_cli("serialize")
+    assert os.path.exists(".fhy"), "Expected temporary directory to exist"
+
+    # Then call clean
+    code, _, error = access_cli("--clean")
+    assert not os.path.exists(".fhy"), "Expected temporary directory to be removed"
+    assert code == Status.OK, "Expected graceful exit."
+
+
 def test_no_file_error():
     """Test CLI without file argument raises errors and reports correctly to stderr."""
     code, _, error = access_cli("serialize", "--verbose")

@@ -82,3 +82,20 @@ def test_serialization_to_json(file: str):
 
     assert output == output2, "Expected Output to be invariant of flag used."
     assert code == code2 == Status.OK, "Expected Successful Status Code."
+
+
+# NOTE: Because serialization format uses an enumeration using typer, it fails fast
+#       when providing an invalid format. Meaning we never reach failure capture code
+def test_invalid_serialization():
+    file = os.path.join(OUTPUT, "matmul.fhy")
+    invalid_format = "invalidtestformat"
+    code, output, error = access_cli("serialize", file, "-f", invalid_format)
+    assert code != 0, "Expected User error status"
+    assert invalid_format in error, "Expected to report failed format."
+
+
+@pytest.mark.parametrize("file", examples)
+def test_compilation_without_serialization(file: str):
+    """Tests FhY Entry Point compilation of a collection of example files."""
+    code, output, _ = access_cli("serialize", file)
+    assert code == Status.OK, "Expected Successful Status Code."

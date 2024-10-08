@@ -42,9 +42,10 @@ from typing import Annotated, Optional, TypeVar
 import typer
 import typer.core
 
-from fhy import __version__, ir
+from fhy import __version__
 from fhy.driver import CompilationOptions, Workspace, compile_fhy
 from fhy.driver.file_reader import standard_path
+from fhy.ir.program import Program as IRProgram
 from fhy.lang.ast.pprint import pformat_ast
 from fhy.lang.ast.serialization import SerializationOptions
 from fhy.lang.ast.serialization.to_json import dump
@@ -104,7 +105,7 @@ class Status(IntEnum):
 class CompilationResult:
     """Results of compilation."""
 
-    program: ir.Program
+    program: IRProgram
     logger: logging.Logger
     status: Status
 
@@ -165,13 +166,13 @@ def compile_fhy_source(
         add_file_handler(log, log_file, logging.DEBUG if verbose else logging.INFO)
 
     # NOTE: Inform client we have not currently set this portion up, but scoping
-    # here for future backward compatibility.
+    #       here for future backward compatibility.
     if config is not None:
         log.info(
             "Client set configuration file, but this option is NOT yet currently used."
         )
 
-    # Now we start Compiling
+    # Start Compiling
     try:
         filepath: Path = standard_path(main_file)
 
@@ -187,7 +188,7 @@ def compile_fhy_source(
     options = CompilationOptions(verbose=verbose)
 
     try:
-        program: ir.Program = compile_fhy(workspace, options, log)
+        program: IRProgram = compile_fhy(workspace, options, log)
 
     except KeyboardInterrupt as e:
         status = Status.INTERRUPTED
@@ -228,11 +229,8 @@ def main(
     """Welcome to FhY!"""
     # NOTE: We check sys.argv to make it possible to place arguments in subcommands
     #       and respond equivalently.
-    if _confirm_arg(version, "--version"):
-        report_version(True)
-
-    if _confirm_arg(clean, "--clean"):
-        _clean_dir(True)
+    report_version(_confirm_arg(version, "--version"))
+    _clean_dir(_confirm_arg(clean, "--clean"))
 
 
 @app.command(
@@ -283,19 +281,16 @@ def serialize(
     compiled: CompilationResult = compile_fhy_source(
         main_file, verbose, log_file, config, force_rebuild
     )
-
     log: logging.Logger = compiled.logger
 
-    if (program := compiled.program) is None:
-        log.error("IR Program not built.")
-        sys.exit(Status.FAILED)
-
-    if format is None:
+    if format is None or compiled.status != Status.OK:
         return compiled.status
 
     elif format.value == SerializationOptions.JSON:
         sys.stdout.write("\n\n")
-        text: str = dump(list(program._components.values()), indent, include_span)
+        text: str = dump(
+            list(compiled.program._components.values()), indent, include_span
+        )
         sys.stdout.write(text)
         sys.stdout.write("\n\n")
 
@@ -303,7 +298,7 @@ def serialize(
         space: str = (indent or 2) * " "
         show_id: bool = format == SerializationOptions.PRETTYID
         sys.stdout.write("\n\n")
-        for key, value in program._components.items():
+        for key, value in compiled.program._components.items():
             text = pformat_ast(value, space, show_id)
             name = key.name_hint
             sys.stdout.write(f"\\\\ {name}\n{'=' * (len(name) + 3)}\n")
