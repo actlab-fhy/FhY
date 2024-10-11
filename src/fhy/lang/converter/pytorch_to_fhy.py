@@ -1,7 +1,3 @@
-#--------------------------------------------------------------------------
-# Example to run it with
-#--------------------------------------------------------------------------
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -11,35 +7,6 @@ from torch.fx.node import Node
 from typing import Any, Dict, Optional, Union, Tuple
 import torch.fx
 
-class Mod(torch.nn.Module):
-    def forward(self, x: torch.Tensor, y:torch.Tensor) -> torch.Tensor:
-        a = torch.sin(x)
-        b = torch.cos(y)
-        return a+b
-
-class SimpleModel(nn.Module):
-    def forward(self, x):
-        a = torch.relu(x)
-        b = torch.sum(a, dim=1)
-        c = b + 1.5
-        d = torch.stack((b,c), dim=0)
-        return 4
-
-example_args = (torch.randn(10,10), torch.rand(10, 10))
-
-exported_program: torch.export.ExportedProgram = export(Mod(), args= example_args)
-
-core_ir_exported = exported_program.run_decompositions()
-print(core_ir_exported)
-
-
-#model = SimpleModel()
-#example_inputs = (torch.randn(10,10),)
-#
-#exported_program = torch.export.ExportedProgram = export(SimpleModel(), args=example_inputs)
-#print(exported_program)
-#ir_exported = exported_program.run_decompositions()
-#print(ir_exported)
 #--------------------------------------------------------------------------
 # PyTorchOpExtractor
 #--------------------------------------------------------------------------
@@ -363,6 +330,9 @@ class PyTorchToFhyConverter:
 
     # get the type properly mapped with the shape
     def get_fhy_type(self, type_info: Any) -> str:
+        if type_info is None:
+            return "unknown_type"
+        
         if 'dtype' in type_info and 'shape' in type_info:
             dtype = self.pytorch_to_fhy_dtype(type_info['dtype'])
             shape = type_info['shape']
@@ -372,16 +342,21 @@ class PyTorchToFhyConverter:
             if all(isinstance(item, dict) and 'type' in item for item in type_info):
                 types = [self.pytorch_to_fhy_dtype(item['type'])for item in type_info]
                 return f"tuple[{', '.join(types)}]"
-
+        
         return "unknown_type"
 
     # pytorch to fhy type converter
     def pytorch_to_fhy_dtype(self, dtype: str) -> str:
         dtype_mapping = {
-            "torch.float32": "float32",
-            "torch.float64": "float64",
-            "int"          : "int32",
-            "float"        : "float32"
+           "torch.float32"  : "float32",
+            "torch.float"   : "float32",
+            "torch.float64" : "float64",
+            "torch.double"  : "float64",
+            "torch.int32"   : "int32",
+            "torch.int64"   : "int64",
+            "torch.long"    : "int64",
+            "int"           : "int32",
+            "float"         : "float32",
         }
         return dtype_mapping.get(str(dtype).lower(), "unknown_not_found")
 
@@ -391,7 +366,29 @@ class PyTorchToFhyConverter:
 #--------------------------------------------------------------------------
 
 
-m = SimpleModel()
+class Mod(torch.nn.Module):
+    def forward(self, x: torch.Tensor, y:torch.Tensor) -> torch.Tensor:
+        a = torch.sin(x)
+        b = torch.cos(y)
+        return a+b
+
+example_args = (torch.randn(10,10), torch.rand(10, 10))
+
+exported_program: torch.export.ExportedProgram = export(Mod(), args= example_args)
+
+core_ir_exported = exported_program.run_decompositions()
+print(core_ir_exported)
+
+#--------------------------------------------------------------------------
+#  Res Net Example 
+#--------------------------------------------------------------------------
+
+model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
+
+example_input = (torch.rand(1, 3, 224, 224),)
+
+# ---------------------------------------------------------------------------
+m = model
 gm = torch.fx.symbolic_trace(m)
 gm.graph.print_tabular()
 
@@ -399,5 +396,5 @@ gm.graph.print_tabular()
 pi = PyTorchOpExtractor(exported_program)
 
 converter = PyTorchToFhyConverter()
-fhy_code = converter.convert(Mod(), example_args)
+fhy_code = converter.convert(model, example_input)
 print(fhy_code)
