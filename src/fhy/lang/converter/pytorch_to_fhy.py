@@ -162,7 +162,6 @@ class PyTorchToFhyConverter:
                 print("---------------------------")
                 print("Node Target = ", node.target)
                 print("---------------------------")
-                pi.get_op_info(node)
                 # generate the op definition
                 self.generate_op_definition(node)
 
@@ -293,7 +292,7 @@ class PyTorchToFhyConverter:
             if isinstance(outputs, tuple):
                 return f"return {', '.join([self.get_node_name(out) for out in outputs])};"
             else:
-                return f"return {self.get_node_name(output)};"
+                return f"return {self.get_node_name(outputs)};"
         else:
             op_info = self.op_extractor.get_op_info(node)
             result_name = self.get_node_name(node)
@@ -312,10 +311,6 @@ class PyTorchToFhyConverter:
                     args.append(str(arg['value']))
                 else:
                     args.append('unknown')
-
-            op_name = op_info['name']
-            base_name = op_name.split('.')[0]
-
             return f"{result_name} = {op_info['name']}({', '.join(args)});"
 
 
@@ -333,15 +328,21 @@ class PyTorchToFhyConverter:
         if type_info is None:
             return "unknown_type"
         
-        if 'dtype' in type_info and 'shape' in type_info:
+        return self.type_infer(type_info)
+
+    def type_infer(self, type_info: Any) -> str:
+        if isinstance(type_info, dict) and 'dtype' in type_info and 'shape' in type_info:
             dtype = self.pytorch_to_fhy_dtype(type_info['dtype'])
             shape = type_info['shape']
             shape_str = ', '.join(map(str, shape))
             return f"{dtype}[{shape_str}]"
         elif isinstance(type_info, list):
             if all(isinstance(item, dict) and 'type' in item for item in type_info):
-                types = [self.pytorch_to_fhy_dtype(item['type'])for item in type_info]
+                types = [self.pytorch_to_fhy_dtype(item['type']) for item in type_info]
                 return f"tuple[{', '.join(types)}]"
+        elif hasattr(type_info, '__origin__') and type_info.__origin__ is tuple:
+            types = [self.type_infer(arg) for arg in type_info.__args__]
+            return f"tuple[{', '.join(types)}]"
         
         return "unknown_type"
 
@@ -377,8 +378,27 @@ example_args = (torch.randn(10,10), torch.rand(10, 10))
 exported_program: torch.export.ExportedProgram = export(Mod(), args= example_args)
 
 core_ir_exported = exported_program.run_decompositions()
-print(core_ir_exported)
+# print(core_ir_exported)
 
+
+class SAC(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.linear1 = torch.nn.Linear(256, 256)
+        self.linear2 = torch.nn.Linear(256, 256)
+        self.nu = torch.nn.Linear(256, 1)
+        self.prob = torch.nn.Linear(256, 1)
+
+    def forward(self, x):
+        x = torch.nn.functional.relu(self.linear1(x))
+        x = torch.nn.functional.relu(self.linear2(x))
+        nu = self.nu(x)
+        prob = self.prob(x)
+        return nu, prob
+
+example_input = (torch.randn(1, 256),)
+exported_program: torch.export.ExportedProgram = export(SAC(), args= example_input)
+# print(exported_program)
 #--------------------------------------------------------------------------
 #  Res Net Example 
 #--------------------------------------------------------------------------
@@ -386,14 +406,13 @@ print(core_ir_exported)
 model = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True)
 
 example_input = (torch.rand(1, 3, 224, 224),)
-
+# example_input = (torch.randn(1, 256),)
+exported_program: torch.export.ExportedProgram = export(model, args= example_input)
+print(exported_program)
 # ---------------------------------------------------------------------------
 m = model
 gm = torch.fx.symbolic_trace(m)
 gm.graph.print_tabular()
-
-# Utilizing the pytorch extractor class extract
-pi = PyTorchOpExtractor(exported_program)
 
 converter = PyTorchToFhyConverter()
 fhy_code = converter.convert(model, example_input)
