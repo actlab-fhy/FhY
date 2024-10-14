@@ -28,28 +28,19 @@ class PyTorchOpExtractor:
 
         }
 
-        print("-----------")
-        print(op_info)
-        #print(node.meta)
-        print(node.meta.get('tensor_meta', None))
-        print("-----------")
-
         # This extracts the inputs form the nodes
         for arg in node.args:
             input_info = self.extract_argument_info(arg)
-            print("This is inputs: ", input_info)
             op_info['inputs'].append(input_info)
 
         # Extarcts the outputs
         output_info = self.extract_tensor_info(node)
-        print("This is output_info: ", output_info)
         if output_info:
             op_info['outputs'].append(output_info)
 
 
         # Extract the attributes
         for key, value in node.kwargs.items():
-            print(key, value , "This is the kye and theeee value")
             op_info['attributes'][key] = value
 
         return op_info
@@ -67,18 +58,20 @@ class PyTorchOpExtractor:
     # Extracts the necessary info for the input give arg and return it
     def extract_argument_info(self, arg:Any) -> Any:
         if isinstance(arg, Node):
-
-            print("---------------------")
-            print("This is arg : ", arg)
-            print("This is Node : ", Node)
-            print("---------------------")
-
             return self.extract_tensor_info(arg)
         elif isinstance(arg, (int, float, bool, str)):
-            print("------------------------------")
-            print ("This is the arg elif: ", arg)
-            print (type(arg).__name__)
-            print("------------------------------")
+            # Handle scalar literals
+            return {'type': type(arg).__name__, 'value': arg}
+        elif isinstance(arg, (tuple, list)):
+            # Handle tuples or lists of arguments
+            return [self.extract_argument_info(a) for a in arg]
+        elif isinstance(arg, torch.Tensor):
+            # If it's a tensor, use the same tensor extraction logic
+            return self.extract_tensor_info(arg)
+        else:
+            # Handle other unknown argument types
+            return {'type': 'unknown', 'value': str(arg)}
+
     # Extract tensor information from the node metada such as
     # shape, type, device ....
     def extract_tensor_info(self, node:Node) ->Optional[Dict[str, Any]]:
@@ -87,10 +80,6 @@ class PyTorchOpExtractor:
             shape = tensor_meta.shape
             dtype = tensor_meta.dtype
             requires_grad = tensor_meta.requires_grad
-            #device = getattr(tensor_meta, 'device', 'unknown')
-            #stride = tensor_meta.stride
-            # In the future if we support quantized model metadata
-            # has is_quatized and qparams that we can leverage
 
             return{
                 'name' : node.name,
@@ -104,7 +93,6 @@ class PyTorchOpExtractor:
             shape = val.shape
             dtype = val.dtype
             requires_grad = val.requires_grad
-            #device = val.device
 
             return{
                 'name' : node.name,
@@ -116,7 +104,7 @@ class PyTorchOpExtractor:
         else:
             # if no metadata is avialble return unkown
             return{
-                'return': node.name,
+                'name': node.name,
                 'dtype': 'unknown',
                 'shape': [],
                 'requires_grad': False,
@@ -349,7 +337,7 @@ class PyTorchToFhyConverter:
     # pytorch to fhy type converter
     def pytorch_to_fhy_dtype(self, dtype: str) -> str:
         dtype_mapping = {
-           "torch.float32"  : "float32",
+            "torch.float32" : "float32",
             "torch.float"   : "float32",
             "torch.float64" : "float64",
             "torch.double"  : "float64",
@@ -358,9 +346,11 @@ class PyTorchToFhyConverter:
             "torch.long"    : "int64",
             "int"           : "int32",
             "float"         : "float32",
+            "torch.bool"    : "bool",
+            "torch.half"    : "float16",  
+            "torch.uint8"   : "uint8",   
         }
-        return dtype_mapping.get(str(dtype).lower(), "unknown_not_found")
-
+        return dtype_mapping.get(str(dtype).lower(), "unknown_type")
 
 #--------------------------------------------------------------------------
 # Testing
@@ -413,6 +403,9 @@ print(exported_program)
 m = model
 gm = torch.fx.symbolic_trace(m)
 gm.graph.print_tabular()
+from torch.fx import symbolic_trace
+symbolic_traced : torch.fx.GraphModule = symbolic_trace(m)
+print(symbolic_traced.graph)
 
 converter = PyTorchToFhyConverter()
 fhy_code = converter.convert(model, example_input)
