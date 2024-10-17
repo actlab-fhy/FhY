@@ -2,7 +2,6 @@
 
 import difflib
 import subprocess
-from typing import Tuple
 
 
 def get_diff(a, b):
@@ -11,15 +10,18 @@ def get_diff(a, b):
         if s[0] == " ":
             continue
         elif s[0] == "-":
-            print('Delete "{}" from position {}'.format(s[-1], i))
+            print(f'Delete "{s[-1]}" from position {i}')
         elif s[0] == "+":
-            print('Add "{}" to position {}'.format(s[-1], i))
+            print(f'Add "{s[-1]}" to position {i}')
 
 
-def access_cli(*args) -> Tuple[int, str, str]:
+def access_cli(*args) -> tuple[int, str, str]:
     """Access FhY Entry Point using subprocess and return the decoded stdout"""
     result = subprocess.run(
-        ["fhy", *args], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False
+        ["fhy", *args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
     )
     output = result.stdout.decode()
     errors = result.stderr.decode()

@@ -14,17 +14,19 @@ maintainers = [
    {name = "Christopher Priebe", email = "cpriebe@ucsd.edu"},
    {name = "Jason C Del Rio", email = "j3delrio@ucsd.edu"},
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 keywords = [
    "Compiler", "Cross-Domain Language", "Cross-Domain Compiler", "Multi-Target Compiler"
 ]
 classifiers = [
    "Development Status :: 1 - Planning",
    "Programming Language :: Python :: 3",
+   "License :: OSI Approved :: BSD License",
 ]
 dynamic = ["version", "readme", "dependencies"]
 
 [tool.setuptools.dynamic]
+version = {attr = "fhy.__version__"}
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements_build.txt", "requirements.txt"]}
 
@@ -36,14 +38,16 @@ where = ["src"]
 exclude = ["grammar", "docs", "tests"]
 
 [project.scripts]
-fhy = "fhy.cli:main"
+fhy = "fhy.cli:app"
 
 [project.optional-dependencies]
-dev = ["fhy[test,lint,type,docs]", "tox"]
+dev = ["fhy[test,lint,type,docs,rich,pre-commit]", "tox"]
 test = ["pytest", "coverage", "pytest-xdist"]
+pre-commit = ["pre-commit>3.0.0"]
 lint = ["ruff", "pylint"]
 type = ["mypy"]
 docs = ["sphinx>=5.0.2"]
+rich = ["typer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -53,6 +57,10 @@ addopts = "-n auto -rA"
 parallel = true
 branch = true
 source = ["fhy"]
+disable_warnings = [
+   "no-data-collected",
+   "module-not-imported"
+]
 
 [tool.coverage.paths]
 source = ["src", "*/.tox/py*/**/site-packages"]
@@ -69,10 +77,12 @@ omit = [
 ]
 exclude_also = [
    "def __repr__",
-   'if __name__ == "__main__"'
+   'if __name__ == "__main__"',
+   "except KeyboardInterrupt",
 ]
 
 [tool.mypy]
+mypy_path = "src"
 pretty = false
 
 [[tool.mypy.overrides]]
@@ -102,7 +112,7 @@ disable = [
    "C0103",  # invalid-name
    "C0116",  # missing-function-docstring
    "C1804",  # "use-implicit-booleaness-not-comparison-to-string",
-   "C1805",  # use-implicit-booleaness-not-comparison-to-zero 
+   "C1805",  # use-implicit-booleaness-not-comparison-to-zero
    "I0001",  # raw-checker-failed
    "I0010",  # bad-inline-option
    "I0011",  # locally-disabled
@@ -144,7 +154,15 @@ select = [
    "D",  # PyDocstyle
    "W",  # Warning
    "PL",  # Pylint
-   # "C",  # Convention
+   "C",  # Convention
+   "PYI",  # flake8-pyi
+   "UP",  # pyupgrade
+   "RUF",  # ruff
+   "PIE",  # flake8-pie
+   "PGH004",  # pygrep-hooks - Use specific rule codes when using noqa
+   "PLE",  # pylint error
+   "PLW",  # pylint warning
+   "PLR1714",  # Consider merging multiple comparisons
 ]
 ignore = [
    "D102",  # undocumented-public-method (D102)
@@ -169,6 +187,11 @@ convention = "google"  # Accepts: "google" | "numpy" | "pep257"
    "D",  # PyDocstyle
    "F841",  # unused-variable (F841)
    "PLR2004",  # magic-value-comparison (PLR2004)
+   "UP022",  # replace-stdout-stderr (UP022)
+   "UP031",  # printf-string-formatting (UP031)
+]
+"*fhy/cli.py" = [
+   "UP007",  # non-pep604-annotation (UP007) --> We must use Optional[type] here
 ]
 
 [tool.ruff.format]

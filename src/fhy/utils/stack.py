@@ -37,7 +37,8 @@ Classes:
 """
 
 from collections import deque
-from typing import Generic, Iterator, TypeVar
+from collections.abc import Iterator
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -99,6 +100,7 @@ class Stack(Generic[T]):
         """
         try:
             return self._stack.pop()
+
         except IndexError as e:
             raise IndexError("Cannot pop from an empty stack.") from e
 
@@ -111,6 +113,7 @@ class Stack(Generic[T]):
         """
         try:
             return self._stack[-1]
+
         except IndexError as e:
             raise IndexError("Cannot peek at an empty stack.") from e
 
@@ -119,6 +122,7 @@ class Stack(Generic[T]):
 
     def __iter__(self) -> Iterator[T]:
         self._iter_index = 0
+
         return self
 
     def __next__(self) -> T:
@@ -127,4 +131,5 @@ class Stack(Generic[T]):
 
         item = self._stack[self._iter_index]
         self._iter_index += 1
+
         return item

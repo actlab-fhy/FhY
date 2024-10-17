@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from typing import List, Set, Tuple
 
 import pytest
 from fhy import error, ir
@@ -13,6 +12,7 @@ from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.utils import get_imported_symbol_module_components_and_name
 from fhy.driver.workspace import Workspace
+from fhy.ir.program import Program as IRProgram
 from fhy.lang.ast.passes import collect_identifiers, collect_imported_identifiers
 
 
@@ -43,7 +43,7 @@ def config() -> CompilationOptions:
 
 
 @pytest.mark.parametrize(["symbol", "expected"], [("a.b.c", (["a", "b"], "c"))])
-def test_separation(symbol: str, expected: Tuple[List[str], str]):
+def test_separation(symbol: str, expected: tuple[list[str], str]):
     result_a, result_b = utils.get_imported_symbol_module_components_and_name(symbol)
 
     assert result_a == expected[0], "Unexpected Import Components"
@@ -52,7 +52,7 @@ def test_separation(symbol: str, expected: Tuple[List[str], str]):
 
 def test_program_instantiation():
     """Simple ir.Program Instantiation Check."""
-    program = ir.Program()
+    program = IRProgram()
     assert hasattr(
         program, "_components"
     ), 'Expected "_components" Attribute to ir.Program.'
@@ -159,11 +159,11 @@ def test_get_correct_module_by_name(unidirectional_import, config):
 def test_identifier_validation(unidirectional_import, config):
     """Confirm that Identifiers are Correctly Replaced."""
     program = ASTProgramBuilder(unidirectional_import, config)
-    ast_files: List[SourceFileAST] = program._build_source_file_asts()
-    paths: Set[Path] = {i.path for i in ast_files}
+    ast_files: list[SourceFileAST] = program._build_source_file_asts()
+    paths: set[Path] = {i.path for i in ast_files}
     tree: ModuleTree = program._build_module_tree(paths)
 
-    result: List[SourceFileAST] = program._resolve_imports(ast_files, tree)
+    result: list[SourceFileAST] = program._resolve_imports(ast_files, tree)
 
     # Use sets to show differences in asts
     previous_ids = set()
@@ -198,4 +198,4 @@ def test_program_build(unidirectional_import, config):
     builder = ASTProgramBuilder(unidirectional_import, config)
     program = builder.build()
 
-    assert isinstance(program, ir.Program), "Expected an ir.Program to be built."
+    assert isinstance(program, IRProgram), "Expected an Program to be built."

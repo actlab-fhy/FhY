@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True, kw_only=True)
-class CompilationOptions(object):
+class CompilationOptions:
     """Supported FhY compilation options.
 
     Args:

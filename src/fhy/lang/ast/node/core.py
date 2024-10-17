@@ -43,7 +43,6 @@ Core Abstract Nodes:
 
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import List
 
 from fhy.ir.expression import Expression as IRExpression
 from fhy.ir.identifier import Identifier as IRIdentifier
@@ -67,11 +66,12 @@ class Module(ASTNode):
 
     # TODO: remove default value for name and have converter create name
     name: IRIdentifier = field(default=IRIdentifier("module"))
-    statements: List["Statement"] = field(default_factory=list)
+    statements: list["Statement"] = field(default_factory=list)
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name", "statements"])
+
         return attrs
 
 
@@ -92,15 +92,12 @@ class Function(Statement, ABC):
 
     name: IRIdentifier
 
-    def get_visit_attrs(self) -> List[str]:
+    def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
         attrs.extend(["name"])
+
         return attrs
 
 
 class Expression(ASTNode, IRExpression, ABC):
-    """Abstract expression AST node.
-
-    Also is an expression from the IR to enable use in symbol table fields.
-
-    """
+    """Abstract expression AST node."""

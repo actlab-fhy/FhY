@@ -31,6 +31,7 @@
 
 """Source file compilation to AST."""
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -40,7 +41,7 @@ from ..file_reader import read_file
 
 
 @dataclass(frozen=True)
-class SourceFileAST(object):
+class SourceFileAST:
     """Data container mapping file information to ast module build.
 
     Args:
@@ -53,11 +54,15 @@ class SourceFileAST(object):
     ast: ast.Module
 
 
-def build_source_file_ast(source_file_path: Path) -> SourceFileAST:
+def build_source_file_ast(
+    source_file_path: Path, log: logging.Logger | None = None
+) -> SourceFileAST:
     """Build an AST module from a valid filepath.
 
     Args:
         source_file_path (Path): Filepath to module
+        log (optional, logging.Logger): Inject a logger to control debugging information
+            during parsing.
 
     Returns:
         SourceFileAST: Dataclass containing both built module AST and filepath info.
@@ -68,6 +73,9 @@ def build_source_file_ast(source_file_path: Path) -> SourceFileAST:
 
     """
     source_text = read_file(source_file_path)
-    source_ast = from_fhy_source(source_text)
+    if log is not None:
+        source_ast = from_fhy_source(source_text, ast.Source(source_file_path), log)
+    else:
+        source_ast = from_fhy_source(source_text, ast.Source(source_file_path))
 
     return SourceFileAST(source_file_path, source_ast)

@@ -38,6 +38,8 @@ Classes:
 
 """
 
+from pathlib import Path
+
 
 class Slice:
     """General definition of start and stop positions.
@@ -66,8 +68,7 @@ class Slice:
         return f"{self.start:,d}:{self.stop:,d}"
 
 
-# TODO: Jason: Create Source object that can track the source file
-class Source(object):
+class Source:
     """Defines source file or namespace.
 
     Args:
@@ -75,19 +76,19 @@ class Source(object):
 
     """
 
-    namespace: str
+    namespace: str | Path
 
-    def __init__(self, namespace: str) -> None:
+    def __init__(self, namespace: str | Path) -> None:
         self.namespace = namespace
 
     def __eq__(self, value: object) -> bool:
         return isinstance(value, Source) and self.namespace == value.namespace
 
     def __repr__(self) -> str:
-        return self.namespace
+        return str(self.namespace)
 
 
-class Span(object):
+class Span:
     """Context to describe locations of an object.
 
     Args:
@@ -104,7 +105,7 @@ class Span(object):
 
     """
 
-    source: Source
+    source: Source | None
     line: Slice
     column: Slice
 
@@ -114,7 +115,7 @@ class Span(object):
         end_line: int,
         start_column: int,
         end_column: int,
-        source: Source = Source("_null"),
+        source: Source | None = None,
     ) -> None:
         self.source = source
         self.line = Slice(start_line, end_line)
@@ -133,4 +134,5 @@ class Span(object):
         if self.source is not None:
             text += f"{self.source} "
         text += f"Lines {self.line} Columns: {self.column}"
+
         return text

@@ -10,9 +10,9 @@ from fhy.cli import Status
 from .utils import access_cli, get_diff
 
 HERE = os.path.abspath(os.path.join(__file__, os.pardir))
-SAMPLES = os.path.join(HERE, "Samples")
-OUTPUT = os.path.join(SAMPLES, "Output")
-INPUT = os.path.join(SAMPLES, "Input", "*.fhy")
+SAMPLES = os.path.join(HERE, "data")
+OUTPUT = os.path.join(SAMPLES, "output")
+INPUT = os.path.join(SAMPLES, "input", "*.fhy")
 
 examples = glob(INPUT)
 
@@ -60,11 +60,11 @@ def cleanup_pretty_print_output(output: str) -> str:
 @pytest.mark.parametrize("file", examples)
 def test_single_file_examples_through_cli_pretty(file: str):
     """Tests FhY Entry Point using Pretty Print on a collection of Example Files."""
-    code, output, _ = access_cli("-m", file, "serialize", "-f", "pretty")
+    code, output, _ = access_cli("serialize", file, "-f", "pretty")
     result = cleanup_pretty_print_output(output)
 
     out_path = grab_expected_output_file(file)
-    with open(out_path, "r") as st:
+    with open(out_path) as st:
         expected = st.read()
 
     if result != expected:
@@ -77,8 +77,25 @@ def test_single_file_examples_through_cli_pretty(file: str):
 @pytest.mark.parametrize("file", examples)
 def test_serialization_to_json(file: str):
     # First Compare Output by use of Flags are successful and invariant
-    code, output, _ = access_cli("-m", file, "serialize", "-f", "json")
-    code2, output2, _ = access_cli("-m", file, "serialize", "--format", "json")
+    code, output, _ = access_cli("serialize", file, "-f", "json")
+    code2, output2, _ = access_cli("serialize", file, "--format", "json")
 
     assert output == output2, "Expected Output to be invariant of flag used."
     assert code == code2 == Status.OK, "Expected Successful Status Code."
+
+
+# NOTE: Because serialization format uses an enumeration using typer, it fails fast
+#       when providing an invalid format. Meaning we never reach failure capture code
+def test_invalid_serialization():
+    file = os.path.join(OUTPUT, "matmul.fhy")
+    invalid_format = "invalidtestformat"
+    code, output, error = access_cli("serialize", file, "-f", invalid_format)
+    assert code != 0, "Expected User error status"
+    assert invalid_format in error, "Expected to report failed format."
+
+
+@pytest.mark.parametrize("file", examples)
+def test_compilation_without_serialization(file: str):
+    """Tests FhY Entry Point compilation of a collection of example files."""
+    code, output, _ = access_cli("serialize", file)
+    assert code == Status.OK, "Expected Successful Status Code."

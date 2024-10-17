@@ -29,43 +29,35 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""AST visitor pass to collect import identifiers."""
+"""The following module is provided for backward compatibility.
 
-from fhy.ir.identifier import Identifier
-from fhy.lang.ast import node as ast
-from fhy.lang.ast.alias import ASTObject
-from fhy.lang.ast.visitor import Visitor
+IntEnum and StrEnum were made available in standard library starting in Python version
+3.11
 
+"""
 
-class ImportedIdentifierCollector(Visitor):
-    """Visitor pass to collect import identifiers from AST nodes."""
+try:
+    from enum import IntEnum, StrEnum
 
-    _identifiers: set[Identifier]
+except ImportError:
+    import enum
 
-    def __init__(self) -> None:
-        super().__init__()
-        self._identifiers = set()
+    # NOTE: The following code is adapted from Cpython standard library.
+    class IntEnum(int, enum.Enum):  # type: ignore[no-redef]
+        """Enum where members are also (and must be) ints."""
 
-    @property
-    def identifiers(self) -> set[Identifier]:
-        return self._identifiers
+    class StrEnum(str, enum.Enum):  # type: ignore[no-redef]
+        """Enum where members are also (and must be) strings."""
 
-    def visit_Import(self, node: ast.Import) -> None:
-        self._identifiers.add(node.name)
-        super().visit_Import(node)
+        def __new__(cls, *values):
+            """Values must already be of type `str`."""
+            value = str(*values)
+            member = str.__new__(cls, value)
+            member._value_ = value
 
+            return member
 
-def collect_imported_identifiers(node: ASTObject) -> set[Identifier]:
-    """Collect all identifiers from import statements from a given node.
-
-    Args:
-        node (ASTObject): AST node object.
-
-    Returns:
-        Set[ir.Identifier]: Set of discovered import identifiers from node graph.
-
-    """
-    collector = ImportedIdentifierCollector()
-    collector(node)
-
-    return collector.identifiers
+        @staticmethod
+        def _generate_next_value_(name, start, count, last_values):
+            """Return the lower-cased version of the member name."""
+            return name.lower()

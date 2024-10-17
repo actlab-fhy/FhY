@@ -35,12 +35,10 @@ All custom FhY exceptions can be viewed at 'Fhy.utils.errors.FHY_ERRORS'
 
 """
 
-from typing import Dict, Type
-
-FHY_ERRORS: Dict[Type[Exception], str] = {}
+FHY_ERRORS: dict[type[Exception], str] = {}
 
 
-def register_fhy_error(error: Type[Exception]) -> Type[Exception]:
+def register_fhy_error(error: type[Exception]) -> type[Exception]:
     """Register custom FhY exceptions."""
     FHY_ERRORS[error] = error.__doc__ or error.__name__
 
@@ -72,8 +70,6 @@ _initialize_builtins()
 class UsageError(Exception):
     """User induced error."""
 
-    ...
-
 
 @register_fhy_error
 class FhYASTBuildError(RuntimeError):
@@ -93,6 +89,11 @@ class FhYSemanticsError(Exception):
 @register_fhy_error
 class FhYImportError(ImportError):
     """Problematic import statement detected from FhY source code."""
+
+
+@register_fhy_error
+class FhYTypeError(TypeError):
+    """Type error in FhY program."""
 
 
 @register_fhy_error

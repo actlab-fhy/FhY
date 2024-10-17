@@ -29,18 +29,19 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Pretty print serialization of ASTNodes into FhY language.
+"""Pretty print serialization of AST nodes into FhY language.
 
 Functions:
-    pprint_ast: Helper function to serialize the ASTNode into text
+    pprint_ast: Helper function to serialize the AST node into text
 
 Classes:
-    ASTPrettyPrinter: Deconstructs ASTNodes into FhY language text
+    ASTPrettyPrinter: Deconstructs AST nodes into FhY language text
 
 """
 
 from fhy import ir
 from fhy.lang import ast
+from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import BasePass
 
 
@@ -49,20 +50,20 @@ class ASTPrettyFormatter(BasePass):
 
     Args:
         indent_char (str): character(s) used to indent the output text
-        is_identifier_id_printed (bool): Includes assigned ID in output text if true
+        show_id (bool): Include assigned identifier ID in output text if true
 
     Raises:
         RuntimeError: When class is improperly used and the indent becomes negative.
 
     """
 
-    _is_identifier_id_printed: bool
+    show_id: bool
     _indent_char: str
     _current_indent: int
 
-    def __init__(self, indent_char: str, is_identifier_id_printed: bool) -> None:
+    def __init__(self, indent_char: str, show_id: bool) -> None:
         super().__init__()
-        self._is_identifier_id_printed = is_identifier_id_printed
+        self.show_id = show_id
         self._indent_char = indent_char
         self._current_indent = 0
 
@@ -98,6 +99,7 @@ class ASTPrettyFormatter(BasePass):
         templates = ", ".join(self.visit(arg) for arg in operation.templates)
         args = ", ".join(self.visit(arg) for arg in operation.args)
         ret = self.visit(operation.return_type)
+
         return (
             f"op {name}<{templates}>({args}) -> {ret} "
             + "{\n"
@@ -114,6 +116,7 @@ class ASTPrettyFormatter(BasePass):
         name = self.visit(procedure.name)
         templates = ", ".join(self.visit(arg) for arg in procedure.templates)
         args = ", ".join(self.visit(arg) for arg in procedure.args)
+
         return (
             f"proc {name}<{templates}>({args}) " + "{\n" + pprinted_statements + "\n}"
         )
@@ -131,6 +134,7 @@ class ASTPrettyFormatter(BasePass):
             right = f" = {self.visit(declaration_statement.expression)};"
         else:
             right = ";"
+
         return left + right
 
     def visit_ExpressionStatement(
@@ -140,6 +144,7 @@ class ASTPrettyFormatter(BasePass):
             left = f"{self.visit(expression_statement.left)} = "
         else:
             left = ""
+
         return left + self.visit(expression_statement.right) + ";"
 
     def visit_SelectionStatement(
@@ -177,18 +182,21 @@ class ASTPrettyFormatter(BasePass):
 
     def visit_UnaryExpression(self, unary_expression: ast.UnaryExpression) -> str:
         return (
-            f"{unary_expression.operation}({self.visit(unary_expression.expression)})"
+            f"{unary_expression.operation.value}"
+            f"({self.visit(unary_expression.expression)})"
         )
 
     def visit_BinaryExpression(self, binary_expression: ast.BinaryExpression) -> str:
         left = self.visit(binary_expression.left)
         right = self.visit(binary_expression.right)
-        return f"({left} {binary_expression.operation} {right})"
+
+        return f"({left} {binary_expression.operation.value} {right})"
 
     def visit_TernaryExpression(self, ternary_expression: ast.TernaryExpression) -> str:
         condition = self.visit(ternary_expression.condition)
         _true = self.visit(ternary_expression.true)
         _false = self.visit(ternary_expression.false)
+
         return f"({condition} ? {_true} : {_false})"
 
     def visit_FunctionExpression(
@@ -201,7 +209,23 @@ class ASTPrettyFormatter(BasePass):
         indices = ", ".join(self.visit(index) for index in function_expression.indices)
         args = ", ".join(self.visit(arg) for arg in function_expression.args)
         func = self.visit(function_expression.function)
+
         return f"{func}<{template_types}>[{indices}]({args})"
+
+    def _build_base_tuple(self, nodes: list[ASTObject]) -> str:
+        a: str = "( " + ", ".join([self.visit(i) for i in nodes])
+        a += ", )" if len(nodes) == 1 else " )"
+
+        return a
+
+    def visit_TupleExpression(self, node: ast.TupleExpression) -> str:
+        return self._build_base_tuple(node.expressions)
+
+    def visit_TupleAccessExpression(self, node: ast.TupleAccessExpression) -> str:
+        _tuple: str = self.visit(node.tuple_expression)
+        element: str = self.visit_IntLiteral(node.element_index)
+
+        return f"{_tuple}.{element}"
 
     def visit_ArrayAccessExpression(
         self, array_access_expression: ast.ArrayAccessExpression
@@ -222,18 +246,28 @@ class ASTPrettyFormatter(BasePass):
     def visit_FloatLiteral(self, float_literal: ast.FloatLiteral) -> str:
         return str(float_literal.value)
 
+    def visit_ComplexLiteral(self, complex_literal: ast.ComplexLiteral) -> str:
+        return str(complex_literal.value)
+
     def visit_QualifiedType(self, qualified_type: ast.QualifiedType) -> str:
-        return f"{qualified_type.type_qualifier} {self.visit(qualified_type.base_type)}"
+        return (
+            f"{qualified_type.type_qualifier.value} "
+            f"{self.visit(qualified_type.base_type)}"
+        )
 
     def visit_NumericalType(self, numerical_type: ir.NumericalType) -> str:
         if len(numerical_type.shape) == 0:
             shape = ""
         else:
             shape = f"[{', '.join(self.visit(dim) for dim in numerical_type.shape)}]"
+
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
-    def visit_DataType(self, data_type: ir.DataType) -> str:
-        return str(data_type.primitive_data_type)
+    def visit_PrimitiveDataType(self, node: ir.PrimitiveDataType) -> str:
+        return str(node.core_data_type.value)
+
+    def visit_TemplateDataType(self, node: ir.TemplateDataType) -> str:
+        return self.visit_Identifier(node.template_type)
 
     def visit_IndexType(self, index_type: ir.IndexType) -> str:
         index_range = f"{self.visit(index_type.lower_bound)}:"
@@ -246,8 +280,11 @@ class ASTPrettyFormatter(BasePass):
 
         return f"index[{index_range}]"
 
+    def visit_TupleType(self, tuple_type: ir.TupleType) -> str:
+        return "tuple " + self._build_base_tuple(tuple_type._types)
+
     def visit_Identifier(self, identifier: ir.Identifier) -> str:
-        if self._is_identifier_id_printed:
+        if self.show_id:
             return f"({identifier.name_hint}::{identifier.id})"
         else:
             return identifier.name_hint
@@ -257,18 +294,18 @@ class ASTPrettyFormatter(BasePass):
 
 
 def pformat_ast(
-    ast: ast.ASTNode, indent_char: str = "  ", is_identifier_id_printed: bool = False
+    ast: ast.ASTNode, indent_char: str = "  ", show_id: bool = False
 ) -> str:
-    """Returns FhY text from a given an ASTNode.
+    """Returns FhY text from a given an AST node.
 
     Args:
         ast (ASTNode): a valid FhY AST node
         indent_char (str): character(s) used to indent the output text
-        is_identifier_id_printed (bool): Includes assigned ID in output text if true
+        show_id (bool): Include assigned ID in output text if true
 
     Raises:
         RuntimeError: When class is improperly used and the indent becomes negative.
 
     """
-    pformatter = ASTPrettyFormatter(indent_char, is_identifier_id_printed)
+    pformatter = ASTPrettyFormatter(indent_char, show_id)
     return pformatter(ast)

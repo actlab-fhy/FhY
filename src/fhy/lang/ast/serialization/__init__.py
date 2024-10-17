@@ -34,3 +34,13 @@
 We currently support serializing to json formats.
 
 """
+
+from fhy.utils.enumeration import StrEnum
+
+
+class SerializationOptions(StrEnum):
+    """Supported serialization options."""
+
+    JSON = "json"
+    PRETTY = "pretty"
+    PRETTYID = "pretty-id"

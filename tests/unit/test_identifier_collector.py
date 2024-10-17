@@ -1,9 +1,9 @@
 """Test the Identifier Collector AST Pass."""
 
-from typing import Callable, Generator
+from collections.abc import Callable, Generator
 
 import pytest
-from fhy.ir import Identifier, NumericalType, PrimitiveDataType, TypeQualifier
+from fhy.ir import CoreDataType, Identifier, NumericalType, TypeQualifier
 from fhy.lang.ast import (
     DeclarationStatement,
     IntLiteral,
@@ -58,7 +58,7 @@ def test_empty_module():
 
 def _qualified_type():
     return QualifiedType(
-        base_type=NumericalType(data_type=PrimitiveDataType.INT32, shape=[]),
+        base_type=NumericalType(data_type=CoreDataType.INT32, shape=[]),
         type_qualifier=TypeQualifier.INPUT,
     )
 
