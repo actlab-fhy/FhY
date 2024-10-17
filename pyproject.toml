@@ -41,7 +41,8 @@ exclude = ["grammar", "docs", "tests"]
 fhy = "fhy.cli:app"
 
 [project.optional-dependencies]
-dev = ["fhy[test,lint,type,docs,rich,pre-commit]", "tox"]
+dev = ["fhy[pytorch,test,lint,type,docs,rich,pre-commit]", "tox"]
+pytorch = ["torch>=2.3.0"]
 test = ["pytest", "coverage", "pytest-xdist"]
 pre-commit = ["pre-commit>3.0.0"]
 lint = ["ruff", "pylint"]
