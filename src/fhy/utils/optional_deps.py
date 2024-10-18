@@ -41,7 +41,7 @@ from types import ModuleType
 
 from packaging.version import Version
 
-VERSIONS = {"torch": ">=2.3.0"}
+VERSIONS = {"torch": "2.3.0"}
 
 
 INSTALL_MAPPING = {}
@@ -111,7 +111,7 @@ def import_optional_dependency(
     install_name = package_name if package_name is not None else name
 
     msg = (
-        f'Missing optional dependency "{install_name}". {extra}. '
+        f'Missing optional dependency "{install_name}". {extra}\n'
         f"Use pip or conda to install {install_name}."
     )
     try:
