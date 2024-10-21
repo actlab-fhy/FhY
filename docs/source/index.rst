@@ -4,8 +4,6 @@ Welcome to *FhY*
 
 *FhY* is a cross-domain language with mathematical foundations that moves beyond the current paradigm of domain-specific languages to enable cross-domain multi-acceleration.
 
-.. Check out our :doc:`design blog <design_blog/index>` for more information on current progress.
-
 .. TODO: Make this an extension rather than manual HTML
 .. raw:: html
 
@@ -54,6 +52,8 @@ Authors
 This project is being developed by the Alternative Computing Technologies (ACT) Lab at the University of California San Diego led by Professor Hadi Esmaeilzadeh.
 The current contributors are Christopher Priebe and Jason Del Rio.
 
+Check out our :doc:`design blog <design_blog/index>` for more information on current progress.
+
 Indices and tables
 ------------------
 
@@ -62,6 +62,7 @@ Indices and tables
    :caption: Contents:
 
    install
+   design_blog/index
 
 * :ref:`genindex`
 * :ref:`modindex`
