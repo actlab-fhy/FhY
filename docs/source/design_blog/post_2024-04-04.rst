@@ -328,16 +328,17 @@ Using these constructs, we can implement this training loop in *FhY* as follows:
 
 .. code-block:: FhY
 
-   // --- Declared in another file ---
+   # --- Declared in another file ---
 
    native initialize_weights(input int32 m, input int32 n) -> output float32[m, n];
    native initialize_bias(input int32 m) -> output float32[m];
 
-   // --- Declared in primary file ---
+   # --- Declared in primary file ---
 
    op sigmoid(input float32[m] x) -> output float32[m] {
       temp index[1:m] i;
-      return 1 / (1 + exp(-x[i]));
+      param float32 e = 2.71828;
+      return 1 / (1 + e ** (-x[i]));
    }
 
    op forward(input float32[n] x, input float32[m, n] W, input float32[m] b) -> output float32[m] {

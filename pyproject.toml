@@ -40,13 +40,14 @@ exclude = ["grammar", "docs", "tests"]
 [project.scripts]
 fhy = "fhy.cli:app"
 
+# pydata-sphinx-theme>=0.13 is required as that is the version which upgrades to Bootstrap 5
 [project.optional-dependencies]
 dev = ["fhy[test,lint,type,docs,rich,pre-commit]", "tox"]
 test = ["pytest", "coverage", "pytest-xdist"]
 pre-commit = ["pre-commit>3.0.0"]
 lint = ["ruff", "pylint"]
 type = ["mypy"]
-docs = ["sphinx>=5.0.2"]
+docs = ["sphinx>=5.0.2", "pydata-sphinx-theme>=0.13"]
 rich = ["typer"]
 
 [tool.pytest.ini_options]
