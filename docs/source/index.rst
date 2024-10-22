@@ -11,7 +11,7 @@ Welcome to *FhY*
       <div class="col-xs-12 col-md-4">
          <div class="card">
             <div class="card-header">
-               Exploitation of Mathematical Parallelism
+               <i class="fa-solid fa-calculator"></i> Mathematical Parallelism
             </div>
             <div class="card-body">
                <p class="card-text">FhY includes intrinsic functions like sum (Σ) and prod (Π) to express mathematical operations naturally, such as matrix-vector multiplication.</p>
@@ -21,7 +21,7 @@ Welcome to *FhY*
       <div class="col-xs-12 col-md-4">
          <div class="card">
             <div class="card-header">
-               Cross-Domain Support
+               <i class="fa-solid fa-layer-group"></i> Cross-Domain Support
             </div>
             <div class="card-body">
                <p class="card-text">FhY supports a wide range of computational domains, including planning, kinematics, digital signal processing, graph processing, numerical optimization, data analytics, and deep learning.</p>
@@ -31,7 +31,7 @@ Welcome to *FhY*
       <div class="col-xs-12 col-md-4">
          <div class="card">
             <div class="card-header">
-               Template Types
+               <i class="fa-solid fa-code"></i> Template Types
             </div>
             <div class="card-body">
                <p class="card-text">Similar to C++ and Rust, FhY allows parametric type signatures through template types, enabling flexible and reusable code structures.</p>
@@ -62,6 +62,7 @@ Indices and tables
    :caption: Contents:
 
    install
+   contributors
    design_blog/index
 
 * :ref:`genindex`
