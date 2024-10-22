@@ -180,13 +180,13 @@ class PyTorchToFhyConverter:
         # Export the model to the exported program graph(basicly torch.fx)
         exported_program = _export(pytorch_module, inputs)
         # Do the decomposition to reduce # of aten function
-        decomp_exported_program = exported_program.run_decompositions()
+        # decomp_exported_program = exported_program.run_decompositions()
 
         # Extrat the operations
-        self.op_extractor = PyTorchOpExtractor(decomp_exported_program)
-        self.graph = decomp_exported_program.graph_module.graph
+        self.op_extractor = PyTorchOpExtractor(exported_program)
+        self.graph = exported_program.graph_module.graph
         self.identify_input_tensor()
-        fhy_code = self.generate_fhy_code(decomp_exported_program)
+        fhy_code = self.generate_fhy_code(exported_program)
         return fhy_code
 
     def identify_input_tensor(self):
@@ -201,9 +201,6 @@ class PyTorchToFhyConverter:
         # loop through the node in exported graph constructing the graph
         for node in self.graph.nodes:
             if node.op in ["call_function", "call_method", "call_module", "get_attr"]:
-                print("---------------------------")
-                print("Node Target = ", node.target)
-                print("---------------------------")
                 # generate the op definition
                 self.generate_op_definition(node)
 
@@ -222,7 +219,6 @@ class PyTorchToFhyConverter:
         op_info = self.op_extractor.get_op_info(node)
         op_name = op_info["name"]
 
-        print("Operation Name : ", op_name)
         if op_name not in self.op_definitions:
             self.op_definitions[op_name] = op_info
 
@@ -247,7 +243,7 @@ class PyTorchToFhyConverter:
             out_name = (
                 out.get("name", f"out_{i}") if isinstance(inp, dict) else f"out_{i}"
             )
-            outputs.append(f"output {out_type} {out_name}")
+            outputs.append(f"output {out_type}")
 
         outputs_str = ", ".join(outputs)
 
@@ -257,13 +253,11 @@ class PyTorchToFhyConverter:
         # example :  (input float32[] add) -> output float32[] sum
         op_name = op_info["name"]
         base_name = op_name.split(".")[0]
+        # add _default to the base_name
+        base_name = f"{base_name}_default"
         fhy_code = f"op {base_name}({inputs_str}) -> {outputs_str} {{\n"
-        fhy_code += f" // Implementation for {op_name}\n"
+        fhy_code += f" # Implementation for {op_name}\n"
         fhy_code += "}"
-
-        print("--------------------")
-        print(fhy_code)
-        print("--------------------")
 
         return fhy_code
 
@@ -288,9 +282,6 @@ class PyTorchToFhyConverter:
                 parameter_arg.append(f"param {arg_type} {arg_name}")
             elif node.op == "output":
                 outputs = node.args[0]
-                print("-----------------")
-                print(outputs)
-                print("-----------------")
                 if isinstance(outputs, tuple):
                     for out_node in outputs:
                         out_info = self.op_extractor.extract_tensor_info(out_node)
@@ -306,9 +297,6 @@ class PyTorchToFhyConverter:
         declared_vars = {
             arg.split()[-1] for arg in input_args + parameter_arg + output_args
         }
-        print("--------------------")
-        print("Declared Variables : ", declared_vars)
-        print("--------------------")
         for node in self.graph.nodes:
             if (
                 node.op not in ["output", "placeholder", "get_attr"]
@@ -320,7 +308,7 @@ class PyTorchToFhyConverter:
 
         all_args = input_args + parameter_arg
 
-        fhy_code = [f"op main({', '.join(all_args)}) -> {', '.join(output_args)} {{"]
+        fhy_code = [f"proc main({', '.join(all_args)}, {', '.join(output_args)}) {{"]
         fhy_code.extend(sorted(temp_vars))  # sorting for consistent order
         fhy_code.append("")  # blank line
         for node in self.graph.nodes:
@@ -328,9 +316,6 @@ class PyTorchToFhyConverter:
             if node_code:
                 fhy_code.append(f"     {node_code}")
         fhy_code.append("}")
-        print("-------------------------------------------")
-        print(fhy_code)
-        print("-------------------------------------------")
         return "\n".join(fhy_code)
 
     # converting the nodes to code
@@ -338,13 +323,14 @@ class PyTorchToFhyConverter:
         if node.op in ["placeholder", "get_attr"]:
             return None
         elif node.op == "output":
-            outputs = node.args[0]
-            if isinstance(outputs, tuple):
-                return (
-                    f"return {', '.join([self.get_node_name(out) for out in outputs])};"
-                )
-            else:
-                return f"return {self.get_node_name(outputs)};"
+            # outputs = node.args[0]
+            # if isinstance(outputs, tuple):
+            #     return (
+            #         f"return ({', '.join([self.get_node_name(out) for out in outputs])});"
+            #     )
+            # else:
+            #     return f"return {self.get_node_name(outputs)};"
+            return None
         else:
             op_info = self.op_extractor.get_op_info(node)
             result_name = self.get_node_name(node)
@@ -352,7 +338,6 @@ class PyTorchToFhyConverter:
             for arg in op_info["inputs"]:
                 if isinstance(arg, dict) and "name" in arg:
                     arg_name = arg["name"]
-                    print("ARG NAME: ", arg_name)
                     if arg_name.startswith("_"):
                         arg_name = f"{arg_name[1:]}"
                     args.append(arg_name)
@@ -370,12 +355,13 @@ class PyTorchToFhyConverter:
                     args.append(str(arg["value"]))
                 else:
                     args.append("unknown")
-            return f"{result_name} = {op_info['name']}({', '.join(args)});"
+            base_name = op_info["name"].split(".")[0]
+            base_name = f"{base_name}_default"
+            return f"{result_name} = {base_name}({', '.join(args)});"
 
     # get the nodes name from the output purpose
     def get_node_name(self, node_or_name: _Node | str) -> str:
         if isinstance(node_or_name, _Node):
-            print(node_or_name.name)
             return node_or_name.name
         else:
             print("This is the name string: ", str(node_or_name))
@@ -386,6 +372,7 @@ class PyTorchToFhyConverter:
         if type_info is None:
             return "unknown_type"
 
+
         return self.type_infer(type_info)
 
     def type_infer(self, type_info: Any) -> str:
@@ -393,7 +380,9 @@ class PyTorchToFhyConverter:
             isinstance(type_info, dict)
             and "dtype" in type_info
             and "shape" in type_info
-        ):
+        ):  
+            print("------------------------------------")
+            print("This is the type info: ", type_info)
             dtype = self.pytorch_to_fhy_dtype(type_info["dtype"])
             shape = type_info["shape"]
             shape_str = ", ".join(map(str, shape))
