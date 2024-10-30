@@ -32,7 +32,6 @@
 """FhY intermediate representation tool kit."""
 
 from .expression import Expression
-from .identifier import Identifier
 
 # TODO: this is causing import errors so resolve
 # from .program import Program

@@ -55,6 +55,8 @@ import json
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from fhy_core import Identifier
+
 from fhy import ir
 from fhy.lang import ast
 from fhy.lang.ast import visitor
@@ -464,7 +466,7 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(types=types),
         )
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> AlmostJson:
+    def visit_Identifier(self, identifier: Identifier) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(identifier),
             attributes=dict(name_hint=identifier.name_hint, _id=identifier.id),
@@ -537,7 +539,7 @@ class JSONtoAST(visitor.BasePass):
         )
         args: list[ast.Argument] = self.visit_sequence(values.get("args"))
         body: list[ast.Statement] = self.visit_sequence(values.get("body"))
-        name: ir.Identifier = self.visit_Identifier(values.get("name"))
+        name: Identifier = self.visit_Identifier(values.get("name"))
         ret_type: ast.QualifiedType = self.visit_QualifiedType(
             values.get("return_type")
         )
@@ -562,7 +564,7 @@ class JSONtoAST(visitor.BasePass):
         )
         args: list[ast.Argument] = self.visit_sequence(values.get("args"))
         body: list[ast.Statement] = self.visit_sequence(values.get("body"))
-        name: ir.Identifier = self.visit_Identifier(values.get("name"))
+        name: Identifier = self.visit_Identifier(values.get("name"))
 
         return ast.Procedure(
             span=span, name=name, templates=templates, args=args, body=body
@@ -574,7 +576,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
-        name: ir.Identifier = self.visit_Identifier(values.get("name"))
+        name: Identifier = self.visit_Identifier(values.get("name"))
 
         return ast.Import(span=span, name=name)
 
@@ -587,7 +589,7 @@ class JSONtoAST(visitor.BasePass):
         qtype: ast.QualifiedType = self.visit_QualifiedType(
             values.get("qualified_type")
         )
-        name: ir.Identifier = self.visit_Identifier(values.get("name"))
+        name: Identifier = self.visit_Identifier(values.get("name"))
 
         return ast.Argument(span=span, name=name, qualified_type=qtype)
 
@@ -599,7 +601,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
-        varname: ir.Identifier = self.visit_Identifier(values.get("variable_name"))
+        varname: Identifier = self.visit_Identifier(values.get("variable_name"))
         vartype: ast.QualifiedType = self.visit_QualifiedType(
             values.get("variable_type")
         )
@@ -774,7 +776,7 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("Invalid IdentifierExpression")
 
         values: dict = node.attributes
-        identifier: ir.Identifier = self.visit_Identifier(values.get("identifier"))
+        identifier: Identifier = self.visit_Identifier(values.get("identifier"))
         span: Span | None = self.visit_Span(values.get("span"))
 
         return ast.IdentifierExpression(span=span, identifier=identifier)
@@ -898,14 +900,14 @@ class JSONtoAST(visitor.BasePass):
 
         return ir.TupleType(types=types)
 
-    def visit_Identifier(self, identifier: AlmostJson | None) -> ir.Identifier:
+    def visit_Identifier(self, identifier: AlmostJson | None) -> Identifier:
         if identifier is None:
             raise ValueError("No Identifier Provided")
 
         if (hint := identifier.attributes.get("name_hint")) is None:
             raise ValueError("Invalid Identifier Name")
 
-        identity = ir.Identifier(name_hint=hint)
+        identity = Identifier(name_hint=hint)
 
         if (value := identifier.attributes.get("_id")) is None:
             raise ValueError("Invalid ID.")

@@ -3,6 +3,7 @@
 import pytest
 from fhy import error, ir
 from fhy.lang import ast
+from fhy_core import Identifier
 
 from ..utils import list_to_types
 
@@ -95,7 +96,7 @@ def _assert_is_expected_import(node: ast.ASTNode, expected_import: str) -> None:
     assert isinstance(node, ast.Import), wrong_node_babe(ast.Import, node)
 
     assert isinstance(
-        node.name, ir.Identifier
+        node.name, Identifier
     ), f'Expected import name to be "Identifier", got "{type(node.name)}"'
 
     assert (
@@ -112,7 +113,7 @@ def _assert_is_expected_procedure(
     assert isinstance(node, ast.Procedure), wrong_node_babe(ast.Procedure, node)
 
     assert isinstance(
-        node.name, ir.Identifier
+        node.name, Identifier
     ), f'Expected procedure name to be "Identifier", got "{type(node.name)}"'
     assert (
         node.name.name_hint == expected_name
@@ -144,7 +145,7 @@ def _assert_is_expected_operation(
     assert isinstance(node, ast.Operation), wrong_node_babe(ast.Operation, node)
 
     assert isinstance(
-        node.name, ir.Identifier
+        node.name, Identifier
     ), f'Expected operation name to be "Identifier", got "{type(node.name)}"'
     assert (
         node.name.name_hint == expected_name
@@ -190,9 +191,7 @@ def _assert_is_expected_argument(
 ) -> None:
     assert isinstance(node, ast.Argument), wrong_node_babe(ast.Argument, node)
 
-    assert isinstance(node.name, ir.Identifier), wrong_node_babe(
-        ir.Identifier, node.name
-    )
+    assert isinstance(node.name, Identifier), wrong_node_babe(Identifier, node.name)
     assert (
         node.name.name_hint == expected_name
     ), f'Expected argument name to be "{expected_name}", got "{node.name.name_hint}"'
@@ -283,15 +282,15 @@ def _assert_is_expected_index_type(
 
 def _assert_is_expected_declaration_statement(
     node: ast.ASTNode,
-    expected_variable_name: ir.Identifier,
+    expected_variable_name: Identifier,
     expected_expression: ast.Expression | None,
 ) -> None:
     assert isinstance(node, ast.DeclarationStatement), wrong_node_babe(
         ast.DeclarationStatement, node
     )
 
-    assert isinstance(node.variable_name, ir.Identifier), wrong_node_babe(
-        ir.Identifier, node.variable_name
+    assert isinstance(node.variable_name, Identifier), wrong_node_babe(
+        Identifier, node.variable_name
     )
 
     assert node.variable_name.name_hint == expected_variable_name.name_hint, (
@@ -448,8 +447,8 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
     _assert_is_expected_shape(
         arg_type_shape,
         [
-            ast.IdentifierExpression(identifier=ir.Identifier("m")),
-            ast.IdentifierExpression(identifier=ir.Identifier("n")),
+            ast.IdentifierExpression(identifier=Identifier("m")),
+            ast.IdentifierExpression(identifier=Identifier("n")),
         ],
     )
 
@@ -493,8 +492,8 @@ def test_empty_operation_return_type(construct_ast):
         arg_base_type,
         ir.CoreDataType.INT32,
         [
-            ast.IdentifierExpression(identifier=ir.Identifier("n")),
-            ast.IdentifierExpression(identifier=ir.Identifier("m")),
+            ast.IdentifierExpression(identifier=Identifier("n")),
+            ast.IdentifierExpression(identifier=Identifier("m")),
         ],
     )
 
@@ -506,8 +505,8 @@ def test_empty_operation_return_type(construct_ast):
     _assert_is_expected_shape(
         return_type_shape,
         [
-            ast.IdentifierExpression(identifier=ir.Identifier("n")),
-            ast.IdentifierExpression(identifier=ir.Identifier("m")),
+            ast.IdentifierExpression(identifier=Identifier("n")),
+            ast.IdentifierExpression(identifier=Identifier("m")),
         ],
     )
 
@@ -657,7 +656,7 @@ def test_declaration_statement_without_assignment(construct_ast):
     _assert_is_expected_module(_ast, 1)
 
     statement = _ast.statements[0]
-    _assert_is_expected_declaration_statement(statement, ir.Identifier("i"), None)
+    _assert_is_expected_declaration_statement(statement, Identifier("i"), None)
 
     qualified = statement.variable_type
     _assert_is_expected_qualified_type(
@@ -695,7 +694,7 @@ def test_expression_statement_with_assignment(construct_ast):
     )
 
     assert is_primitive_expression_equal(
-        statement.left, ast.IdentifierExpression(identifier=ir.Identifier("A"))
+        statement.left, ast.IdentifierExpression(identifier=Identifier("A"))
     )
 
     assert isinstance(statement.right, ast.BinaryExpression), wrong_node_babe(
@@ -751,7 +750,7 @@ def test_return_statement(construct_ast):
 
     statement = _ast.statements[0]
     _assert_is_expected_return_statement(
-        statement, ast.IdentifierExpression(identifier=ir.Identifier("i"))
+        statement, ast.IdentifierExpression(identifier=Identifier("i"))
     )
 
 
@@ -839,9 +838,9 @@ def test_tuple_access_expression(construct_ast, name: str):
 
     _assert_is_expected_expression_statement(
         statement,
-        ast.IdentifierExpression(identifier=ir.Identifier("x")),
+        ast.IdentifierExpression(identifier=Identifier("x")),
         ast.TupleAccessExpression(
-            tuple_expression=ast.IdentifierExpression(identifier=ir.Identifier(name)),
+            tuple_expression=ast.IdentifierExpression(identifier=Identifier(name)),
             element_index=ast.IntLiteral(value=1),
         ),
     )
@@ -856,10 +855,10 @@ def test_tuple_access_function_expression(construct_ast):
     statement = _ast.statements[0]
     _assert_is_expected_expression_statement(
         statement,
-        ast.IdentifierExpression(identifier=ir.Identifier("x")),
+        ast.IdentifierExpression(identifier=Identifier("x")),
         ast.TupleAccessExpression(
             tuple_expression=ast.FunctionExpression(
-                function=ast.IdentifierExpression(identifier=ir.Identifier("f"))
+                function=ast.IdentifierExpression(identifier=Identifier("f"))
             ),
             element_index=ast.IntLiteral(value=1),
         ),
@@ -902,7 +901,7 @@ def test_function_expression(construct_ast, source: str, nargs: int, name: str):
         ast.FunctionExpression, expression
     )
     assert is_primitive_expression_equal(
-        expression.function, ast.IdentifierExpression(identifier=ir.Identifier(name))
+        expression.function, ast.IdentifierExpression(identifier=Identifier(name))
     )
 
     template = expression.template_types
@@ -915,7 +914,7 @@ def test_function_expression(construct_ast, source: str, nargs: int, name: str):
     ), f"Expected {nargs} arguments, got {len(expression.args)}"
 
     if nargs:
-        expect = ast.IdentifierExpression(identifier=ir.Identifier("A"))
+        expect = ast.IdentifierExpression(identifier=Identifier("A"))
         assert is_primitive_expression_equal(expression.args[0], expect)
 
 
@@ -1003,8 +1002,8 @@ def test_tensor_access_expression(construct_ast):
     _assert_is_expected_expression_statement(
         statement,
         ast.ArrayAccessExpression(
-            array_expression=ast.IdentifierExpression(identifier=ir.Identifier("A")),
-            indices=[ast.IdentifierExpression(identifier=ir.Identifier("i"))],
+            array_expression=ast.IdentifierExpression(identifier=Identifier("A")),
+            indices=[ast.IdentifierExpression(identifier=Identifier("i"))],
         ),
         ast.IntLiteral(value=1),
     )
@@ -1019,9 +1018,9 @@ def test_tuple_expression(construct_ast):
     statement = _ast.statements[0]
     _assert_is_expected_expression_statement(
         statement,
-        ast.IdentifierExpression(identifier=ir.Identifier("b")),
+        ast.IdentifierExpression(identifier=Identifier("b")),
         ast.TupleExpression(
-            expressions=[ast.IdentifierExpression(identifier=ir.Identifier("a"))]
+            expressions=[ast.IdentifierExpression(identifier=Identifier("a"))]
         ),
     )
 
@@ -1045,7 +1044,7 @@ def test_index_type(construct_ast):
     _assert_is_expected_index_type(
         statement.variable_type.base_type,
         ast.IntLiteral(value=1),
-        ast.IdentifierExpression(identifier=ir.Identifier("m")),
+        ast.IdentifierExpression(identifier=Identifier("m")),
         None,
     )
 
@@ -1078,8 +1077,8 @@ def test_tuple_type(construct_ast, source: str):
         t1,
         ir.CoreDataType.INT32,
         [
-            ast.IdentifierExpression(identifier=ir.Identifier("m")),
-            ast.IdentifierExpression(identifier=ir.Identifier("n")),
+            ast.IdentifierExpression(identifier=Identifier("m")),
+            ast.IdentifierExpression(identifier=Identifier("n")),
         ],
     )
     _assert_is_expected_numerical_type(t2, ir.CoreDataType.INT32, [])

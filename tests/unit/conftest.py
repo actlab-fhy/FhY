@@ -12,7 +12,6 @@ from typing import TypeVar
 import pytest
 from fhy.ir import (
     CoreDataType,
-    Identifier,
     IndexType,
     NumericalType,
     PrimitiveDataType,
@@ -51,6 +50,7 @@ from fhy.lang.ast import (
 from fhy.lang.ast.span import Source, Span
 from fhy.lang.converter.from_fhy_source import from_fhy_source as fhy_source
 from fhy.logger import get_logger
+from fhy_core import Identifier
 
 log = get_logger(__name__, 10)
 TLiteral = TypeVar("TLiteral", IntLiteral, FloatLiteral, ComplexLiteral)

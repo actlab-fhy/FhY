@@ -41,9 +41,10 @@ Classes:
 
 from typing import Any
 
+from fhy_core import Identifier, Stack
+
 from fhy.error import FhYSemanticsError
 from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS, BUILTINS_NAMESPACE_NAME
-from fhy.ir.identifier import Identifier
 from fhy.ir.table import (
     FunctionKeyword,
     FunctionSymbolTableFrame,
@@ -55,7 +56,6 @@ from fhy.ir.table import (
 from fhy.ir.type import CoreDataType, NumericalType, PrimitiveDataType, TypeQualifier
 from fhy.lang.ast.node import core, expression, statement
 from fhy.lang.ast.visitor import Visitor
-from fhy.utils import Stack
 
 from .identifier_collector import collect_identifiers
 

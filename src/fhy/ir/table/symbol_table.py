@@ -42,7 +42,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, NoReturn
 
-from fhy.ir.identifier import Identifier
+from fhy_core import Identifier
+
 from fhy.ir.type import Type, TypeQualifier
 from fhy.utils.enumeration import StrEnum
 

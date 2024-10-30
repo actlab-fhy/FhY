@@ -41,9 +41,9 @@ from dataclasses import replace
 from pathlib import Path
 
 import networkx as nx  # type: ignore[import-untyped]
+from fhy_core import Identifier
 
 from fhy import error
-from fhy.ir.identifier import Identifier
 from fhy.ir.program import Program as IRProgram
 from fhy.ir.table import SymbolTable, SymbolTableFrame
 from fhy.lang import collect_imported_identifiers
