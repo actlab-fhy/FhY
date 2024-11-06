@@ -40,8 +40,9 @@ Statement ASTNodes:
 
 from dataclasses import dataclass, field
 
+from fhy_core import Identifier
+
 from fhy.ir import TemplateDataType
-from fhy.ir.identifier import Identifier as IRIdentifier
 
 from .base import ASTNode
 from .core import Function, Statement
@@ -57,14 +58,14 @@ class Import(Statement):
     """Import statement node.
 
     Args:
-        name (ir.Identifier): Name of imported object.
+        name (Identifier): Name of imported object.
 
     Attributes:
-        name (ir.Identifier): Name of imported object
+        name (Identifier): Name of imported object
 
     """
 
-    name: IRIdentifier
+    name: Identifier
 
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
@@ -78,16 +79,16 @@ class Argument(ASTNode):
     """Function argument node.
 
     Args:
-        name (ir.Identifier): Variable name of the argument.
+        name (Identifier): Variable name of the argument.
         qualified_type (QualifiedType): Type of the argument.
 
     Attributes:
-        name (ir.Identifier): Variable name of the argument.
+        name (Identifier): Variable name of the argument.
         qualified_type (QualifiedType): Type of the argument.
 
     """
 
-    name: IRIdentifier
+    name: Identifier
     qualified_type: QualifiedType
 
     def get_visit_attrs(self) -> list[str]:
@@ -180,18 +181,18 @@ class DeclarationStatement(Statement):
     """Declaration statement AST node.
 
     Args:
-        variable_name (ir.Identifier): Name of the declared variable.
+        variable_name (Identifier): Name of the declared variable.
         variable_type (QualifiedType): Type of the declared variable.
         expression (Expression, optional): Expression to assign to the variable.
 
     Attributes:
-        variable_name (IRIdentifier): Name of the declared variable.
+        variable_name (Identifier): Name of the declared variable.
         variable_type (QualifiedType): Type of the declared variable.
         expression (Expression, optional): Expression to assign to the variable.
 
     """
 
-    variable_name: IRIdentifier
+    variable_name: Identifier
     variable_type: QualifiedType
     expression: Expression | None = field(default=None)
 

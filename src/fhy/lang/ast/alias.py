@@ -33,8 +33,9 @@
 
 from typing import Generic, TypeVar
 
+from fhy_core import Identifier
+
 from fhy.ir.expression import Expression as IRExpression
-from fhy.ir.identifier import Identifier as IRIdentifier
 from fhy.ir.type import CoreDataType as IRCoreDataType
 from fhy.ir.type import (
     DataType as IRDataType,
@@ -63,7 +64,7 @@ CoreASTNodes = core.Statement | core.Function | core.Expression
 Core = TypeVar("Core", bound=CoreASTNodes)
 
 OtherTypes = (
-    IRIdentifier
+    Identifier
     | IRDataType
     | IRTypeQualifier
     | IRPrimitiveDataType

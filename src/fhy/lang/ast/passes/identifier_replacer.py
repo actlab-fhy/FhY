@@ -33,7 +33,8 @@
 
 from copy import copy
 
-from fhy.ir.identifier import Identifier
+from fhy_core import Identifier
+
 from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import Transformer
 

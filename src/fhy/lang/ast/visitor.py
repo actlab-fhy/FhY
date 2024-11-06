@@ -43,7 +43,8 @@ from collections.abc import Callable, Sequence
 from copy import copy
 from typing import Any, TypeVar
 
-from fhy.ir.identifier import Identifier as IRIdentifier
+from fhy_core import Identifier
+
 from fhy.ir.type import CoreDataType as IRCoreDataType
 from fhy.ir.type import DataType as IRDataType
 from fhy.ir.type import IndexType as IRIndexType
@@ -443,7 +444,7 @@ class Visitor(BasePass):
 
         """
 
-    def visit_Identifier(self, identifier: IRIdentifier) -> None:
+    def visit_Identifier(self, identifier: Identifier) -> None:
         """Visit an identifier.
 
         Args:
@@ -530,7 +531,7 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_name: Identifier = self.visit_Identifier(node.name)
         new_statements: list[Statement] = self.visit_sequence(
             node.statements, is_length_same=False
         )
@@ -570,7 +571,7 @@ class Transformer(BasePass):
             node (Import): Import node to transform.
 
         """
-        new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_name: Identifier = self.visit_Identifier(node.name)
         span: Span | None = self.visit_Span(node.span)
 
         return Import(span=span, name=new_name)
@@ -583,7 +584,7 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_name: Identifier = self.visit_Identifier(node.name)
         new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
         new_return_type: QualifiedType = self.visit_QualifiedType(node.return_type)
@@ -606,7 +607,7 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_name: IRIdentifier = self.visit_Identifier(node.name)
+        new_name: Identifier = self.visit_Identifier(node.name)
         new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
         new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
@@ -639,7 +640,7 @@ class Transformer(BasePass):
         new_qualified_type: QualifiedType = self.visit_QualifiedType(
             node.qualified_type
         )
-        new_name: IRIdentifier | None
+        new_name: Identifier | None
         if node.name is not None:
             new_name = self.visit_Identifier(node.name)
         else:
@@ -655,7 +656,7 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_variable_name: IRIdentifier = self.visit_Identifier(node.variable_name)
+        new_variable_name: Identifier = self.visit_Identifier(node.variable_name)
         new_variable_type: QualifiedType = self.visit_QualifiedType(node.variable_type)
         new_expression: Expression | None
 
@@ -879,7 +880,7 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_identifier: IRIdentifier = self.visit_Identifier(node.identifier)
+        new_identifier: Identifier = self.visit_Identifier(node.identifier)
 
         return IdentifierExpression(span=span, identifier=new_identifier)
 
@@ -1055,7 +1056,7 @@ class Transformer(BasePass):
         """
         return copy(type_qualifier)
 
-    def visit_Identifier(self, identifier: IRIdentifier) -> IRIdentifier:
+    def visit_Identifier(self, identifier: Identifier) -> Identifier:
         """Transform an identifier node.
 
         Args:

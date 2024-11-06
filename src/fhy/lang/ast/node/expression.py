@@ -56,7 +56,8 @@ Primitive Expressions:
 from abc import ABC
 from dataclasses import dataclass, field
 
-from fhy.ir.identifier import Identifier as IRIdentifier
+from fhy_core import Identifier
+
 from fhy.ir.type import DataType as IRDataType
 from fhy.utils.enumeration import StrEnum
 
@@ -321,14 +322,14 @@ class IdentifierExpression(Expression):
     """Wrapper node for a variable is used in an expression.
 
     Args:
-        identifier (IRIdentifier): Identifier of the variable.
+        identifier (Identifier): Identifier of the variable.
 
     Attributes:
-        identifier (IRIdentifier): Identifier of the variable.
+        identifier (Identifier): Identifier of the variable.
 
     """
 
-    identifier: IRIdentifier
+    identifier: Identifier
 
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()

@@ -31,6 +31,6 @@
 
 """Pre-defined built-ins namespace."""
 
-from fhy.ir.identifier import Identifier
+from fhy_core import Identifier
 
 BUILTINS_NAMESPACE_NAME = Identifier("builtins")
