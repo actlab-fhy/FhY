@@ -41,11 +41,10 @@ from dataclasses import replace
 from pathlib import Path
 
 import networkx as nx  # type: ignore[import-untyped]
-from fhy_core import Identifier
+from fhy_core import Identifier, SymbolTable, SymbolTableFrame
 
-from fhy import error
+from fhy.error import FhYImportError
 from fhy.ir.program import Program as IRProgram
-from fhy.ir.table import SymbolTable, SymbolTableFrame
 from fhy.lang import collect_imported_identifiers
 from fhy.lang.ast.passes import build_symbol_table, replace_identifiers
 
@@ -285,7 +284,7 @@ class ASTProgramBuilder:
                 if relevant_module is None:
                     msg = f"Invalid Import Statement. Module Not Found: {iid}"
                     self.log.error(msg)
-                    raise error.FhYImportError(msg)
+                    raise FhYImportError(msg)
 
                 # Find Source of Import
                 source_imported: SourceFileAST | None = self._find_source(
@@ -310,7 +309,7 @@ class ASTProgramBuilder:
                         f"{source_imported.path}"
                     )
                     self.log.error(msg)
-                    raise error.FhYImportError(msg)
+                    raise FhYImportError(msg)
 
                 id_map[iid] = exists
 
@@ -325,7 +324,7 @@ class ASTProgramBuilder:
         if result := self._is_cyclical(graph):
             msg = f"Circular Import Detected: {result}"
             self.log.error(msg)
-            raise error.FhYImportError(msg)
+            raise FhYImportError(msg)
 
         return resolved_sources
 

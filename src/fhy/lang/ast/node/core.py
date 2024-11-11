@@ -46,8 +46,6 @@ from dataclasses import dataclass, field
 
 from fhy_core import Identifier
 
-from fhy.ir.expression import Expression as IRExpression
-
 from .base import ASTNode
 
 
@@ -100,5 +98,5 @@ class Function(Statement, ABC):
         return attrs
 
 
-class Expression(ASTNode, IRExpression, ABC):
+class Expression(ASTNode, ABC):
     """Abstract expression AST node."""

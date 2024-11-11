@@ -41,19 +41,23 @@ Classes:
 
 from typing import Any
 
-from fhy_core import Identifier, Stack
+from fhy_core import (
+    CoreDataType,
+    FunctionKeyword,
+    FunctionSymbolTableFrame,
+    Identifier,
+    ImportSymbolTableFrame,
+    NumericalType,
+    PrimitiveDataType,
+    Stack,
+    SymbolTable,
+    SymbolTableFrame,
+    TypeQualifier,
+    VariableSymbolTableFrame,
+)
 
 from fhy.error import FhYSemanticsError
 from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS, BUILTINS_NAMESPACE_NAME
-from fhy.ir.table import (
-    FunctionKeyword,
-    FunctionSymbolTableFrame,
-    ImportSymbolTableFrame,
-    SymbolTable,
-    SymbolTableFrame,
-    VariableSymbolTableFrame,
-)
-from fhy.ir.type import CoreDataType, NumericalType, PrimitiveDataType, TypeQualifier
 from fhy.lang.ast.node import core, expression, statement
 from fhy.lang.ast.visitor import Visitor
 
@@ -128,7 +132,7 @@ class SymbolTableBuilder(Visitor):
             raise FhYSemanticsError(f"{msg}: {symbol.name_hint}")
 
     def _is_symbol_defined(self, symbol: Identifier) -> bool:
-        return self._symbol_table.is_symbol_defined(
+        return self._symbol_table.is_symbol_defined_in_namespace(
             self._namespace_stack.peek(), symbol
         )
 

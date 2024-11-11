@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 
 import pytest
-from fhy import error, ir
 from fhy.driver import utils
 from fhy.driver.ast_program_builder.builder import ASTProgramBuilder
 from fhy.driver.ast_program_builder.module_tree import ModuleTree
@@ -12,8 +11,10 @@ from fhy.driver.ast_program_builder.source_file_ast import SourceFileAST
 from fhy.driver.compilation_options import CompilationOptions
 from fhy.driver.utils import get_imported_symbol_module_components_and_name
 from fhy.driver.workspace import Workspace
+from fhy.error import FhYImportError
 from fhy.ir.program import Program as IRProgram
 from fhy.lang.ast.passes import collect_identifiers, collect_imported_identifiers
+from fhy_core import SymbolTable
 
 
 @pytest.fixture
@@ -64,7 +65,7 @@ def test_program_instantiation():
         program, "_symbol_table"
     ), "Expected _symbol_table Attribute to ir.Program."
     assert isinstance(
-        program._symbol_table, ir.SymbolTable
+        program._symbol_table, SymbolTable
     ), "Expected _component Attribute to be an ir.SymbolTable."
 
 
@@ -190,7 +191,7 @@ def test_identifier_validation_circular_import(circular_dir, config):
     paths = {i.path for i in ast_files}
     tree = program._build_module_tree(paths)
 
-    with pytest.raises(error.FhYImportError):
+    with pytest.raises(FhYImportError):
         program._resolve_imports(ast_files, tree)
 
 

@@ -12,9 +12,6 @@ import json
 from typing import TypeVar
 
 import pytest
-from fhy.ir import (
-    CoreDataType,
-)
 from fhy.lang.ast import (
     ComplexLiteral,
     FloatLiteral,
@@ -29,6 +26,9 @@ from fhy.lang.ast.serialization.to_json import (
     JSONtoAST,
     dump,
     load,
+)
+from fhy_core import (
+    CoreDataType,
 )
 
 from ..utils import load_text

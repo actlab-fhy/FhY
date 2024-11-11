@@ -33,31 +33,25 @@
 
 from typing import Generic, TypeVar
 
-from fhy_core import Identifier
+from fhy_core import (
+    CoreDataType,
+    DataType,
+    Identifier,
+    PrimitiveDataType,
+    TemplateDataType,
+    Type,
+    TypeQualifier,
+)
+from fhy_core import Expression as CoreExpression
 
-from fhy.ir.expression import Expression as IRExpression
-from fhy.ir.type import CoreDataType as IRCoreDataType
-from fhy.ir.type import (
-    DataType as IRDataType,
-)
-from fhy.ir.type import (
-    PrimitiveDataType as IRPrimitiveDataType,
-)
-from fhy.ir.type import TemplateDataType as IRTemplateDataType
-from fhy.ir.type import (
-    Type as IRType,
-)
-from fhy.ir.type import (
-    TypeQualifier as IRTypeQualifier,
-)
 from fhy.lang.ast.node import base, core
 from fhy.lang.ast.span import Source, Span
 
 # Define Commonly Used Aliases
-ASTTypeNodes = base.ASTNode | IRType
+ASTTypeNodes = base.ASTNode | Type
 Nodes = TypeVar("Nodes", bound=ASTTypeNodes)
 
-Expressions = IRExpression | core.Expression
+Expressions = CoreExpression | core.Expression
 ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
 
 CoreASTNodes = core.Statement | core.Function | core.Expression
@@ -65,11 +59,11 @@ Core = TypeVar("Core", bound=CoreASTNodes)
 
 OtherTypes = (
     Identifier
-    | IRDataType
-    | IRTypeQualifier
-    | IRPrimitiveDataType
-    | IRTemplateDataType
-    | IRCoreDataType
+    | DataType
+    | TypeQualifier
+    | PrimitiveDataType
+    | TemplateDataType
+    | CoreDataType
 )
 
 Spans = Span | Source

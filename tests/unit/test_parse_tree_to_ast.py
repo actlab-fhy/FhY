@@ -1,9 +1,19 @@
 """Test Conversion of FhY Source Code from CST to AST."""
 
 import pytest
-from fhy import error, ir
+from fhy.error import FhYSyntaxError
 from fhy.lang import ast
-from fhy_core import Identifier
+from fhy_core import (
+    CoreDataType,
+    Identifier,
+    IndexType,
+    NumericalType,
+    PrimitiveDataType,
+    TemplateDataType,
+    TupleType,
+    Type,
+    TypeQualifier,
+)
 
 from ..utils import list_to_types
 
@@ -170,8 +180,8 @@ def _assert_is_expected_operation(
 
 def _assert_is_expected_qualified_type(
     node: ast.ASTNode,
-    expected_type_qualifier: ir.TypeQualifier,
-    expected_base_type_cls: type[ir.Type],
+    expected_type_qualifier: TypeQualifier,
+    expected_base_type_cls: type[Type],
 ) -> None:
     assert isinstance(node, ast.QualifiedType), wrong_node_babe(ast.QualifiedType, node)
 
@@ -198,12 +208,12 @@ def _assert_is_expected_argument(
 
 
 def _assert_is_expected_numerical_type(
-    numerical_type: ir.NumericalType,
-    expected_primitive_data_type: ir.CoreDataType,
+    numerical_type: NumericalType,
+    expected_primitive_data_type: CoreDataType,
     expected_shape: list[ast.Expression],
 ) -> None:
-    assert isinstance(numerical_type, ir.NumericalType), wrong_node_babe(
-        ir.NumericalType, numerical_type
+    assert isinstance(numerical_type, NumericalType), wrong_node_babe(
+        NumericalType, numerical_type
     )
 
     assert numerical_type.data_type.core_data_type == expected_primitive_data_type, (
@@ -245,14 +255,12 @@ def _assert_is_expected_shape(
 
 
 def _assert_is_expected_index_type(
-    index_type: ir.IndexType,
+    index_type: IndexType,
     expected_low: ast.Expression,
     expected_high: ast.Expression,
     expected_stride: ast.Expression | None,
 ) -> None:
-    assert isinstance(index_type, ir.IndexType), wrong_node_babe(
-        ir.IndexType, index_type
-    )
+    assert isinstance(index_type, IndexType), wrong_node_babe(IndexType, index_type)
 
     assert isinstance(index_type.lower_bound, ast.Expression), wrong_node_babe(
         ast.Expression, index_type.lower_bound
@@ -421,10 +429,10 @@ def test_empty_procedure_with_qualified_argument(construct_ast, name: str):
 
     arg_qualified_type = arg.qualified_type
     _assert_is_expected_qualified_type(
-        arg_qualified_type, ir.TypeQualifier.INPUT, ir.NumericalType
+        arg_qualified_type, TypeQualifier.INPUT, NumericalType
     )
     arg_base_type = arg_qualified_type.base_type
-    _assert_is_expected_numerical_type(arg_base_type, ir.CoreDataType.INT32, [])
+    _assert_is_expected_numerical_type(arg_base_type, CoreDataType.INT32, [])
 
 
 def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
@@ -441,7 +449,7 @@ def test_empty_procedure_with_a_qualified_argument_with_shape(construct_ast):
 
     arg_qualified_type = arg.qualified_type
     _assert_is_expected_qualified_type(
-        arg_qualified_type, ir.TypeQualifier.INPUT, ir.NumericalType
+        arg_qualified_type, TypeQualifier.INPUT, NumericalType
     )
     arg_type_shape = arg_qualified_type.base_type.shape
     _assert_is_expected_shape(
@@ -485,12 +493,12 @@ def test_empty_operation_return_type(construct_ast):
 
     arg_qualified_type = arg.qualified_type
     _assert_is_expected_qualified_type(
-        arg_qualified_type, ir.TypeQualifier.INPUT, ir.NumericalType
+        arg_qualified_type, TypeQualifier.INPUT, NumericalType
     )
-    arg_base_type: ir.Type = arg_qualified_type.base_type
+    arg_base_type: Type = arg_qualified_type.base_type
     _assert_is_expected_numerical_type(
         arg_base_type,
-        ir.CoreDataType.INT32,
+        CoreDataType.INT32,
         [
             ast.IdentifierExpression(identifier=Identifier("n")),
             ast.IdentifierExpression(identifier=Identifier("m")),
@@ -498,9 +506,7 @@ def test_empty_operation_return_type(construct_ast):
     )
 
     return_type = operation.return_type
-    _assert_is_expected_qualified_type(
-        return_type, ir.TypeQualifier.OUTPUT, ir.NumericalType
-    )
+    _assert_is_expected_qualified_type(return_type, TypeQualifier.OUTPUT, NumericalType)
     return_type_shape = return_type.base_type.shape
     _assert_is_expected_shape(
         return_type_shape,
@@ -530,9 +536,7 @@ def test_operation_template_types(construct_ast, templates: list[str]):
         templates
     ), "Expected Same Number of Template Types."
     for j, k in zip(operation.templates, templates):
-        assert isinstance(j, ir.TemplateDataType), wrong_node_babe(
-            ir.TemplateDataType, j
-        )
+        assert isinstance(j, TemplateDataType), wrong_node_babe(TemplateDataType, j)
         (
             j._data_type.name_hint == k,
             f"Expected Same Identifier Name: {j._data_type.name_hint}",
@@ -549,8 +553,8 @@ def test_operation_template_type_body(construct_ast):
     _assert_is_expected_operation(operation, "foo", 1, 1)
 
     template = operation.templates[0]
-    assert isinstance(template, ir.TemplateDataType), wrong_node_babe(
-        ir.TemplateDataType, template
+    assert isinstance(template, TemplateDataType), wrong_node_babe(
+        TemplateDataType, template
     )
 
     statement: ast.Statement = operation.body[0]
@@ -558,7 +562,7 @@ def test_operation_template_type_body(construct_ast):
         ast.DeclarationStatement, statement
     )
 
-    numerical: ir.NumericalType = statement.variable_type.base_type
+    numerical: NumericalType = statement.variable_type.base_type
     assert (
         numerical.data_type._data_type.id == template._data_type.id
     ), "Expected same TemplateDataType Identifier ID."
@@ -584,8 +588,8 @@ def test_operation_template_type_call(construct_ast):
     _assert_is_expected_operation(operation, "foo", 1, 2)
 
     template = operation.templates[0]
-    assert isinstance(template, ir.TemplateDataType), wrong_node_babe(
-        ir.TemplateDataType, template
+    assert isinstance(template, TemplateDataType), wrong_node_babe(
+        TemplateDataType, template
     )
 
     statement: ast.Statement = operation.body[0]
@@ -593,13 +597,13 @@ def test_operation_template_type_call(construct_ast):
         ast.DeclarationStatement, statement
     )
 
-    numerical: ir.NumericalType = statement.variable_type.base_type
-    assert isinstance(numerical, ir.NumericalType), wrong_node_babe(
-        ir.NumericalType, numerical
+    numerical: NumericalType = statement.variable_type.base_type
+    assert isinstance(numerical, NumericalType), wrong_node_babe(
+        NumericalType, numerical
     )
 
-    assert isinstance(numerical.data_type, ir.TemplateDataType), wrong_node_babe(
-        ir.TemplateDataType, numerical.data_type
+    assert isinstance(numerical.data_type, TemplateDataType), wrong_node_babe(
+        TemplateDataType, numerical.data_type
     )
     assert (
         numerical.data_type._data_type.id == template._data_type.id
@@ -628,11 +632,11 @@ def test_operation_template_type_call(construct_ast):
     )
 
     assert len(function.template_types) == 1, "Expected 1 Template Type."
-    assert isinstance(
-        function.template_types[0], ir.PrimitiveDataType
-    ), wrong_node_babe(ir.PrimitiveDataType, function.template_types[0])
+    assert isinstance(function.template_types[0], PrimitiveDataType), wrong_node_babe(
+        PrimitiveDataType, function.template_types[0]
+    )
     assert (
-        function.template_types[0].core_data_type == ir.CoreDataType.INT32
+        function.template_types[0].core_data_type == CoreDataType.INT32
     ), "Expected Template Type to be INT32."
 
 
@@ -659,9 +663,7 @@ def test_declaration_statement_without_assignment(construct_ast):
     _assert_is_expected_declaration_statement(statement, Identifier("i"), None)
 
     qualified = statement.variable_type
-    _assert_is_expected_qualified_type(
-        qualified, ir.TypeQualifier.TEMP, ir.NumericalType
-    )
+    _assert_is_expected_qualified_type(qualified, TypeQualifier.TEMP, NumericalType)
     _assert_is_expected_shape(qualified.base_type.shape, [])
 
 
@@ -955,8 +957,8 @@ def test_function_expression_with_templates(construct_ast):
     proc = _ast.statements[0]
     assert isinstance(proc, ast.Procedure), wrong_node_babe(ast.Procedure, proc)
     template = proc.templates[0]
-    assert isinstance(template, ir.TemplateDataType), wrong_node_babe(
-        ir.TemplateDataType, template
+    assert isinstance(template, TemplateDataType), wrong_node_babe(
+        TemplateDataType, template
     )
 
     statement = proc.body[0]
@@ -967,12 +969,12 @@ def test_function_expression_with_templates(construct_ast):
     # Check argument too.
     arg = proc.args[0]
     assert isinstance(arg, ast.Argument), wrong_node_babe(ast.Argument, arg)
-    assert isinstance(arg.qualified_type.base_type, ir.NumericalType), wrong_node_babe(
-        ir.NumericalType, arg.qualified_type.base_type
+    assert isinstance(arg.qualified_type.base_type, NumericalType), wrong_node_babe(
+        NumericalType, arg.qualified_type.base_type
     )
     arg_temp = arg.qualified_type.base_type.data_type
-    assert isinstance(arg_temp, ir.TemplateDataType), wrong_node_babe(
-        ir.TemplateDataType, arg_temp
+    assert isinstance(arg_temp, TemplateDataType), wrong_node_babe(
+        TemplateDataType, arg_temp
     )
     assert (
         template._data_type.id == arg_temp._data_type.id
@@ -983,9 +985,7 @@ def test_function_expression_with_templates(construct_ast):
         ast.FunctionExpression, function
     )
     ftemp = function.template_types[0]
-    assert isinstance(ftemp, ir.TemplateDataType), wrong_node_babe(
-        ir.TemplateDataType, ftemp
-    )
+    assert isinstance(ftemp, TemplateDataType), wrong_node_babe(TemplateDataType, ftemp)
 
     assert (
         template._data_type.id == ftemp._data_type.id
@@ -1039,7 +1039,7 @@ def test_index_type(construct_ast):
         ast.DeclarationStatement, statement
     )
     _assert_is_expected_qualified_type(
-        statement.variable_type, ir.TypeQualifier.TEMP, ir.IndexType
+        statement.variable_type, TypeQualifier.TEMP, IndexType
     )
     _assert_is_expected_index_type(
         statement.variable_type.base_type,
@@ -1067,21 +1067,21 @@ def test_tuple_type(construct_ast, source: str):
     )
     assert statement.variable_name.name_hint == "i", 'Expected Variable Name "i"'
     _assert_is_expected_qualified_type(
-        statement.variable_type, ir.TypeQualifier.OUTPUT, ir.TupleType
+        statement.variable_type, TypeQualifier.OUTPUT, TupleType
     )
 
-    _tuple: ir.TupleType = statement.variable_type.base_type
+    _tuple: TupleType = statement.variable_type.base_type
     assert len(_tuple._types) == 2, "Expected 2 Types in TupleType Definition."
     t1, t2 = _tuple._types
     _assert_is_expected_numerical_type(
         t1,
-        ir.CoreDataType.INT32,
+        CoreDataType.INT32,
         [
             ast.IdentifierExpression(identifier=Identifier("m")),
             ast.IdentifierExpression(identifier=Identifier("n")),
         ],
     )
-    _assert_is_expected_numerical_type(t2, ir.CoreDataType.INT32, [])
+    _assert_is_expected_numerical_type(t2, CoreDataType.INT32, [])
 
 
 @pytest.mark.parametrize(
@@ -1187,7 +1187,7 @@ def test_empty_procedure_with_line_comment(construct_ast):
 def test_syntax_error_no_argument_name(construct_ast):
     """Raise FhYSyntaxError when an function Argument is defined without a Name."""
     source: str = "op foo(input int32[m,n]) -> output int32 {}"
-    with pytest.raises(error.FhYSyntaxError):
+    with pytest.raises(FhYSyntaxError):
         _ast = construct_ast(source)
 
 
@@ -1196,7 +1196,7 @@ def test_syntax_error_no_procedure_name(construct_ast):
     source: str = "proc () {}"
     # NOTE: This raises the Antlr Syntax Error, not from our visitor class.
     #       This means we do not gain coverage in parse tree converter for this case.
-    with pytest.raises(error.FhYSyntaxError):
+    with pytest.raises(FhYSyntaxError):
         _ast = construct_ast(source)
 
 
@@ -1205,21 +1205,21 @@ def test_syntax_error_no_operation_name(construct_ast):
     source: str = "op (input int32[m,n] A) -> output int32 {}"
     # NOTE: This raises the Antlr Syntax Error, not from our visitor class.
     #       This means we do not gain coverage in parse tree converter for this case.
-    with pytest.raises(error.FhYSyntaxError):
+    with pytest.raises(FhYSyntaxError):
         _ast = construct_ast(source)
 
 
 def test_syntax_error_no_operation_return_type(construct_ast):
     """Raise FhYSyntaxError when an Operation is defined without a return type."""
     source: str = "op func(input int32[m,n] A) {}"
-    with pytest.raises(error.FhYSyntaxError):
+    with pytest.raises(FhYSyntaxError):
         _ast = construct_ast(source)
 
 
 def test_invalid_function_keyword(construct_ast):
     """Raise FhySyntaxError when Function is Declared with Invalid Keyword."""
     source: str = "def foo(input int32[m,n] A) -> output int32[m,n] {}"
-    with pytest.raises(error.FhYSyntaxError):
+    with pytest.raises(FhYSyntaxError):
         _ast = construct_ast(source)
 
 
@@ -1232,5 +1232,5 @@ def test_invalid_function_keyword(construct_ast):
 )
 def test_gibberish(construct_ast, source: str):
     """Gibberish (unrecognized text according to fhy grammar) Raises FhySyntaxError."""
-    with pytest.raises(error.FhYSyntaxError):
+    with pytest.raises(FhYSyntaxError):
         _ast = construct_ast(source)

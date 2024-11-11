@@ -56,10 +56,7 @@ Primitive Expressions:
 from abc import ABC
 from dataclasses import dataclass, field
 
-from fhy_core import Identifier
-
-from fhy.ir.type import DataType as IRDataType
-from fhy.utils.enumeration import StrEnum
+from fhy_core import DataType, Identifier, StrEnum
 
 from .core import Expression
 
@@ -253,14 +250,14 @@ class FunctionExpression(Expression):
 
     Attributes:
         function (Expression): Expression defining the function to call.
-        template_types (List[IRDataType]): Types for template arguments.
+        template_types (List[DataType]): Types for template arguments.
         indices (List[Expression]): Reduced indices for a reduction operation.
         args (List[Expression]): Provided arguments to function call.
 
     """
 
     function: Expression
-    template_types: list[IRDataType] = field(default_factory=list)
+    template_types: list[DataType] = field(default_factory=list)
     indices: list[Expression] = field(default_factory=list)
     args: list[Expression] = field(default_factory=list)
 

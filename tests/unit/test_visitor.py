@@ -3,8 +3,6 @@ from typing import TypeVar
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fhy.ir.type import CoreDataType, PrimitiveDataType
-from fhy.ir.type import NumericalType as IRNumericalType
 from fhy.lang.ast import (
     ComplexLiteral,
     ExpressionStatement,
@@ -15,6 +13,7 @@ from fhy.lang.ast import (
 )
 from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import BasePass, Visitor
+from fhy_core import CoreDataType, NumericalType, PrimitiveDataType
 
 BP = TypeVar("BP", bound=BasePass)
 
@@ -117,12 +116,12 @@ def test_visitor_transform_type():
     """Verifys the Transformer class transforms a Type node correctly."""
     transformer = visitor.Transformer()
     primitive_data_type = CoreDataType.FLOAT32
-    numerical_type_node = IRNumericalType(
+    numerical_type_node = NumericalType(
         data_type=PrimitiveDataType(core_data_type=primitive_data_type),
         shape=[],
     )
     result = transformer.visit_Type(numerical_type_node)
-    assert isinstance(result, IRNumericalType)
+    assert isinstance(result, NumericalType)
 
 
 def mock_transform(x):

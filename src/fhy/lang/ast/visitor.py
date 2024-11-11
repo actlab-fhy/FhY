@@ -43,17 +43,19 @@ from collections.abc import Callable, Sequence
 from copy import copy
 from typing import Any, TypeVar
 
-from fhy_core import Identifier
+from fhy_core import (
+    CoreDataType,
+    DataType,
+    Identifier,
+    IndexType,
+    NumericalType,
+    PrimitiveDataType,
+    TemplateDataType,
+    TupleType,
+    Type,
+    TypeQualifier,
+)
 
-from fhy.ir.type import CoreDataType as IRCoreDataType
-from fhy.ir.type import DataType as IRDataType
-from fhy.ir.type import IndexType as IRIndexType
-from fhy.ir.type import NumericalType as IRNumericalType
-from fhy.ir.type import PrimitiveDataType as IRPrimitiveDataType
-from fhy.ir.type import TemplateDataType as IRTemplateDataType
-from fhy.ir.type import TupleType as IRTupleType
-from fhy.ir.type import Type as IRType
-from fhy.ir.type import TypeQualifier as IRTypeQualifier
 from fhy.lang.ast.alias import ASTObject
 
 from .node import (
@@ -379,7 +381,7 @@ class Visitor(BasePass):
         self.visit(node.base_type)
         self.visit(node.type_qualifier)
 
-    def visit_NumericalType(self, numerical_type: IRNumericalType) -> None:
+    def visit_NumericalType(self, numerical_type: NumericalType) -> None:
         """Visit a numerical type.
 
         Args:
@@ -389,7 +391,7 @@ class Visitor(BasePass):
         self.visit(numerical_type.data_type)
         self.visit(numerical_type.shape)
 
-    def visit_IndexType(self, index_type: IRIndexType) -> None:
+    def visit_IndexType(self, index_type: IndexType) -> None:
         """Visit an index type.
 
         Args:
@@ -401,7 +403,7 @@ class Visitor(BasePass):
         if index_type.stride is not None:
             self.visit(index_type.stride)
 
-    def visit_TupleType(self, tuple_type: IRTupleType) -> None:
+    def visit_TupleType(self, tuple_type: TupleType) -> None:
         """Visit a tuple type.
 
         Args:
@@ -410,7 +412,7 @@ class Visitor(BasePass):
         """
         self.visit(tuple_type.types)
 
-    def visit_PrimitiveDataType(self, node: IRPrimitiveDataType) -> None:
+    def visit_PrimitiveDataType(self, node: PrimitiveDataType) -> None:
         """Visit a primitive data type.
 
         Args:
@@ -419,7 +421,7 @@ class Visitor(BasePass):
         """
         self.visit(node.core_data_type)
 
-    def visit_TemplateDataType(self, node: IRTemplateDataType) -> None:
+    def visit_TemplateDataType(self, node: TemplateDataType) -> None:
         """Visit a template data type.
 
         Args:
@@ -428,7 +430,7 @@ class Visitor(BasePass):
         """
         self.visit(node.template_type)
 
-    def visit_TypeQualifier(self, type_qualifier: IRTypeQualifier) -> None:
+    def visit_TypeQualifier(self, type_qualifier: TypeQualifier) -> None:
         """Visit a type qualifier.
 
         Args:
@@ -436,7 +438,7 @@ class Visitor(BasePass):
 
         """
 
-    def visit_CoreDataType(self, primitive: IRCoreDataType) -> None:
+    def visit_CoreDataType(self, primitive: CoreDataType) -> None:
         """Visit a primitive data type.
 
         Args:
@@ -585,7 +587,7 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_name: Identifier = self.visit_Identifier(node.name)
-        new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
+        new_templates: list[TemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
         new_return_type: QualifiedType = self.visit_QualifiedType(node.return_type)
         new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
@@ -608,7 +610,7 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_name: Identifier = self.visit_Identifier(node.name)
-        new_templates: list[IRTemplateDataType] = self.visit_sequence(node.templates)
+        new_templates: list[TemplateDataType] = self.visit_sequence(node.templates)
         new_args: list[Argument] = self.visit_Arguments(node.args)
         new_body: list[Statement] = self.visit_sequence(node.body, is_length_same=False)
 
@@ -816,7 +818,7 @@ class Transformer(BasePass):
         """
         span: Span | None = self.visit_Span(node.span)
         new_function: Expression = self.visit(node.function)
-        new_template_types: list[IRDataType] = self.visit_sequence(node.template_types)
+        new_template_types: list[DataType] = self.visit_sequence(node.template_types)
         new_indices: list[Expression] = self.visit_sequence(node.indices)
         new_args: list[Expression] = self.visit_sequence(node.args)
 
@@ -919,8 +921,8 @@ class Transformer(BasePass):
 
         """
         span: Span | None = self.visit_Span(node.span)
-        new_base_type: IRType = self.visit(node.base_type)
-        new_type_qualifier: IRTypeQualifier = self.visit_TypeQualifier(
+        new_base_type: Type = self.visit(node.base_type)
+        new_type_qualifier: TypeQualifier = self.visit_TypeQualifier(
             node.type_qualifier
         )
 
@@ -928,7 +930,7 @@ class Transformer(BasePass):
             span=span, base_type=new_base_type, type_qualifier=new_type_qualifier
         )
 
-    def visit_Types(self, nodes: list[IRType]) -> list[IRType]:
+    def visit_Types(self, nodes: list[Type]) -> list[Type]:
         """Transform a list of type nodes.
 
         Args:
@@ -937,23 +939,23 @@ class Transformer(BasePass):
         """
         return [self.visit_Type(node) for node in nodes]
 
-    def visit_Type(self, node: IRType) -> IRType:
+    def visit_Type(self, node: Type) -> Type:
         """Transform a type node.
 
         Args:
-            node (IRType): Type node to transform.
+            node (Type): Type node to transform.
 
         """
-        if isinstance(node, IRNumericalType):
+        if isinstance(node, NumericalType):
             return self.visit_NumericalType(node)
-        elif isinstance(node, IRIndexType):
+        elif isinstance(node, IndexType):
             return self.visit_IndexType(node)
-        elif isinstance(node, IRTupleType):
+        elif isinstance(node, TupleType):
             return self.visit_TupleType(node)
         else:
             raise NotImplementedError(f'Node "{type(node)}" is not supported.')
 
-    def visit_NumericalType(self, numerical_type: IRNumericalType) -> IRNumericalType:
+    def visit_NumericalType(self, numerical_type: NumericalType) -> NumericalType:
         """Transform a numerical type node.
 
         Args:
@@ -963,9 +965,9 @@ class Transformer(BasePass):
         new_data_type = self.visit_DataType(numerical_type.data_type)
         new_shape = [self.visit(j) for j in numerical_type.shape]
 
-        return IRNumericalType(data_type=new_data_type, shape=new_shape)
+        return NumericalType(data_type=new_data_type, shape=new_shape)
 
-    def visit_TupleType(self, tuple_type: IRTupleType) -> IRTupleType:
+    def visit_TupleType(self, tuple_type: TupleType) -> TupleType:
         """Transform a tuple type node.
 
         Args:
@@ -974,23 +976,23 @@ class Transformer(BasePass):
         """
         new_types = self.visit_Types(tuple_type.types)
 
-        return IRTupleType(types=new_types)
+        return TupleType(types=new_types)
 
-    def visit_DataType(self, data_type: IRDataType) -> IRDataType:
+    def visit_DataType(self, data_type: DataType) -> DataType:
         """Transform a data type node.
 
         Args:
             data_type (ir.DataType): DataType node to transform.
 
         """
-        if isinstance(data_type, IRPrimitiveDataType):
+        if isinstance(data_type, PrimitiveDataType):
             return self.visit_PrimitiveDataType(data_type)
-        elif isinstance(data_type, IRTemplateDataType):
+        elif isinstance(data_type, TemplateDataType):
             return self.visit_TemplateDataType(data_type)
         else:
             raise NotImplementedError(f'Node "{type(data_type)}" is not supported.')
 
-    def visit_IndexType(self, index_type: IRIndexType) -> IRIndexType:
+    def visit_IndexType(self, index_type: IndexType) -> IndexType:
         """Transform a numerical type node.
 
         Args:
@@ -1007,27 +1009,27 @@ class Transformer(BasePass):
         else:
             new_stride = None
 
-        return IRIndexType(
+        return IndexType(
             lower_bound=new_lower_bound,
             upper_bound=new_upper_bound,
             stride=new_stride,
         )
 
     def visit_PrimitiveDataType(
-        self, primitive_data_type: IRPrimitiveDataType
-    ) -> IRPrimitiveDataType:
+        self, primitive_data_type: PrimitiveDataType
+    ) -> PrimitiveDataType:
         """Transform a primitive data type node.
 
         Args:
             primitive_data_type (ir.PrimitiveDataType): DataType node to transform.
 
         """
-        new_core_data_type: IRCoreDataType = self.visit_CoreDataType(
+        new_core_data_type: CoreDataType = self.visit_CoreDataType(
             primitive_data_type.core_data_type
         )
-        return IRPrimitiveDataType(core_data_type=new_core_data_type)
+        return PrimitiveDataType(core_data_type=new_core_data_type)
 
-    def visit_CoreDataType(self, core_data_type: IRCoreDataType) -> IRCoreDataType:
+    def visit_CoreDataType(self, core_data_type: CoreDataType) -> CoreDataType:
         """Transform a core data type node.
 
         Args:
@@ -1036,7 +1038,7 @@ class Transformer(BasePass):
         """
         return copy(core_data_type)
 
-    def visit_TemplateDataType(self, node: IRTemplateDataType) -> IRTemplateDataType:
+    def visit_TemplateDataType(self, node: TemplateDataType) -> TemplateDataType:
         """Transform a template data type node.
 
         Args:
@@ -1045,9 +1047,9 @@ class Transformer(BasePass):
         """
         new_primitive_data_type = self.visit(node.template_type)
 
-        return IRTemplateDataType(data_type=new_primitive_data_type)
+        return TemplateDataType(data_type=new_primitive_data_type)
 
-    def visit_TypeQualifier(self, type_qualifier: IRTypeQualifier) -> IRTypeQualifier:
+    def visit_TypeQualifier(self, type_qualifier: TypeQualifier) -> TypeQualifier:
         """Transform a type qualifier node.
 
         Args:

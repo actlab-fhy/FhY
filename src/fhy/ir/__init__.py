@@ -31,25 +31,5 @@
 
 """FhY intermediate representation tool kit."""
 
-from .expression import Expression
-
 # TODO: this is causing import errors so resolve
 # from .program import Program
-from .table import (
-    FunctionSymbolTableFrame,
-    ImportSymbolTableFrame,
-    SymbolTable,
-    SymbolTableFrame,
-    VariableSymbolTableFrame,
-)
-from .type import (
-    CoreDataType,
-    DataType,
-    IndexType,
-    NumericalType,
-    PrimitiveDataType,
-    TemplateDataType,
-    TupleType,
-    Type,
-    TypeQualifier,
-)

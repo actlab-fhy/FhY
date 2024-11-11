@@ -55,9 +55,20 @@ import json
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from fhy_core import Identifier
+from fhy_core import (
+    CoreDataType,
+    DataType,
+    Expression,
+    Identifier,
+    IndexType,
+    NumericalType,
+    PrimitiveDataType,
+    TemplateDataType,
+    TupleType,
+    Type,
+    TypeQualifier,
+)
 
-from fhy import ir
 from fhy.lang import ast
 from fhy.lang.ast import visitor
 from fhy.lang.ast.alias import ASTObject
@@ -410,13 +421,13 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(span=self.visit_Span(node.span), value=result),
         )
 
-    def visit_PrimitiveDataType(self, node: ir.PrimitiveDataType) -> AlmostJson:
+    def visit_PrimitiveDataType(self, node: PrimitiveDataType) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(core_data_type=node.core_data_type.value),
         )
 
-    def visit_TemplateDataType(self, node: ir.TemplateDataType) -> AlmostJson:
+    def visit_TemplateDataType(self, node: TemplateDataType) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(node),
             attributes=dict(data_type=self.visit(node.template_type)),
@@ -434,7 +445,7 @@ class ASTtoJSON(visitor.BasePass):
             ),
         )
 
-    def visit_NumericalType(self, numerical_type: ir.NumericalType) -> AlmostJson:
+    def visit_NumericalType(self, numerical_type: NumericalType) -> AlmostJson:
         dtype: AlmostJson = self.visit(numerical_type.data_type)
         shape: list[AlmostJson] = self.visit_sequence(numerical_type.shape)
 
@@ -443,7 +454,7 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(data_type=dtype, shape=shape),
         )
 
-    def visit_IndexType(self, index_type: ir.IndexType) -> AlmostJson:
+    def visit_IndexType(self, index_type: IndexType) -> AlmostJson:
         lower: AlmostJson = self.visit(index_type.lower_bound)
         upper: AlmostJson = self.visit(index_type.upper_bound)
         if index_type.stride is not None:
@@ -458,7 +469,7 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(lower_bound=lower, upper_bound=upper, stride=stride),
         )
 
-    def visit_TupleType(self, tuple_type: ir.TupleType) -> AlmostJson:
+    def visit_TupleType(self, tuple_type: TupleType) -> AlmostJson:
         types: list[AlmostJson] = self.visit_sequence(tuple_type._types)
 
         return AlmostJson(
@@ -534,9 +545,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
-        templates: list[ir.TemplateDataType] = self.visit_sequence(
-            values.get("templates")
-        )
+        templates: list[TemplateDataType] = self.visit_sequence(values.get("templates"))
         args: list[ast.Argument] = self.visit_sequence(values.get("args"))
         body: list[ast.Statement] = self.visit_sequence(values.get("body"))
         name: Identifier = self.visit_Identifier(values.get("name"))
@@ -559,9 +568,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
-        templates: list[ir.TemplateDataType] = self.visit_sequence(
-            values.get("templates")
-        )
+        templates: list[TemplateDataType] = self.visit_sequence(values.get("templates"))
         args: list[ast.Argument] = self.visit_sequence(values.get("args"))
         body: list[ast.Statement] = self.visit_sequence(values.get("body"))
         name: Identifier = self.visit_Identifier(values.get("name"))
@@ -715,7 +722,7 @@ class JSONtoAST(visitor.BasePass):
         values: dict = node.attributes
         span: Span | None = self.visit_Span(values.get("span"))
         function: ast.Expression = self.visit(values.get("function"))
-        template: list[ir.DataType] = self.visit_sequence(values.get("template_types"))
+        template: list[DataType] = self.visit_sequence(values.get("template_types"))
         index: list[ast.Expression] = self.visit_sequence(values.get("indices"))
         args: list[ast.Expression] = self.visit_sequence(values.get("args"))
 
@@ -817,30 +824,30 @@ class JSONtoAST(visitor.BasePass):
 
         return ast.ComplexLiteral(span=span, value=result)
 
-    def visit_PrimitiveDataType(self, node: AlmostJson | None) -> ir.PrimitiveDataType:
+    def visit_PrimitiveDataType(self, node: AlmostJson | None) -> PrimitiveDataType:
         if node is None:
             raise ValueError("Invalid DataType")
 
-        core = ir.CoreDataType(str(node.attributes.get("core_data_type")))
+        core = CoreDataType(str(node.attributes.get("core_data_type")))
 
-        return ir.PrimitiveDataType(core_data_type=core)
+        return PrimitiveDataType(core_data_type=core)
 
-    def visit_TemplateDataType(self, node: AlmostJson | None) -> ir.TemplateDataType:
+    def visit_TemplateDataType(self, node: AlmostJson | None) -> TemplateDataType:
         if node is None:
             raise ValueError("Invalid DataType")
 
         template = self.visit(node.attributes.get("data_type"))
 
-        return ir.TemplateDataType(data_type=template)
+        return TemplateDataType(data_type=template)
 
     def visit_QualifiedType(self, node: AlmostJson | None) -> ast.QualifiedType:
         if node is None:
             raise ValueError("Invalid QualifiedType")
 
         values: dict = node.attributes
-        base: ir.Type = self.visit(values.get("base_type"))
+        base: Type = self.visit(values.get("base_type"))
         span: Span | None = self.visit_Span(values.get("span"))
-        qtype = ir.TypeQualifier(str(values.get("type_qualifier")))
+        qtype = TypeQualifier(str(values.get("type_qualifier")))
 
         return ast.QualifiedType(
             span=span,
@@ -848,19 +855,17 @@ class JSONtoAST(visitor.BasePass):
             type_qualifier=qtype,
         )
 
-    def visit_NumericalType(
-        self, numerical_type: AlmostJson | None
-    ) -> ir.NumericalType:
+    def visit_NumericalType(self, numerical_type: AlmostJson | None) -> NumericalType:
         if numerical_type is None:
             raise ValueError("Invalid numerical_type")
 
         values: dict = numerical_type.attributes
-        dtype: ir.type.DataType = self.visit(values.get("data_type"))
-        shape: list[ir.Expression] = self.visit_sequence(values.get("shape"))
+        dtype: type.DataType = self.visit(values.get("data_type"))
+        shape: list[Expression] = self.visit_sequence(values.get("shape"))
 
-        return ir.NumericalType(data_type=dtype, shape=shape)
+        return NumericalType(data_type=dtype, shape=shape)
 
-    def visit_IndexType(self, index_type: AlmostJson | None) -> ir.IndexType:
+    def visit_IndexType(self, index_type: AlmostJson | None) -> IndexType:
         if index_type is None:
             raise ValueError("No Index Type Provided")
 
@@ -882,13 +887,13 @@ class JSONtoAST(visitor.BasePass):
             )
 
         # TODO: use the IR expressions when implemented
-        return ir.IndexType(
+        return IndexType(
             lower_bound=lower,  # type: ignore
             upper_bound=upper,  # type: ignore
             stride=stride,  # type: ignore
         )
 
-    def visit_TupleType(self, tuple_type: AlmostJson | None) -> ir.TupleType:
+    def visit_TupleType(self, tuple_type: AlmostJson | None) -> TupleType:
         if tuple_type is None:
             raise ValueError("No Tuple Type Provided.")
 
@@ -896,9 +901,9 @@ class JSONtoAST(visitor.BasePass):
         if (v := values.get("types")) is None:
             raise ValueError("Invalid Tuple Type. No Type definitions of Elements.")
 
-        types: list[ir.Type] = self.visit_sequence(v)
+        types: list[Type] = self.visit_sequence(v)
 
-        return ir.TupleType(types=types)
+        return TupleType(types=types)
 
     def visit_Identifier(self, identifier: AlmostJson | None) -> Identifier:
         if identifier is None:

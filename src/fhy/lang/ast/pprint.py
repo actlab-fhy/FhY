@@ -39,9 +39,15 @@ Classes:
 
 """
 
-from fhy_core import Identifier
+from fhy_core import (
+    Identifier,
+    IndexType,
+    NumericalType,
+    PrimitiveDataType,
+    TemplateDataType,
+    TupleType,
+)
 
-from fhy import ir
 from fhy.lang import ast
 from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.visitor import BasePass
@@ -257,7 +263,7 @@ class ASTPrettyFormatter(BasePass):
             f"{self.visit(qualified_type.base_type)}"
         )
 
-    def visit_NumericalType(self, numerical_type: ir.NumericalType) -> str:
+    def visit_NumericalType(self, numerical_type: NumericalType) -> str:
         if len(numerical_type.shape) == 0:
             shape = ""
         else:
@@ -265,13 +271,13 @@ class ASTPrettyFormatter(BasePass):
 
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
-    def visit_PrimitiveDataType(self, node: ir.PrimitiveDataType) -> str:
+    def visit_PrimitiveDataType(self, node: PrimitiveDataType) -> str:
         return str(node.core_data_type.value)
 
-    def visit_TemplateDataType(self, node: ir.TemplateDataType) -> str:
+    def visit_TemplateDataType(self, node: TemplateDataType) -> str:
         return self.visit_Identifier(node.template_type)
 
-    def visit_IndexType(self, index_type: ir.IndexType) -> str:
+    def visit_IndexType(self, index_type: IndexType) -> str:
         index_range = f"{self.visit(index_type.lower_bound)}:"
         index_range += f"{self.visit(index_type.upper_bound)}:"
 
@@ -282,7 +288,7 @@ class ASTPrettyFormatter(BasePass):
 
         return f"index[{index_range}]"
 
-    def visit_TupleType(self, tuple_type: ir.TupleType) -> str:
+    def visit_TupleType(self, tuple_type: TupleType) -> str:
         return "tuple " + self._build_base_tuple(tuple_type._types)
 
     def visit_Identifier(self, identifier: Identifier) -> str:
