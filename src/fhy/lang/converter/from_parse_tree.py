@@ -63,6 +63,7 @@ from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS
 from fhy.lang import ast
 from fhy.lang.ast import Source, Span
 from fhy.lang.ast.alias import Expressions
+from fhy.lang.ast.passes import convert_ast_expression_to_core_expression
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
 
 
@@ -697,10 +698,9 @@ class ParseTreeConverter(FhYVisitor):
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
 
-        # TODO: use the IR expressions when implemented
         return NumericalType(
             data_type=data_type,
-            shape=list(shape),  # type: ignore
+            shape=list(map(convert_ast_expression_to_core_expression, shape)),
         )
 
     def visitDtype(self, ctx: FhYParser.DtypeContext) -> DataType:
@@ -730,9 +730,11 @@ class ParseTreeConverter(FhYVisitor):
 
         # TODO: use the IR expressions when implemented
         return IndexType(
-            lower_bound=low,  # type: ignore
-            upper_bound=high,  # type: ignore
-            stride=stride,  # type: ignore
+            lower_bound=convert_ast_expression_to_core_expression(low),
+            upper_bound=convert_ast_expression_to_core_expression(high),
+            stride=convert_ast_expression_to_core_expression(stride)
+            if stride
+            else None,
         )
 
     def visitRange(

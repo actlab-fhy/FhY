@@ -56,9 +56,14 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from fhy_core import (
+    BinaryExpression as CoreBinaryExpression,
+)
+from fhy_core import (
+    BinaryOperation as CoreBinaryOperation,
+)
+from fhy_core import (
     CoreDataType,
     DataType,
-    Expression,
     Identifier,
     IndexType,
     NumericalType,
@@ -67,6 +72,21 @@ from fhy_core import (
     TupleType,
     Type,
     TypeQualifier,
+)
+from fhy_core import (
+    Expression as CoreExpression,
+)
+from fhy_core import (
+    IdentifierExpression as CoreIdentifierExpression,
+)
+from fhy_core import (
+    LiteralExpression as CoreLiteralExpression,
+)
+from fhy_core import (
+    UnaryExpression as CoreUnaryExpression,
+)
+from fhy_core import (
+    UnaryOperation as CoreUnaryOperation,
 )
 
 from fhy.lang import ast
@@ -477,6 +497,56 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(types=types),
         )
 
+    def visit_CoreExpression(self, expression: CoreExpression) -> AlmostJson:
+        if isinstance(expression, CoreBinaryExpression):
+            return self.visit_CoreBinaryExpression(expression)
+        elif isinstance(expression, CoreUnaryExpression):
+            return self.visit_CoreUnaryExpression(expression)
+        elif isinstance(expression, CoreLiteralExpression):
+            return self.visit_CoreLiteralExpression(expression)
+        elif isinstance(expression, CoreIdentifierExpression):
+            return self.visit_CoreIdentifierExpression(expression)
+        else:
+            raise ValueError("Invalid core expression.")
+
+    def visit_CoreBinaryExpression(
+        self, expression: CoreBinaryExpression
+    ) -> AlmostJson:
+        left: AlmostJson = self.visit_CoreExpression(expression.left)
+        right: AlmostJson = self.visit_CoreExpression(expression.right)
+
+        return AlmostJson(
+            cls_name="CoreBinaryExpression",
+            attributes=dict(
+                left=left, operation=expression.operation.value, right=right
+            ),
+        )
+
+    def visit_CoreUnaryExpression(self, expression: CoreUnaryExpression) -> AlmostJson:
+        operand: AlmostJson = self.visit_CoreExpression(expression.operand)
+
+        return AlmostJson(
+            cls_name="CoreUnaryExpression",
+            attributes=dict(operand=operand, operation=expression.operation.value),
+        )
+
+    def visit_CoreLiteralExpression(
+        self, expression: CoreLiteralExpression
+    ) -> AlmostJson:
+        return AlmostJson(
+            cls_name="CoreLiteralExpression",
+            attributes=dict(value=expression.value),
+        )
+
+    def visit_CoreIdentifierExpression(
+        self, expression: CoreIdentifierExpression
+    ) -> AlmostJson:
+        identifier = self.visit_Identifier(expression.identifier)
+        return AlmostJson(
+            cls_name="CoreIdentifierExpression",
+            attributes=dict(name=identifier),
+        )
+
     def visit_Identifier(self, identifier: Identifier) -> AlmostJson:
         return AlmostJson(
             cls_name=visitor.get_cls_name(identifier),
@@ -861,7 +931,7 @@ class JSONtoAST(visitor.BasePass):
 
         values: dict = numerical_type.attributes
         dtype: type.DataType = self.visit(values.get("data_type"))
-        shape: list[Expression] = self.visit_sequence(values.get("shape"))
+        shape: list[CoreExpression] = self.visit_sequence(values.get("shape"))
 
         return NumericalType(data_type=dtype, shape=shape)
 
@@ -870,11 +940,11 @@ class JSONtoAST(visitor.BasePass):
             raise ValueError("No Index Type Provided")
 
         values: dict = index_type.attributes
-        lower: ast.Expression = self.visit(values.get("lower_bound"))
-        upper: ast.Expression = self.visit(values.get("upper_bound"))
+        lower: CoreExpression = self.visit_CoreExpression(values.get("lower_bound"))
+        upper: CoreExpression = self.visit_CoreExpression(values.get("upper_bound"))
 
         if (_stride := values.get("stride")) is not None:
-            stride = self.visit(_stride)
+            stride = self.visit_CoreExpression(_stride)
         else:
             stride = self.visit_IntLiteral(
                 AlmostJson(
@@ -886,12 +956,79 @@ class JSONtoAST(visitor.BasePass):
                 )
             )
 
-        # TODO: use the IR expressions when implemented
         return IndexType(
-            lower_bound=lower,  # type: ignore
-            upper_bound=upper,  # type: ignore
-            stride=stride,  # type: ignore
+            lower_bound=lower,
+            upper_bound=upper,
+            stride=stride,
         )
+
+    def visit_CoreExpression(self, expression: AlmostJson | None) -> CoreExpression:
+        if expression is None:
+            raise ValueError("No Core Expression Provided")
+
+        name = expression.cls_name
+        if name == "CoreBinaryExpression":
+            return self.visit_CoreBinaryExpression(expression)
+        elif name == "CoreUnaryExpression":
+            return self.visit_CoreUnaryExpression(expression)
+        elif name == "CoreLiteralExpression":
+            return self.visit_CoreLiteralExpression(expression)
+        elif name == "CoreIdentifierExpression":
+            return self.visit_CoreIdentifierExpression(expression)
+        else:
+            raise ValueError("Invalid Core Expression.")
+
+    def visit_CoreBinaryExpression(
+        self, expression: AlmostJson | None
+    ) -> CoreBinaryExpression:
+        if expression is None:
+            raise ValueError("No Core Binary Expression Provided")
+
+        values: dict = expression.attributes
+        left: CoreExpression = self.visit_CoreExpression(values.get("left"))
+        right: CoreExpression = self.visit_CoreExpression(values.get("right"))
+
+        return CoreBinaryExpression(
+            left=left,
+            operation=CoreBinaryOperation(str(values.get("operation"))),
+            right=right,
+        )
+
+    def visit_CoreUnaryExpression(
+        self, expression: AlmostJson | None
+    ) -> CoreUnaryExpression:
+        if expression is None:
+            raise ValueError("No Core Unary Expression Provided")
+
+        values: dict = expression.attributes
+        operand: CoreExpression = self.visit_CoreExpression(values.get("operand"))
+
+        return CoreUnaryExpression(
+            operand=operand,
+            operation=CoreUnaryOperation(str(values.get("operation"))),
+        )
+
+    def visit_CoreLiteralExpression(
+        self, expression: AlmostJson | None
+    ) -> CoreLiteralExpression:
+        if expression is None:
+            raise ValueError("No Core Literal Expression Provided")
+
+        values: dict = expression.attributes
+        value = values.get("value")
+
+        return CoreLiteralExpression(value=value)
+
+    def visit_CoreIdentifierExpression(
+        self, expression: AlmostJson | None
+    ) -> CoreIdentifierExpression:
+        if expression is None:
+            raise ValueError("No Core Identifier Expression Provided")
+
+        values: dict = expression.attributes
+        identifier: Identifier = self.visit_Identifier(values.get("name"))
+
+        return CoreIdentifierExpression(identifier=identifier)
 
     def visit_TupleType(self, tuple_type: AlmostJson | None) -> TupleType:
         if tuple_type is None:

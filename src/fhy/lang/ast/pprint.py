@@ -46,6 +46,7 @@ from fhy_core import (
     PrimitiveDataType,
     TemplateDataType,
     TupleType,
+    pformat_expression,
 )
 
 from fhy.lang import ast
@@ -267,7 +268,11 @@ class ASTPrettyFormatter(BasePass):
         if len(numerical_type.shape) == 0:
             shape = ""
         else:
-            shape = f"[{', '.join(self.visit(dim) for dim in numerical_type.shape)}]"
+            shape = ", ".join(
+                pformat_expression(dim, show_id=self.show_id)
+                for dim in numerical_type.shape
+            )
+            shape = f"[{shape}]"
 
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
@@ -278,11 +283,17 @@ class ASTPrettyFormatter(BasePass):
         return self.visit_Identifier(node.template_type)
 
     def visit_IndexType(self, index_type: IndexType) -> str:
-        index_range = f"{self.visit(index_type.lower_bound)}:"
-        index_range += f"{self.visit(index_type.upper_bound)}:"
+        index_range = (
+            f"{pformat_expression(index_type.lower_bound, show_id=self.show_id)}:"
+        )
+        index_range += (
+            f"{pformat_expression(index_type.upper_bound, show_id=self.show_id)}:"
+        )
 
         if index_type.stride is not None:
-            index_range += f"{self.visit(index_type.stride)}"
+            index_range += (
+                f"{pformat_expression(index_type.stride, show_id=self.show_id)}"
+            )
         else:
             index_range += "1"
 
