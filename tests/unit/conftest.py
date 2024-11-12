@@ -18,7 +18,6 @@ from fhy.lang.ast import (
     BinaryOperation,
     ComplexLiteral,
     DeclarationStatement,
-    Expression,
     ExpressionStatement,
     FloatLiteral,
     ForAllStatement,
@@ -50,6 +49,15 @@ from fhy_core import (
     TemplateDataType,
     TupleType,
     TypeQualifier,
+)
+from fhy_core import (
+    Expression as CoreExpression,
+)
+from fhy_core import (
+    IdentifierExpression as CoreIdentifierExpression,
+)
+from fhy_core import (
+    LiteralExpression as CoreLiteralExpression,
 )
 
 log = get_logger(__name__, 10)
@@ -90,6 +98,22 @@ def construct_id() -> Generator[Callable[[str], tuple[dict, Span]], None, None]:
         return obj, _id
 
     yield inner
+
+
+@pytest.fixture
+def core_literal_expression() -> (
+    Callable[[int | float | complex], tuple[dict, TLiteral]]
+):
+    def _build(value: int | float | complex):  # noqa: PYI041
+        _literal: TLiteral
+        result = dict(value=value)
+        _literal = CoreLiteralExpression(value=value)
+
+        name = _literal.__class__.__qualname__
+        obj = dict(cls_name=name, attributes=dict(value=result))
+        return obj, _literal
+
+    return _build
 
 
 @add_fixture_node
@@ -139,7 +163,7 @@ def literals(span_node) -> Callable[[int | float | complex], tuple[dict, TLitera
 def build_numerical_type() -> (
     Generator[
         Callable[
-            [CoreDataType, list[dict], list[Expression]],
+            [CoreDataType, list[dict], list[CoreExpression]],
             tuple[dict, NumericalType],
         ],
         None,
@@ -149,7 +173,7 @@ def build_numerical_type() -> (
     def inner(
         core: CoreDataType,
         shape_objs: list[dict],
-        shape_cls: list[Expression],
+        shape_cls: list[CoreExpression],
     ) -> tuple[dict, NumericalType]:
         """Builds a Numerical Type obj and node."""
         obj = dict(
@@ -174,9 +198,9 @@ def build_numerical_type() -> (
 
 @add_fixture_node
 @pytest.fixture
-def index_type(literals, construct_id) -> tuple[dict, IndexType]:
+def index_type(core_literal_expression, construct_id) -> tuple[dict, IndexType]:
     text = "index[1:k:1]"
-    one_obj, one_cls = literals(1)
+    one_obj, one_cls = core_literal_expression(1)
     upper_obj, upper_cls = construct_id("k")
 
     obj = dict(
@@ -190,7 +214,7 @@ def index_type(literals, construct_id) -> tuple[dict, IndexType]:
 
     index = IndexType(
         lower_bound=one_cls,
-        upper_bound=upper_cls,
+        upper_bound=CoreIdentifierExpression(upper_cls),
         stride=one_cls,
     )
 
@@ -203,7 +227,7 @@ def tuple_type(construct_id, build_numerical_type) -> tuple[dict, TupleType]:
     text = "tuple ( int32[m], )"
     shape_1_obj, shape_1_id = construct_id("m")
     num_obj, numerical = build_numerical_type(
-        CoreDataType.INT32, [shape_1_obj], [shape_1_id]
+        CoreDataType.INT32, [shape_1_obj], [CoreIdentifierExpression(shape_1_id)]
     )
 
     obj = dict(cls_name="TupleType", attributes=dict(types=[num_obj]))
@@ -223,7 +247,9 @@ def qualified(
     shape_1_obj, shape_1_id = construct_id("m")
     shape_2_obj, shape_2_id = construct_id("n")
     num_obj, num_cls = build_numerical_type(
-        CoreDataType.INT32, [shape_1_obj, shape_2_obj], [shape_1_id, shape_2_id]
+        CoreDataType.INT32,
+        [shape_1_obj, shape_2_obj],
+        [CoreIdentifierExpression(shape_1_id), CoreIdentifierExpression(shape_2_id)],
     )
 
     obj = dict(

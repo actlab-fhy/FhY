@@ -29,27 +29,7 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Conversion (serialization) of AST nodes to and from json format.
-
-We construct an intermediate data format, called AlmostJson, which serves as a data
-container and node identifier to prepare conversion of AST nodes both to and from the
-json format. The AlmostJson class, can recursively convert all child leaf nodes into a
-dictionary object in preparation of json serialization. Conversely, data contained by
-the AlmostJson class can be used to reconstruct AST Nodes.
-
-The classes, ASTtoJSON and JSONtoAST, both employ a visitor pattern, and are the primary
-drivers behind the respective transformations. Each class has a function (mimicking the
-json library api) to dump and load, as the primary entry point of use.
-
-Primary API:
-    load: Convert json string into AST nodes.
-    dump: Convert AST nodes into json string.
-
-Core Classes:
-    ASTtoJSON: ASTNode visitor constructing AlmostJson nodes.
-    JSONtoAST: AlmostJson node visitor constructing ASTNodes.
-
-"""
+"""Conversion (serialization) of the FhY AST to and from JSON format."""
 
 import json
 from collections.abc import Callable, Sequence
@@ -89,14 +69,14 @@ from fhy_core import (
     UnaryOperation as CoreUnaryOperation,
 )
 
-from fhy.lang import ast
-from fhy.lang.ast import visitor
+from fhy.lang.ast import node as ast_node
 from fhy.lang.ast.alias import ASTObject
 from fhy.lang.ast.span import Source, Span
+from fhy.lang.ast.visitor import BasePass
 
 
 def convert(value: object) -> Any:
-    """Recursively Converts objects into dictionary records."""
+    """Recursively convert objects into dictionary records."""
     if isinstance(value, AlmostJson):
         return value.data()
 
@@ -108,7 +88,7 @@ def convert(value: object) -> Any:
 
 
 class AlmostJson:
-    """Consistent Data Structure Format for JSON Preparations."""
+    """Data structure format for JSON serialization preparations."""
 
     cls_name: str
     attributes: dict
@@ -138,7 +118,11 @@ class AlmostJson:
 JSONObject = AlmostJson | Sequence[AlmostJson]
 
 
-class ASTtoJSON(visitor.BasePass):
+def _get_node_cls_name(node: ASTObject) -> str:
+    return node.__class__.__qualname__
+
+
+class ASTtoJSON(BasePass):
     """Convert an AST node into a json object.
 
     Args:
@@ -157,28 +141,28 @@ class ASTtoJSON(visitor.BasePass):
 
         return super().default(node)
 
-    def visit_Module(self, node: ast.Module) -> AlmostJson:
+    def visit_module(self, node: ast_node.Module) -> AlmostJson:
         statements: list[AlmostJson] = self.visit_sequence(node.statements)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 statements=statements,
             ),
         )
 
         return obj
 
-    def visit_Operation(self, node: ast.Operation) -> AlmostJson:
+    def visit_operation(self, node: ast_node.Operation) -> AlmostJson:
         templates: list[AlmostJson] = self.visit_sequence(node.templates)
         args: list[AlmostJson] = self.visit_sequence(node.args)
         ret_type: AlmostJson = self.visit(node.return_type)
         body: list[AlmostJson] = self.visit_sequence(node.body)
-        name: AlmostJson = self.visit_Identifier(node.name)
+        name: AlmostJson = self.visit_identifier(node.name)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 templates=templates,
                 name=name,
                 args=args,
@@ -189,15 +173,15 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_Procedure(self, node: ast.Procedure) -> AlmostJson:
+    def visit_procedure(self, node: ast_node.Procedure) -> AlmostJson:
         templates: list[AlmostJson] = self.visit_sequence(node.templates)
         args: list[AlmostJson] = self.visit_sequence(node.args)
         body: list[AlmostJson] = self.visit_sequence(node.body)
-        name: AlmostJson = self.visit_Identifier(node.name)
+        name: AlmostJson = self.visit_identifier(node.name)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 templates=templates,
                 name=name,
                 args=args,
@@ -207,37 +191,39 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_Import(self, node: ast.Import) -> AlmostJson:
-        identifier: AlmostJson = self.visit_Identifier(node.name)
+    def visit_import(self, node: ast_node.Import) -> AlmostJson:
+        identifier: AlmostJson = self.visit_identifier(node.name)
         return AlmostJson(
-            cls_name=visitor.get_cls_name(node),
-            attributes=dict(span=self.visit_Span(node.span), name=identifier),
+            cls_name=_get_node_cls_name(node),
+            attributes=dict(span=self.visit_span(node.span), name=identifier),
         )
 
-    def visit_Argument(self, node: ast.Argument) -> AlmostJson:
-        qtype: AlmostJson = self.visit_QualifiedType(node.qualified_type)
+    def visit_argument(self, node: ast_node.Argument) -> AlmostJson:
+        qtype: AlmostJson = self.visit_qualified_type(node.qualified_type)
         name: AlmostJson | None = (
-            self.visit_Identifier(node.name) if node.name is not None else None
+            self.visit_identifier(node.name) if node.name is not None else None
         )
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span), qualified_type=qtype, name=name
+                span=self.visit_span(node.span), qualified_type=qtype, name=name
             ),
         )
 
         return obj
 
-    def visit_DeclarationStatement(self, node: ast.DeclarationStatement) -> AlmostJson:
-        varname: AlmostJson = self.visit_Identifier(node.variable_name)
-        vartype: AlmostJson = self.visit_QualifiedType(node.variable_type)
+    def visit_declaration_statement(
+        self, node: ast_node.DeclarationStatement
+    ) -> AlmostJson:
+        varname: AlmostJson = self.visit_identifier(node.variable_name)
+        vartype: AlmostJson = self.visit_qualified_type(node.variable_type)
         express: AlmostJson | None = (
             self.visit(node.expression) if node.expression is not None else None
         )
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 variable_name=varname,
                 variable_type=vartype,
                 expression=express,
@@ -246,15 +232,17 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_ExpressionStatement(self, node: ast.ExpressionStatement) -> AlmostJson:
+    def visit_expression_statement(
+        self, node: ast_node.ExpressionStatement
+    ) -> AlmostJson:
         left: AlmostJson | None = (
             self.visit(node.left) if node.left is not None else None
         )
         right: AlmostJson = self.visit(node.right)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 left=left,
                 right=right,
             ),
@@ -262,14 +250,16 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_SelectionStatement(self, node: ast.SelectionStatement) -> AlmostJson:
+    def visit_selection_statement(
+        self, node: ast_node.SelectionStatement
+    ) -> AlmostJson:
         condition: AlmostJson = self.visit(node.condition)
         tbody: list[AlmostJson] = self.visit_sequence(node.true_body)
         fbody: list[AlmostJson] = self.visit_sequence(node.false_body)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 condition=condition,
                 true_body=tbody,
                 false_body=fbody,
@@ -278,13 +268,13 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_ForAllStatement(self, node: ast.ForAllStatement) -> AlmostJson:
+    def visit_for_all_statement(self, node: ast_node.ForAllStatement) -> AlmostJson:
         index: AlmostJson = self.visit(node.index)
         body: list[AlmostJson] = self.visit_sequence(node.body)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 index=index,
                 body=body,
             ),
@@ -292,24 +282,24 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_ReturnStatement(self, node: ast.ReturnStatement) -> AlmostJson:
+    def visit_return_statement(self, node: ast_node.ReturnStatement) -> AlmostJson:
         express: AlmostJson = self.visit(node.expression)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 expression=express,
             ),
         )
 
         return obj
 
-    def visit_UnaryExpression(self, node: ast.UnaryExpression) -> AlmostJson:
+    def visit_unary_expression(self, node: ast_node.UnaryExpression) -> AlmostJson:
         express: AlmostJson = self.visit(node.expression)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 expression=express,
                 operation=node.operation.value,
             ),
@@ -317,13 +307,13 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_BinaryExpression(self, node: ast.BinaryExpression) -> AlmostJson:
+    def visit_binary_expression(self, node: ast_node.BinaryExpression) -> AlmostJson:
         left: AlmostJson = self.visit(node.left)
         right: AlmostJson = self.visit(node.right)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 left=left,
                 operation=node.operation.value,
                 right=right,
@@ -332,14 +322,14 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_TernaryExpression(self, node: ast.TernaryExpression) -> AlmostJson:
+    def visit_ternary_expression(self, node: ast_node.TernaryExpression) -> AlmostJson:
         condition: AlmostJson = self.visit(node.condition)
         true: AlmostJson = self.visit(node.true)
         false: AlmostJson = self.visit(node.false)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 condition=condition,
                 true=true,
                 false=false,
@@ -348,15 +338,17 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_FunctionExpression(self, node: ast.FunctionExpression) -> AlmostJson:
+    def visit_function_expression(
+        self, node: ast_node.FunctionExpression
+    ) -> AlmostJson:
         function: AlmostJson = self.visit(node.function)
         template: list[AlmostJson] = self.visit_sequence(node.template_types)
         index: list[AlmostJson] = self.visit_sequence(node.indices)
         args: list[AlmostJson] = self.visit_sequence(node.args)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 function=function,
                 template_types=template,
                 indices=index,
@@ -366,15 +358,15 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_ArrayAccessExpression(
-        self, node: ast.ArrayAccessExpression
+    def visit_array_access_expression(
+        self, node: ast_node.ArrayAccessExpression
     ) -> AlmostJson:
         array: AlmostJson = self.visit(node.array_expression)
         index: list[AlmostJson] = self.visit_sequence(node.indices)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 array_expression=array,
                 indices=index,
             ),
@@ -382,27 +374,27 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_TupleExpression(self, node: ast.TupleExpression) -> AlmostJson:
+    def visit_tuple_expression(self, node: ast_node.TupleExpression) -> AlmostJson:
         express: list[AlmostJson] = self.visit_sequence(node.expressions)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 expressions=express,
             ),
         )
 
         return obj
 
-    def visit_TupleAccessExpression(
-        self, node: ast.TupleAccessExpression
+    def visit_tuple_access_expression(
+        self, node: ast_node.TupleAccessExpression
     ) -> AlmostJson:
         _tuple: AlmostJson = self.visit(node.tuple_expression)
-        element: AlmostJson = self.visit_IntLiteral(node.element_index)
+        element: AlmostJson = self.visit_int_literal(node.element_index)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 tuple_expression=_tuple,
                 element_index=element,
             ),
@@ -410,110 +402,110 @@ class ASTtoJSON(visitor.BasePass):
 
         return obj
 
-    def visit_IdentifierExpression(self, node: ast.IdentifierExpression) -> AlmostJson:
+    def visit_identifier_expression(
+        self, node: ast_node.IdentifierExpression
+    ) -> AlmostJson:
         identifier: AlmostJson = self.visit(node.identifier)
         obj = AlmostJson(
-            cls_name=visitor.get_cls_name(node),
-            attributes=dict(span=self.visit_Span(node.span), identifier=identifier),
+            cls_name=_get_node_cls_name(node),
+            attributes=dict(span=self.visit_span(node.span), identifier=identifier),
         )
 
         return obj
 
-    def visit_IntLiteral(self, node: ast.IntLiteral) -> AlmostJson:
+    def visit_int_literal(self, node: ast_node.IntLiteral) -> AlmostJson:
         return AlmostJson(
-            cls_name=visitor.get_cls_name(node),
-            attributes=dict(span=self.visit_Span(node.span), value=node.value),
+            cls_name=_get_node_cls_name(node),
+            attributes=dict(span=self.visit_span(node.span), value=node.value),
         )
 
-    def visit_FloatLiteral(self, node: ast.FloatLiteral) -> AlmostJson:
+    def visit_float_literal(self, node: ast_node.FloatLiteral) -> AlmostJson:
         return AlmostJson(
-            cls_name=visitor.get_cls_name(node),
-            attributes=dict(span=self.visit_Span(node.span), value=node.value),
+            cls_name=_get_node_cls_name(node),
+            attributes=dict(span=self.visit_span(node.span), value=node.value),
         )
 
-    def visit_ComplexLiteral(self, node: ast.ComplexLiteral) -> AlmostJson:
-        # NOTE: Complex Values are not JSON Serializable. We must Separate the
-        #       real and imaginary parts contained by a dictionary.
+    def visit_complex_literal(self, node: ast_node.ComplexLiteral) -> AlmostJson:
         result = dict(real=node.value.real, imag=node.value.imag)
 
         return AlmostJson(
-            cls_name=visitor.get_cls_name(node),
-            attributes=dict(span=self.visit_Span(node.span), value=result),
+            cls_name=_get_node_cls_name(node),
+            attributes=dict(span=self.visit_span(node.span), value=result),
         )
 
-    def visit_PrimitiveDataType(self, node: PrimitiveDataType) -> AlmostJson:
+    def visit_primitive_data_type(self, node: PrimitiveDataType) -> AlmostJson:
         return AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(core_data_type=node.core_data_type.value),
         )
 
-    def visit_TemplateDataType(self, node: TemplateDataType) -> AlmostJson:
+    def visit_template_data_type(self, node: TemplateDataType) -> AlmostJson:
         return AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(data_type=self.visit(node.template_type)),
         )
 
-    def visit_QualifiedType(self, node: ast.QualifiedType) -> AlmostJson:
+    def visit_qualified_type(self, node: ast_node.QualifiedType) -> AlmostJson:
         base: AlmostJson = self.visit(node.base_type)
 
         return AlmostJson(
-            cls_name=visitor.get_cls_name(node),
+            cls_name=_get_node_cls_name(node),
             attributes=dict(
-                span=self.visit_Span(node.span),
+                span=self.visit_span(node.span),
                 base_type=base,
                 type_qualifier=node.type_qualifier.value,
             ),
         )
 
-    def visit_NumericalType(self, numerical_type: NumericalType) -> AlmostJson:
+    def visit_numerical_type(self, numerical_type: NumericalType) -> AlmostJson:
         dtype: AlmostJson = self.visit(numerical_type.data_type)
-        shape: list[AlmostJson] = self.visit_sequence(numerical_type.shape)
+        shape: list[AlmostJson] = [
+            self.visit_core_expression(e) for e in numerical_type.shape
+        ]
 
         return AlmostJson(
-            cls_name=visitor.get_cls_name(numerical_type),
+            cls_name=_get_node_cls_name(numerical_type),
             attributes=dict(data_type=dtype, shape=shape),
         )
 
-    def visit_IndexType(self, index_type: IndexType) -> AlmostJson:
-        lower: AlmostJson = self.visit(index_type.lower_bound)
-        upper: AlmostJson = self.visit(index_type.upper_bound)
+    def visit_index_type(self, index_type: IndexType) -> AlmostJson:
+        lower: AlmostJson = self.visit_core_expression(index_type.lower_bound)
+        upper: AlmostJson = self.visit_core_expression(index_type.upper_bound)
         if index_type.stride is not None:
-            stride: AlmostJson = self.visit(index_type.stride)
+            stride: AlmostJson = self.visit_core_expression(index_type.stride)
         else:
-            stride = self.visit_IntLiteral(
-                ast.IntLiteral(value=1, span=Span(0, 0, 0, 0))
-            )
+            stride = self.visit_core_expression(CoreLiteralExpression(1))
 
         return AlmostJson(
-            cls_name=visitor.get_cls_name(index_type),
+            cls_name=_get_node_cls_name(index_type),
             attributes=dict(lower_bound=lower, upper_bound=upper, stride=stride),
         )
 
-    def visit_TupleType(self, tuple_type: TupleType) -> AlmostJson:
+    def visit_tuple_type(self, tuple_type: TupleType) -> AlmostJson:
         types: list[AlmostJson] = self.visit_sequence(tuple_type._types)
 
         return AlmostJson(
-            cls_name=visitor.get_cls_name(tuple_type),
+            cls_name=_get_node_cls_name(tuple_type),
             attributes=dict(types=types),
         )
 
-    def visit_CoreExpression(self, expression: CoreExpression) -> AlmostJson:
+    def visit_core_expression(self, expression: CoreExpression) -> AlmostJson:
         if isinstance(expression, CoreBinaryExpression):
-            return self.visit_CoreBinaryExpression(expression)
+            return self.visit_core_binary_expression(expression)
         elif isinstance(expression, CoreUnaryExpression):
-            return self.visit_CoreUnaryExpression(expression)
+            return self.visit_core_unary_expression(expression)
         elif isinstance(expression, CoreLiteralExpression):
-            return self.visit_CoreLiteralExpression(expression)
+            return self.visit_core_literal_expression(expression)
         elif isinstance(expression, CoreIdentifierExpression):
-            return self.visit_CoreIdentifierExpression(expression)
+            return self.visit_core_Identifier_expression(expression)
         else:
             raise ValueError("Invalid core expression.")
 
-    def visit_CoreBinaryExpression(
+    def visit_core_binary_expression(
         self, expression: CoreBinaryExpression
     ) -> AlmostJson:
-        left: AlmostJson = self.visit_CoreExpression(expression.left)
-        right: AlmostJson = self.visit_CoreExpression(expression.right)
+        left: AlmostJson = self.visit_core_expression(expression.left)
+        right: AlmostJson = self.visit_core_expression(expression.right)
 
         return AlmostJson(
             cls_name="CoreBinaryExpression",
@@ -522,15 +514,17 @@ class ASTtoJSON(visitor.BasePass):
             ),
         )
 
-    def visit_CoreUnaryExpression(self, expression: CoreUnaryExpression) -> AlmostJson:
-        operand: AlmostJson = self.visit_CoreExpression(expression.operand)
+    def visit_core_unary_expression(
+        self, expression: CoreUnaryExpression
+    ) -> AlmostJson:
+        operand: AlmostJson = self.visit_core_expression(expression.operand)
 
         return AlmostJson(
             cls_name="CoreUnaryExpression",
             attributes=dict(operand=operand, operation=expression.operation.value),
         )
 
-    def visit_CoreLiteralExpression(
+    def visit_core_literal_expression(
         self, expression: CoreLiteralExpression
     ) -> AlmostJson:
         return AlmostJson(
@@ -538,35 +532,35 @@ class ASTtoJSON(visitor.BasePass):
             attributes=dict(value=expression.value),
         )
 
-    def visit_CoreIdentifierExpression(
+    def visit_core_Identifier_expression(
         self, expression: CoreIdentifierExpression
     ) -> AlmostJson:
-        identifier = self.visit_Identifier(expression.identifier)
+        identifier = self.visit_identifier(expression.identifier)
         return AlmostJson(
             cls_name="CoreIdentifierExpression",
             attributes=dict(name=identifier),
         )
 
-    def visit_Identifier(self, identifier: Identifier) -> AlmostJson:
+    def visit_identifier(self, identifier: Identifier) -> AlmostJson:
         return AlmostJson(
-            cls_name=visitor.get_cls_name(identifier),
+            cls_name=_get_node_cls_name(identifier),
             attributes=dict(name_hint=identifier.name_hint, _id=identifier.id),
         )
 
     def visit_sequence(self, nodes: Sequence[ASTObject]) -> list[AlmostJson]:
         return [self.visit(node) for node in nodes]
 
-    def visit_Span(self, span: Span | None) -> AlmostJson | None:
+    def visit_span(self, span: Span | None) -> AlmostJson | None:
         if span is None or not self.include_span:
             return None
 
         if span.source is not None:
-            source: AlmostJson | None = self.visit_Source(span.source)
+            source: AlmostJson | None = self.visit_source(span.source)
         else:
             source = span.source
 
         return AlmostJson(
-            cls_name=visitor.get_cls_name(span),
+            cls_name=_get_node_cls_name(span),
             attributes=dict(
                 start_line=span.line.start,
                 end_line=span.line.stop,
@@ -576,14 +570,14 @@ class ASTtoJSON(visitor.BasePass):
             ),
         )
 
-    def visit_Source(self, source: Source) -> AlmostJson:
+    def visit_source(self, source: Source) -> AlmostJson:
         return AlmostJson(
-            cls_name=visitor.get_cls_name(source),
+            cls_name=_get_node_cls_name(source),
             attributes=dict(namespace=str(source.namespace)),
         )
 
 
-class JSONtoAST(visitor.BasePass):
+class JSONtoAST(BasePass):
     """Converts a JSON object into AST nodes."""
 
     def visit(self, node: JSONObject | None) -> Any:
@@ -599,31 +593,33 @@ class JSONtoAST(visitor.BasePass):
 
         return method(node)
 
-    def visit_Module(self, node: AlmostJson | None) -> ast.Module:
+    def visit_module(self, node: AlmostJson | None) -> ast_node.Module:
         if node is None:
             raise ValueError("Invalid Module")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        statements: list[ast.Statement] = self.visit_sequence(values.get("statements"))
+        span: Span | None = self.visit_span(values.get("span"))
+        statements: list[ast_node.Statement] = self.visit_sequence(
+            values.get("statements")
+        )
 
-        return ast.Module(span=span, statements=statements)
+        return ast_node.Module(span=span, statements=statements)
 
-    def visit_Operation(self, node: AlmostJson | None) -> ast.Operation:
+    def visit_operation(self, node: AlmostJson | None) -> ast_node.Operation:
         if node is None:
             raise ValueError("Invalid Operation")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
+        span: Span | None = self.visit_span(values.get("span"))
         templates: list[TemplateDataType] = self.visit_sequence(values.get("templates"))
-        args: list[ast.Argument] = self.visit_sequence(values.get("args"))
-        body: list[ast.Statement] = self.visit_sequence(values.get("body"))
-        name: Identifier = self.visit_Identifier(values.get("name"))
-        ret_type: ast.QualifiedType = self.visit_QualifiedType(
+        args: list[ast_node.Argument] = self.visit_sequence(values.get("args"))
+        body: list[ast_node.Statement] = self.visit_sequence(values.get("body"))
+        name: Identifier = self.visit_identifier(values.get("name"))
+        ret_type: ast_node.QualifiedType = self.visit_qualified_type(
             values.get("return_type")
         )
 
-        return ast.Operation(
+        return ast_node.Operation(
             span=span,
             name=name,
             templates=templates,
@@ -632,54 +628,54 @@ class JSONtoAST(visitor.BasePass):
             return_type=ret_type,
         )
 
-    def visit_Procedure(self, node: AlmostJson | None) -> ast.Procedure:
+    def visit_procedure(self, node: AlmostJson | None) -> ast_node.Procedure:
         if node is None:
             raise ValueError("Invalid Procedure")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
+        span: Span | None = self.visit_span(values.get("span"))
         templates: list[TemplateDataType] = self.visit_sequence(values.get("templates"))
-        args: list[ast.Argument] = self.visit_sequence(values.get("args"))
-        body: list[ast.Statement] = self.visit_sequence(values.get("body"))
-        name: Identifier = self.visit_Identifier(values.get("name"))
+        args: list[ast_node.Argument] = self.visit_sequence(values.get("args"))
+        body: list[ast_node.Statement] = self.visit_sequence(values.get("body"))
+        name: Identifier = self.visit_identifier(values.get("name"))
 
-        return ast.Procedure(
+        return ast_node.Procedure(
             span=span, name=name, templates=templates, args=args, body=body
         )
 
-    def visit_Import(self, node: AlmostJson | None) -> ast.Import:
+    def visit_import(self, node: AlmostJson | None) -> ast_node.Import:
         if node is None:
             raise ValueError("Invalid Import statement")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        name: Identifier = self.visit_Identifier(values.get("name"))
+        span: Span | None = self.visit_span(values.get("span"))
+        name: Identifier = self.visit_identifier(values.get("name"))
 
-        return ast.Import(span=span, name=name)
+        return ast_node.Import(span=span, name=name)
 
-    def visit_Argument(self, node: AlmostJson | None) -> ast.Argument:
+    def visit_argument(self, node: AlmostJson | None) -> ast_node.Argument:
         if node is None:
             raise ValueError("Invalid Argument")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        qtype: ast.QualifiedType = self.visit_QualifiedType(
+        span: Span | None = self.visit_span(values.get("span"))
+        qtype: ast_node.QualifiedType = self.visit_qualified_type(
             values.get("qualified_type")
         )
-        name: Identifier = self.visit_Identifier(values.get("name"))
+        name: Identifier = self.visit_identifier(values.get("name"))
 
-        return ast.Argument(span=span, name=name, qualified_type=qtype)
+        return ast_node.Argument(span=span, name=name, qualified_type=qtype)
 
-    def visit_DeclarationStatement(
+    def visit_declaration_statement(
         self, node: AlmostJson | None
-    ) -> ast.DeclarationStatement:
+    ) -> ast_node.DeclarationStatement:
         if node is None:
             raise ValueError("Invalid DeclarationStatement")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        varname: Identifier = self.visit_Identifier(values.get("variable_name"))
-        vartype: ast.QualifiedType = self.visit_QualifiedType(
+        span: Span | None = self.visit_span(values.get("span"))
+        varname: Identifier = self.visit_identifier(values.get("variable_name"))
+        vartype: ast_node.QualifiedType = self.visit_qualified_type(
             values.get("variable_type")
         )
         if (_express := values.get("expression")) is not None:
@@ -687,116 +683,130 @@ class JSONtoAST(visitor.BasePass):
 
         express = values.get("expression")
 
-        return ast.DeclarationStatement(
+        return ast_node.DeclarationStatement(
             span=span, variable_name=varname, variable_type=vartype, expression=express
         )
 
-    def visit_ExpressionStatement(
+    def visit_expression_statement(
         self, node: AlmostJson | None
-    ) -> ast.ExpressionStatement:
+    ) -> ast_node.ExpressionStatement:
         if node is None:
             raise ValueError("Invalid ExpressionStatement")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
+        span: Span | None = self.visit_span(values.get("span"))
         if (_left := values.get("left")) is not None:
             values["left"] = self.visit(_left)
 
-        left: ast.Expression | None = values.get("left")
-        right: ast.Expression = self.visit(values.get("right"))
+        left: ast_node.Expression | None = values.get("left")
+        right: ast_node.Expression = self.visit(values.get("right"))
 
-        return ast.ExpressionStatement(span=span, left=left, right=right)
+        return ast_node.ExpressionStatement(span=span, left=left, right=right)
 
-    def visit_SelectionStatement(
+    def visit_selection_statement(
         self, node: AlmostJson | None
-    ) -> ast.SelectionStatement:
+    ) -> ast_node.SelectionStatement:
         if node is None:
             raise ValueError("Invalid SelectionStatement")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        condition: ast.Expression = self.visit(values.get("condition"))
-        tbody: list[ast.Statement] = self.visit_sequence(values.get("true_body"))
-        fbody: list[ast.Statement] = self.visit_sequence(values.get("false_body"))
+        span: Span | None = self.visit_span(values.get("span"))
+        condition: ast_node.Expression = self.visit(values.get("condition"))
+        tbody: list[ast_node.Statement] = self.visit_sequence(values.get("true_body"))
+        fbody: list[ast_node.Statement] = self.visit_sequence(values.get("false_body"))
 
-        return ast.SelectionStatement(
+        return ast_node.SelectionStatement(
             span=span, condition=condition, true_body=tbody, false_body=fbody
         )
 
-    def visit_ForAllStatement(self, node: AlmostJson | None) -> ast.ForAllStatement:
+    def visit_for_all_statement(
+        self, node: AlmostJson | None
+    ) -> ast_node.ForAllStatement:
         if node is None:
             raise ValueError("Invalid ForAllStatement")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        index: ast.Expression = self.visit(values.get("index"))
-        body: list[ast.Statement] = self.visit_sequence(values.get("body"))
+        span: Span | None = self.visit_span(values.get("span"))
+        index: ast_node.Expression = self.visit(values.get("index"))
+        body: list[ast_node.Statement] = self.visit_sequence(values.get("body"))
 
-        return ast.ForAllStatement(span=span, index=index, body=body)
+        return ast_node.ForAllStatement(span=span, index=index, body=body)
 
-    def visit_ReturnStatement(self, node: AlmostJson | None) -> ast.ReturnStatement:
+    def visit_return_statement(
+        self, node: AlmostJson | None
+    ) -> ast_node.ReturnStatement:
         if node is None:
             raise ValueError("Invalid ReturnStatement")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        express: ast.Expression = self.visit(values.get("expression"))
+        span: Span | None = self.visit_span(values.get("span"))
+        express: ast_node.Expression = self.visit(values.get("expression"))
 
-        return ast.ReturnStatement(span=span, expression=express)
+        return ast_node.ReturnStatement(span=span, expression=express)
 
-    def visit_UnaryExpression(self, node: AlmostJson | None) -> ast.UnaryExpression:
+    def visit_unary_expression(
+        self, node: AlmostJson | None
+    ) -> ast_node.UnaryExpression:
         if node is None:
             raise ValueError("Invalid UnaryExpression")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        express: ast.Expression = self.visit(values.get("expression"))
-        operator: ast.UnaryOperation = ast.UnaryOperation(str(values.get("operation")))
+        span: Span | None = self.visit_span(values.get("span"))
+        express: ast_node.Expression = self.visit(values.get("expression"))
+        operator: ast_node.UnaryOperation = ast_node.UnaryOperation(
+            str(values.get("operation"))
+        )
 
-        return ast.UnaryExpression(span=span, operation=operator, expression=express)
+        return ast_node.UnaryExpression(
+            span=span, operation=operator, expression=express
+        )
 
-    def visit_BinaryExpression(self, node: AlmostJson | None) -> ast.BinaryExpression:
+    def visit_binary_expression(
+        self, node: AlmostJson | None
+    ) -> ast_node.BinaryExpression:
         if node is None:
             raise ValueError("Invalid BinaryExpression")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        left: ast.Expression = self.visit(values.get("left"))
-        right: ast.Expression = self.visit(values.get("right"))
-        operator = ast.BinaryOperation(str(values.get("operation")))
+        span: Span | None = self.visit_span(values.get("span"))
+        left: ast_node.Expression = self.visit(values.get("left"))
+        right: ast_node.Expression = self.visit(values.get("right"))
+        operator = ast_node.BinaryOperation(str(values.get("operation")))
 
-        return ast.BinaryExpression(
+        return ast_node.BinaryExpression(
             span=span, left=left, right=right, operation=operator
         )
 
-    def visit_TernaryExpression(self, node: AlmostJson | None) -> ast.TernaryExpression:
+    def visit_ternary_expression(
+        self, node: AlmostJson | None
+    ) -> ast_node.TernaryExpression:
         if node is None:
             raise ValueError("Invalid TernaryExpression")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        condition: ast.Expression = self.visit(values.get("condition"))
-        true: ast.Expression = self.visit(values.get("true"))
-        false: ast.Expression = self.visit(values.get("false"))
+        span: Span | None = self.visit_span(values.get("span"))
+        condition: ast_node.Expression = self.visit(values.get("condition"))
+        true: ast_node.Expression = self.visit(values.get("true"))
+        false: ast_node.Expression = self.visit(values.get("false"))
 
-        return ast.TernaryExpression(
+        return ast_node.TernaryExpression(
             span=span, condition=condition, true=true, false=false
         )
 
-    def visit_FunctionExpression(
+    def visit_function_expression(
         self, node: AlmostJson | None
-    ) -> ast.FunctionExpression:
+    ) -> ast_node.FunctionExpression:
         if node is None:
             raise ValueError("Invalid FunctionExpression")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        function: ast.Expression = self.visit(values.get("function"))
+        span: Span | None = self.visit_span(values.get("span"))
+        function: ast_node.Expression = self.visit(values.get("function"))
         template: list[DataType] = self.visit_sequence(values.get("template_types"))
-        index: list[ast.Expression] = self.visit_sequence(values.get("indices"))
-        args: list[ast.Expression] = self.visit_sequence(values.get("args"))
+        index: list[ast_node.Expression] = self.visit_sequence(values.get("indices"))
+        args: list[ast_node.Expression] = self.visit_sequence(values.get("args"))
 
-        return ast.FunctionExpression(
+        return ast_node.FunctionExpression(
             span=span,
             function=function,
             template_types=template,
@@ -804,97 +814,103 @@ class JSONtoAST(visitor.BasePass):
             args=args,
         )
 
-    def visit_ArrayAccessExpression(
+    def visit_array_access_expression(
         self, node: AlmostJson | None
-    ) -> ast.ArrayAccessExpression:
+    ) -> ast_node.ArrayAccessExpression:
         if node is None:
             raise ValueError("Invalid ArrayAccessExpression")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        array: ast.Expression = self.visit(values.get("array_expression"))
-        index: list[ast.Expression] = self.visit_sequence(values.get("indices"))
+        span: Span | None = self.visit_span(values.get("span"))
+        array: ast_node.Expression = self.visit(values.get("array_expression"))
+        index: list[ast_node.Expression] = self.visit_sequence(values.get("indices"))
 
-        return ast.ArrayAccessExpression(
+        return ast_node.ArrayAccessExpression(
             span=span,
             array_expression=array,
             indices=index,
         )
 
-    def visit_TupleExpression(self, node: AlmostJson | None) -> ast.TupleExpression:
+    def visit_tuple_expression(
+        self, node: AlmostJson | None
+    ) -> ast_node.TupleExpression:
         if node is None:
             raise ValueError("Invalid TupleExpression")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        express: list[ast.Expression] = self.visit_sequence(values.get("expressions"))
+        span: Span | None = self.visit_span(values.get("span"))
+        express: list[ast_node.Expression] = self.visit_sequence(
+            values.get("expressions")
+        )
 
-        return ast.TupleExpression(span=span, expressions=express)
+        return ast_node.TupleExpression(span=span, expressions=express)
 
-    def visit_TupleAccessExpression(
+    def visit_tuple_access_expression(
         self, node: AlmostJson | None
-    ) -> ast.TupleAccessExpression:
+    ) -> ast_node.TupleAccessExpression:
         if node is None:
             raise ValueError("Invalid TupleAccessExpression")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
-        _tuple: ast.Expression = self.visit(values.get("tuple_expression"))
-        element: ast.IntLiteral = self.visit_IntLiteral(values.get("element_index"))
+        span: Span | None = self.visit_span(values.get("span"))
+        _tuple: ast_node.Expression = self.visit(values.get("tuple_expression"))
+        element: ast_node.IntLiteral = self.visit_int_literal(
+            values.get("element_index")
+        )
 
-        return ast.TupleAccessExpression(
+        return ast_node.TupleAccessExpression(
             span=span, tuple_expression=_tuple, element_index=element
         )
 
-    def visit_IdentifierExpression(
+    def visit_identifier_expression(
         self, node: AlmostJson | None
-    ) -> ast.IdentifierExpression:
+    ) -> ast_node.IdentifierExpression:
         if node is None:
             raise ValueError("Invalid IdentifierExpression")
 
         values: dict = node.attributes
-        identifier: Identifier = self.visit_Identifier(values.get("identifier"))
-        span: Span | None = self.visit_Span(values.get("span"))
+        identifier: Identifier = self.visit_identifier(values.get("identifier"))
+        span: Span | None = self.visit_span(values.get("span"))
 
-        return ast.IdentifierExpression(span=span, identifier=identifier)
+        return ast_node.IdentifierExpression(span=span, identifier=identifier)
 
-    def visit_IntLiteral(self, node: AlmostJson | None) -> ast.IntLiteral:
+    def visit_int_literal(self, node: AlmostJson | None) -> ast_node.IntLiteral:
         if node is None:
             raise ValueError("Invalid IntLiteral")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
+        span: Span | None = self.visit_span(values.get("span"))
         if (value := values.get("value")) is None:
             raise ValueError("Invalid IntLiteral Value")
 
-        return ast.IntLiteral(span=span, value=value)
+        return ast_node.IntLiteral(span=span, value=value)
 
-    def visit_FloatLiteral(self, node: AlmostJson | None) -> ast.FloatLiteral:
+    def visit_float_literal(self, node: AlmostJson | None) -> ast_node.FloatLiteral:
         if node is None:
             raise ValueError("Invalid FloatLiteral")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
+        span: Span | None = self.visit_span(values.get("span"))
         if (value := values.get("value")) is None:
             raise ValueError("Invalid FloatLiteral Value")
 
-        return ast.FloatLiteral(span=span, value=value)
+        return ast_node.FloatLiteral(span=span, value=value)
 
-    def visit_ComplexLiteral(self, node: AlmostJson | None) -> ast.ComplexLiteral:
+    def visit_complex_literal(self, node: AlmostJson | None) -> ast_node.ComplexLiteral:
         if node is None:
             raise ValueError("Invalid ComplexLiteral")
 
         values: dict = node.attributes
-        span: Span | None = self.visit_Span(values.get("span"))
+        span: Span | None = self.visit_span(values.get("span"))
         if (value := values.get("value")) is None:
             raise ValueError("Invalid ComplexLiteral Value")
 
         # Combine real and imaginary parts to construct the complex number
         result: complex = complex(real=value.get("real"), imag=value.get("imag"))
 
-        return ast.ComplexLiteral(span=span, value=result)
+        return ast_node.ComplexLiteral(span=span, value=result)
 
-    def visit_PrimitiveDataType(self, node: AlmostJson | None) -> PrimitiveDataType:
+    def visit_primitive_data_type(self, node: AlmostJson | None) -> PrimitiveDataType:
         if node is None:
             raise ValueError("Invalid DataType")
 
@@ -902,7 +918,7 @@ class JSONtoAST(visitor.BasePass):
 
         return PrimitiveDataType(core_data_type=core)
 
-    def visit_TemplateDataType(self, node: AlmostJson | None) -> TemplateDataType:
+    def visit_template_data_type(self, node: AlmostJson | None) -> TemplateDataType:
         if node is None:
             raise ValueError("Invalid DataType")
 
@@ -910,47 +926,48 @@ class JSONtoAST(visitor.BasePass):
 
         return TemplateDataType(data_type=template)
 
-    def visit_QualifiedType(self, node: AlmostJson | None) -> ast.QualifiedType:
+    def visit_qualified_type(self, node: AlmostJson | None) -> ast_node.QualifiedType:
         if node is None:
             raise ValueError("Invalid QualifiedType")
 
         values: dict = node.attributes
         base: Type = self.visit(values.get("base_type"))
-        span: Span | None = self.visit_Span(values.get("span"))
+        span: Span | None = self.visit_span(values.get("span"))
         qtype = TypeQualifier(str(values.get("type_qualifier")))
 
-        return ast.QualifiedType(
+        return ast_node.QualifiedType(
             span=span,
             base_type=base,
             type_qualifier=qtype,
         )
 
-    def visit_NumericalType(self, numerical_type: AlmostJson | None) -> NumericalType:
+    def visit_numerical_type(self, numerical_type: AlmostJson | None) -> NumericalType:
         if numerical_type is None:
             raise ValueError("Invalid numerical_type")
 
         values: dict = numerical_type.attributes
         dtype: type.DataType = self.visit(values.get("data_type"))
-        shape: list[CoreExpression] = self.visit_sequence(values.get("shape"))
+        shape: list[CoreExpression] = [
+            self.visit_core_expression(e) for e in values.get("shape")
+        ]
 
         return NumericalType(data_type=dtype, shape=shape)
 
-    def visit_IndexType(self, index_type: AlmostJson | None) -> IndexType:
+    def visit_index_type(self, index_type: AlmostJson | None) -> IndexType:
         if index_type is None:
             raise ValueError("No Index Type Provided")
 
         values: dict = index_type.attributes
-        lower: CoreExpression = self.visit_CoreExpression(values.get("lower_bound"))
-        upper: CoreExpression = self.visit_CoreExpression(values.get("upper_bound"))
+        lower: CoreExpression = self.visit_core_expression(values.get("lower_bound"))
+        upper: CoreExpression = self.visit_core_expression(values.get("upper_bound"))
 
         if (_stride := values.get("stride")) is not None:
-            stride = self.visit_CoreExpression(_stride)
+            stride = self.visit_core_expression(_stride)
         else:
-            stride = self.visit_IntLiteral(
+            stride = self.visit_core_expression(
                 AlmostJson(
-                    cls_name=ast.IntLiteral.get_key_name(),
+                    cls_name="CoreLiteralExpression",
                     attributes=dict(
-                        span=None,
                         value=1,
                     ),
                 )
@@ -962,31 +979,31 @@ class JSONtoAST(visitor.BasePass):
             stride=stride,
         )
 
-    def visit_CoreExpression(self, expression: AlmostJson | None) -> CoreExpression:
+    def visit_core_expression(self, expression: AlmostJson | None) -> CoreExpression:
         if expression is None:
             raise ValueError("No Core Expression Provided")
 
         name = expression.cls_name
         if name == "CoreBinaryExpression":
-            return self.visit_CoreBinaryExpression(expression)
+            return self.visit_core_binary_expression(expression)
         elif name == "CoreUnaryExpression":
-            return self.visit_CoreUnaryExpression(expression)
+            return self.visit_core_unary_expression(expression)
         elif name == "CoreLiteralExpression":
-            return self.visit_CoreLiteralExpression(expression)
+            return self.visit_core_literal_expression(expression)
         elif name == "CoreIdentifierExpression":
-            return self.visit_CoreIdentifierExpression(expression)
+            return self.visit_core_identifier_expression(expression)
         else:
             raise ValueError("Invalid Core Expression.")
 
-    def visit_CoreBinaryExpression(
+    def visit_core_binary_expression(
         self, expression: AlmostJson | None
     ) -> CoreBinaryExpression:
         if expression is None:
             raise ValueError("No Core Binary Expression Provided")
 
         values: dict = expression.attributes
-        left: CoreExpression = self.visit_CoreExpression(values.get("left"))
-        right: CoreExpression = self.visit_CoreExpression(values.get("right"))
+        left: CoreExpression = self.visit_core_expression(values.get("left"))
+        right: CoreExpression = self.visit_core_expression(values.get("right"))
 
         return CoreBinaryExpression(
             left=left,
@@ -994,21 +1011,21 @@ class JSONtoAST(visitor.BasePass):
             right=right,
         )
 
-    def visit_CoreUnaryExpression(
+    def visit_core_unary_expression(
         self, expression: AlmostJson | None
     ) -> CoreUnaryExpression:
         if expression is None:
             raise ValueError("No Core Unary Expression Provided")
 
         values: dict = expression.attributes
-        operand: CoreExpression = self.visit_CoreExpression(values.get("operand"))
+        operand: CoreExpression = self.visit_core_expression(values.get("operand"))
 
         return CoreUnaryExpression(
             operand=operand,
             operation=CoreUnaryOperation(str(values.get("operation"))),
         )
 
-    def visit_CoreLiteralExpression(
+    def visit_core_literal_expression(
         self, expression: AlmostJson | None
     ) -> CoreLiteralExpression:
         if expression is None:
@@ -1019,18 +1036,18 @@ class JSONtoAST(visitor.BasePass):
 
         return CoreLiteralExpression(value=value)
 
-    def visit_CoreIdentifierExpression(
+    def visit_core_identifier_expression(
         self, expression: AlmostJson | None
     ) -> CoreIdentifierExpression:
         if expression is None:
             raise ValueError("No Core Identifier Expression Provided")
 
         values: dict = expression.attributes
-        identifier: Identifier = self.visit_Identifier(values.get("name"))
+        identifier: Identifier = self.visit_identifier(values.get("name"))
 
         return CoreIdentifierExpression(identifier=identifier)
 
-    def visit_TupleType(self, tuple_type: AlmostJson | None) -> TupleType:
+    def visit_tuple_type(self, tuple_type: AlmostJson | None) -> TupleType:
         if tuple_type is None:
             raise ValueError("No Tuple Type Provided.")
 
@@ -1042,7 +1059,7 @@ class JSONtoAST(visitor.BasePass):
 
         return TupleType(types=types)
 
-    def visit_Identifier(self, identifier: AlmostJson | None) -> Identifier:
+    def visit_identifier(self, identifier: AlmostJson | None) -> Identifier:
         if identifier is None:
             raise ValueError("No Identifier Provided")
 
@@ -1065,7 +1082,7 @@ class JSONtoAST(visitor.BasePass):
 
         return [self.visit(node) for node in nodes]
 
-    def visit_Span(self, span: AlmostJson | None) -> Span | None:
+    def visit_span(self, span: AlmostJson | None) -> Span | None:
         if span is None:
             return None
 
@@ -1073,7 +1090,7 @@ class JSONtoAST(visitor.BasePass):
 
         source: Source | None = None
         if (_source := values.get("source")) is not None:
-            source = self.visit_Source(_source)
+            source = self.visit_source(_source)
         maybe = dict(source=source)
 
         return Span(
@@ -1084,7 +1101,7 @@ class JSONtoAST(visitor.BasePass):
             **{k: v for k, v in maybe.items() if v is not None},
         )
 
-    def visit_Source(self, source: AlmostJson) -> Source:
+    def visit_source(self, source: AlmostJson) -> Source:
         return Source(namespace=source.attributes.get("namespace") or "_null")
 
 

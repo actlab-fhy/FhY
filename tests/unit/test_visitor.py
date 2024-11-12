@@ -219,9 +219,8 @@ def test_module_node(module):
 
     for s, transform in (
         ("visit_sequence", lambda x: x.statements),
-        ("visit_Operation", lambda x: x.statements[0]),
-        ("visit_Procedure", lambda x: x.statements[1]),
-        # ("visit_Span", lambda x: x.span),  # visitor pattern is not visiting span
+        ("visit_operation", lambda x: x.statements[0]),
+        ("visit_procedure", lambda x: x.statements[1]),
     ):
         mocker: Callable[[ASTObject], _BP] = visit_generic(
             s, Visitor, mock_assert, transform
