@@ -55,7 +55,7 @@ class IndexCollector(ExpressionVisitor):
     def indices(self) -> set[Identifier]:
         return self._indices
 
-    def visit_Identifier(self, node: Identifier) -> None:
+    def visit_identifier(self, node: Identifier) -> None:
         if self._is_identifier_index(node):
             self._indices.add(node)
 
@@ -97,14 +97,14 @@ class ReducedIndexCollector(ExpressionVisitor):
     def reduced_indices(self) -> set[Identifier]:
         return self._reduced_indices
 
-    def visit_FunctionExpression(self, node: FunctionExpression) -> None:
+    def visit_function_expression(self, node: FunctionExpression) -> None:
         for index in node.indices:
             if not isinstance(index, IdentifierExpression):
                 raise RuntimeError()
             if self._is_identifier_index(index.identifier):
                 self._reduced_indices.add(index.identifier)
 
-        super().visit_FunctionExpression(node)
+        super().visit_function_expression(node)
 
 
 def collect_reduced_indices(
