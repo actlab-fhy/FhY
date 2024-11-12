@@ -39,6 +39,8 @@ Classes:
 
 """
 
+from fhy_core import Identifier
+
 from fhy import ir
 from fhy.lang import ast
 from fhy.lang.ast.alias import ASTObject
@@ -283,7 +285,7 @@ class ASTPrettyFormatter(BasePass):
     def visit_TupleType(self, tuple_type: ir.TupleType) -> str:
         return "tuple " + self._build_base_tuple(tuple_type._types)
 
-    def visit_Identifier(self, identifier: ir.Identifier) -> str:
+    def visit_Identifier(self, identifier: Identifier) -> str:
         if self.show_id:
             return f"({identifier.name_hint}::{identifier.id})"
         else:

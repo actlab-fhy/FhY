@@ -33,7 +33,7 @@
 
 from typing import Any
 
-from fhy.ir.identifier import Identifier
+from fhy_core import Identifier
 
 # from fhy.lang.ast.node.core import Module as ASTModule
 from .table import SymbolTable

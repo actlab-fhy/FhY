@@ -44,8 +44,9 @@ Core Abstract Nodes:
 from abc import ABC
 from dataclasses import dataclass, field
 
+from fhy_core import Identifier
+
 from fhy.ir.expression import Expression as IRExpression
-from fhy.ir.identifier import Identifier as IRIdentifier
 
 from .base import ASTNode
 
@@ -55,17 +56,17 @@ class Module(ASTNode):
     """FhY module AST node.
 
     Args:
-        name (IRIdentifier): Name of the module.
+        name (Identifier): Name of the module.
         statements (List[Statement]): List of statements in the module.
 
     Attributes:
-        name (IRIdentifier): Name of the module.
+        name (Identifier): Name of the module.
         statements (List[Statement]): List of statements in the module.
 
     """
 
     # TODO: remove default value for name and have converter create name
-    name: IRIdentifier = field(default=IRIdentifier("module"))
+    name: Identifier = field(default=Identifier("module"))
     statements: list["Statement"] = field(default_factory=list)
 
     def get_visit_attrs(self) -> list[str]:
@@ -86,11 +87,11 @@ class Function(Statement, ABC):
     Used as a base for the function nodes such as procedures and operations.
 
     Attributes:
-        name (IRIdentifier): Name of the function.
+        name (Identifier): Name of the function.
 
     """
 
-    name: IRIdentifier
+    name: Identifier
 
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()

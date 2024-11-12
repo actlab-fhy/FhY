@@ -3,7 +3,7 @@
 from collections.abc import Callable, Generator
 
 import pytest
-from fhy.ir import CoreDataType, Identifier, NumericalType, TypeQualifier
+from fhy.ir import CoreDataType, NumericalType, TypeQualifier
 from fhy.lang.ast import (
     DeclarationStatement,
     IntLiteral,
@@ -16,6 +16,7 @@ from fhy.lang.ast.passes.identifier_collector import (
     IdentifierCollector,
     collect_identifiers,
 )
+from fhy_core import Identifier
 
 
 @pytest.fixture

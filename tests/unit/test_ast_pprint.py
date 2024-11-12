@@ -2,13 +2,13 @@
 
 from fhy.ir import (
     CoreDataType,
-    Identifier,
     NumericalType,
     PrimitiveDataType,
     TypeQualifier,
 )
 from fhy.lang.ast import Module, Operation, QualifiedType
 from fhy.lang.ast.pprint import pformat_ast
+from fhy_core import Identifier
 
 
 def test_empty_program():

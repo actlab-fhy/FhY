@@ -45,6 +45,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from antlr4 import ParserRuleContext  # type: ignore[import-untyped]
+from fhy_core import Identifier
 
 from fhy import ir
 from fhy.error import FhYASTBuildError, FhYSyntaxError
@@ -80,23 +81,23 @@ def _source_position(span: Span | None) -> str:
     return text
 
 
-def _initialize_builtin_identifiers() -> dict[str, ir.Identifier]:
+def _initialize_builtin_identifiers() -> dict[str, Identifier]:
     return BUILTIN_LANG_IDENTIFIERS.copy()
 
 
-def _grab_identifier(name: str, scope: ChainMap[str, ir.Identifier]) -> ir.Identifier:
+def _grab_identifier(name: str, scope: ChainMap[str, Identifier]) -> Identifier:
     if name in scope:
         return scope[name]
 
     else:
-        identifier = ir.Identifier(name)
+        identifier = Identifier(name)
         scope[name] = identifier
 
         return identifier
 
 
-def _initialize_builtin_types() -> dict[str, ir.Identifier]:
-    return {t.value: ir.Identifier(t.value) for t in ir.CoreDataType}
+def _initialize_builtin_types() -> dict[str, Identifier]:
+    return {t.value: Identifier(t.value) for t in ir.CoreDataType}
 
 
 class ParseTreeConverter(FhYVisitor):
@@ -117,7 +118,7 @@ class ParseTreeConverter(FhYVisitor):
     """
 
     source: Source | None
-    _scopes: ChainMap[str, ir.Identifier]
+    _scopes: ChainMap[str, Identifier]
 
     def __init__(self, source: Source | None = None) -> None:
         self.source = source
@@ -131,7 +132,7 @@ class ParseTreeConverter(FhYVisitor):
     def _close_scope(self) -> None:
         self._scopes = self._scopes.parents
 
-    def _get_identifier(self, name_hint: str) -> ir.Identifier:
+    def _get_identifier(self, name_hint: str) -> Identifier:
         return _grab_identifier(name_hint, self._scopes)
 
     def _get_span(self, ctx: ParserRuleContext) -> Span | None:
@@ -230,7 +231,7 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Function_headerContext
     ) -> tuple[
         str,
-        ir.Identifier,
+        Identifier,
         list[ir.TemplateDataType],
         list[ast.Argument],
         list[ast.Argument],
@@ -250,7 +251,7 @@ class ParseTreeConverter(FhYVisitor):
             raise FhYSyntaxError(f"Function Name Missing. {text}")
 
         name_hint: str = name_ctx.getText()
-        name: ir.Identifier = self._get_identifier(name_hint)
+        name: Identifier = self._get_identifier(name_hint)
 
         self._open_scope()
 
@@ -330,7 +331,7 @@ class ParseTreeConverter(FhYVisitor):
             raise FhYSyntaxError(f"Variable Name not Declared. {text}")
 
         name_hint: str = _id.getText()
-        name: ir.Identifier = self._get_identifier(name_hint)
+        name: Identifier = self._get_identifier(name_hint)
         expression = None
         if (expression_ctx := ctx.expression()) is not None:
             expression = self.visitExpression(expression_ctx)
@@ -613,8 +614,8 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitIdentifier_list(
         self, ctx: FhYParser.Identifier_listContext
-    ) -> list[ir.Identifier]:
-        ids: list[ir.Identifier] = []
+    ) -> list[Identifier]:
+        ids: list[Identifier] = []
         for name in ctx.IDENTIFIER():
             ids.append(self._get_identifier(name.getText()))
 

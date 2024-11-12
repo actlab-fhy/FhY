@@ -33,9 +33,9 @@
 
 from abc import ABC
 
+from fhy_core import Identifier, Lattice
+
 from fhy.error import FhYTypeError
-from fhy.ir.identifier import Identifier
-from fhy.utils import Lattice
 from fhy.utils.enumeration import StrEnum
 
 from .expression import Expression

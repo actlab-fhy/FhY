@@ -1,0 +1,9 @@
+html[data-theme="light"] {
+    --pst-color-primary: black;
+    --pst-color-background: white;
+}
+
+html[data-theme="dark"] {
+    --pst-color-primary: white;
+    --pst-color-background: black;
+}
