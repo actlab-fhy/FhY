@@ -92,33 +92,35 @@ class ASTToCoreExpressionConverter(BasePass):
             f"Core expressions do not support {node.__class__.__name__} AST nodes."
         )
 
-    def visit_UnaryExpression(self, node: ASTUnaryExpression) -> CoreUnaryExpression:
+    def visit_unary_expression(self, node: ASTUnaryExpression) -> CoreUnaryExpression:
         return CoreUnaryExpression(
             self._AST_TO_CORE_UNARY_OPERATIONS[node.operation],
             self.visit(node.operand),
         )
 
-    def visit_BinaryExpression(self, node: ASTBinaryExpression) -> CoreBinaryExpression:
+    def visit_binary_expression(
+        self, node: ASTBinaryExpression
+    ) -> CoreBinaryExpression:
         return CoreBinaryExpression(
             self._AST_TO_CORE_BINARY_OPERATIONS[node.operation],
             self.visit(node.left),
             self.visit(node.right),
         )
 
-    def visit_IdentifierExpression(
+    def visit_identifier_expression(
         self, node: ASTIdentifierExpression
     ) -> CoreIdentifierExpression:
         return CoreIdentifierExpression(node.identifier)
 
-    def visit_IntLiteral(self, node: ASTIntLiteralExpression) -> CoreLiteralExpression:
+    def visit_int_literal(self, node: ASTIntLiteralExpression) -> CoreLiteralExpression:
         return CoreLiteralExpression(node.value)
 
-    def visit_FloatLiteral(
+    def visit_float_literal(
         self, node: ASTFloatLiteralExpression
     ) -> CoreLiteralExpression:
         return CoreLiteralExpression(node.value)
 
-    def visit_ComplexLiteral(
+    def visit_complex_literal(
         self, node: ASTComplexLiteralExpression
     ) -> CoreLiteralExpression:
         return CoreLiteralExpression(node.value)

@@ -58,7 +58,7 @@ class IdentifierCollector(Visitor):
     def identifiers(self) -> set[Identifier]:
         return self._identifiers
 
-    def visit_Identifier(self, identifier: Identifier) -> None:
+    def visit_identifier(self, identifier: Identifier) -> None:
         self._identifiers.add(identifier)
 
 

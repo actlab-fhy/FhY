@@ -51,9 +51,9 @@ class ImportedIdentifierCollector(Visitor):
     def identifiers(self) -> set[Identifier]:
         return self._identifiers
 
-    def visit_Import(self, node: ast.Import) -> None:
+    def visit_import(self, node: ast.Import) -> None:
         self._identifiers.add(node.name)
-        super().visit_Import(node)
+        super().visit_import(node)
 
 
 def collect_imported_identifiers(node: ASTObject) -> set[Identifier]:

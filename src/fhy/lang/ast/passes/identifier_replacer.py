@@ -54,7 +54,7 @@ class IdentifierReplacer(Transformer):
         super().__init__()
         self._identifier_map = identifier_map
 
-    def visit_Identifier(self, identifier: Identifier) -> Identifier:
+    def visit_identifier(self, identifier: Identifier) -> Identifier:
         return copy(self._identifier_map.get(identifier, identifier))
 
 

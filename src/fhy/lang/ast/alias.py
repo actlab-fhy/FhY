@@ -44,17 +44,16 @@ from fhy_core import (
 )
 from fhy_core import Expression as CoreExpression
 
-from fhy.lang.ast.node import base, core
+from fhy.lang.ast.node import ASTNode, Expression, Function, Statement
 from fhy.lang.ast.span import Source, Span
 
-# Define Commonly Used Aliases
-ASTTypeNodes = base.ASTNode | Type
+ASTTypeNodes = ASTNode | Type
 Nodes = TypeVar("Nodes", bound=ASTTypeNodes)
 
-Expressions = CoreExpression | core.Expression
+Expressions = CoreExpression | Expression
 ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
 
-CoreASTNodes = core.Statement | core.Function | core.Expression
+CoreASTNodes = Statement | Function | Expression
 Core = TypeVar("Core", bound=CoreASTNodes)
 
 OtherTypes = (

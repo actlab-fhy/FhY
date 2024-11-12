@@ -342,15 +342,7 @@ class Literal(Expression, ABC):
 
 @dataclass(frozen=True, kw_only=True)
 class IntLiteral(Literal):
-    """Expression node for integer literals.
-
-    Args:
-        value (int): Integer value.
-
-    Attributes:
-        value (int): Integer value.
-
-    """
+    """Expression node for integer literals."""
 
     value: int
 
@@ -362,15 +354,7 @@ class IntLiteral(Literal):
 
 @dataclass(frozen=True, kw_only=True)
 class FloatLiteral(Literal):
-    """Expression node for floating point literals.
-
-    Args:
-        value (float): Floating point value.
-
-    Attributes:
-        value (float): Floating point value.
-
-    """
+    """Expression node for floating point literals."""
 
     value: float
 
@@ -383,15 +367,7 @@ class FloatLiteral(Literal):
 
 @dataclass(frozen=True, kw_only=True)
 class ComplexLiteral(Literal):
-    """Expression node for complex literals.
-
-    Args:
-        value (complex): Complex value.
-
-    Attributes:
-        value (complex): Complex value.
-
-    """
+    """Expression node for complex literals."""
 
     value: complex
 
