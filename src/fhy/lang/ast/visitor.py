@@ -142,14 +142,15 @@ class BasePass(ABC):
         )
     )
 
-    def __call__(self, node: Any) -> Any:
-        return self.visit(node)
+    def __call__(self, node: Any, **kwargs: Any) -> Any:
+        return self.visit(node, **kwargs)
 
-    def visit(self, node: Any) -> Any:
+    def visit(self, node: Any, **kwargs: Any) -> Any:
         """Visit a node or structure based on its type.
 
         Args:
             node: AST node or structure to visit.
+            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             Result of visiting the node.
@@ -157,16 +158,17 @@ class BasePass(ABC):
         """
         method_name: str = self._VISITOR_METHODS.get(type(node), None)
         if method_name is None:
-            return self.default(node)
+            return self.default(node, **kwargs)
         else:
             method: Callable[[ASTObject], Any] = getattr(self, method_name)
-            return method(node)
+            return method(node, **kwargs)
 
-    def default(self, node: Any) -> Any:
+    def default(self, node: Any, **kwargs: Any) -> Any:
         """Visit a node that is not supported.
 
         Args:
             node: AST node or structure to visit.
+            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             Result of visiting the node.
