@@ -80,8 +80,8 @@ def collect_indices(
     return index_collector.indices
 
 
-# TODO: if the language supports indices in reduction's parameters that are not
-#       just the identifier itself, this pass must be modified
+# NOTE: if FhY supports indices in reduction's parameters that are not just the
+#       identifier itself, this pass must be modified
 class ReducedIndexCollector(ExpressionVisitor):
     """Collect all the indices used in an AST expression that are reduced."""
 
