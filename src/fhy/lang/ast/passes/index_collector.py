@@ -33,7 +33,8 @@
 
 from collections.abc import Callable
 
-from fhy.ir.identifier import Identifier
+from fhy_core import Identifier
+
 from fhy.lang.ast.node import core
 from fhy.lang.ast.node.expression import FunctionExpression, IdentifierExpression
 from fhy.lang.ast.visitor import ExpressionVisitor
