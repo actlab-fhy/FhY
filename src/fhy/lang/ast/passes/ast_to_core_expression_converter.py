@@ -74,6 +74,7 @@ class ASTToCoreExpressionConverter(BasePass):
             ASTBinaryOperation.SUBTRACTION: CoreBinaryOperation.SUBTRACT,
             ASTBinaryOperation.MULTIPLICATION: CoreBinaryOperation.MULTIPLY,
             ASTBinaryOperation.DIVISION: CoreBinaryOperation.DIVIDE,
+            ASTBinaryOperation.FLOORDIV: CoreBinaryOperation.FLOOR_DIVIDE,
             ASTBinaryOperation.MODULO: CoreBinaryOperation.MODULO,
             ASTBinaryOperation.POWER: CoreBinaryOperation.POWER,
             ASTBinaryOperation.EQUAL_TO: CoreBinaryOperation.EQUAL,
