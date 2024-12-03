@@ -1,6 +1,6 @@
 """Tests conversion of FhY source code from CST to AST."""
 
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 from fhy.error import FhYSyntaxError
@@ -18,6 +18,7 @@ from fhy_core import (
     IndexType,
     NumericalType,
     PrimitiveDataType,
+    Stack,
     TemplateDataType,
     TupleType,
     Type,
@@ -47,125 +48,164 @@ from ..utils import assert_name, assert_sequence_type, assert_type
 class ExpressionExactEqualityGetter(BasePass):
     """Pass to determine if two expressions are exactly equal."""
 
-    def __call__(self, node: ast_node.Expression, other: ast_node.Expression) -> bool:
-        return super().__call__(node, other=other)
+    _stack: Stack[ast_node.Expression | Sequence[ast_node.Expression]]
 
-    def visit_sequence(self, node: Any, other: Any) -> bool:
+    def __init__(self, other: ast_node.Expression) -> None:
+        self._stack = Stack[ast_node.Expression]()
+        self._stack.push(other)
+
+    def __call__(self, node: ast_node.Expression) -> bool:
+        return super().__call__(node)
+
+    def visit_sequence(self, node: Sequence[ast_node.Expression]) -> bool:
+        other = self._stack.pop()
+        if not isinstance(other, Sequence):
+            return False
         if len(node) != len(other):
             return False
-        return all(self.visit(n, other=o) for n, o in zip(node, other))
+        for expression, other_expression in zip(node, other):
+            self._stack.push(other_expression)
+            if not self.visit(expression):
+                return False
+        return True
 
-    def visit_unary_expression(
-        self, node: ast_node.UnaryExpression, other: ast_node.Expression
-    ) -> bool:
+    def visit_unary_expression(self, node: ast_node.UnaryExpression) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.UnaryExpression):
             return False
-        if node.operation != other.operation:
-            return False
-        return self.visit(node.expression, other=other.expression)
+        else:
+            if node.operation != other.operation:
+                return False
+            self._stack.push(other.expression)
+            return self.visit(node.expression)
 
-    def visit_binary_expression(
-        self, node: ast_node.BinaryExpression, other: ast_node.Expression
-    ) -> bool:
+    def visit_binary_expression(self, node: ast_node.BinaryExpression) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.BinaryExpression):
             return False
-        if node.operation != other.operation:
-            return False
-        return self.visit(node.left, other=other.left) and self.visit(
-            node.right, other=other.right
-        )
+        else:
+            if node.operation != other.operation:
+                return False
+            self._stack.push(other.right)
+            is_right_equal = self.visit(node.right)
+            self._stack.push(other.left)
+            is_left_equal = self.visit(node.left)
+            return is_left_equal and is_right_equal
 
-    def visit_ternary_expression(
-        self, node: ast_node.TernaryExpression, other: ast_node.Expression
-    ) -> bool:
+    def visit_ternary_expression(self, node: ast_node.TernaryExpression) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.TernaryExpression):
             return False
-        return (
-            self.visit(node.condition, other=other.condition)
-            and self.visit(node.true, other=other.true)
-            and self.visit(node.false, other=other.false)
-        )
+        else:
+            self._stack.push(other.false)
+            is_false_equal = self.visit(node.false)
+            self._stack.push(other.true)
+            is_true_equal = self.visit(node.true)
+            self._stack.push(other.condition)
+            is_condition_equal = self.visit(node.condition)
+            return is_condition_equal and is_true_equal and is_false_equal
 
-    def visit_function_expression(
-        self, node: ast_node.FunctionExpression, other: ast_node.Expression
-    ) -> bool:
+    def visit_function_expression(self, node: ast_node.FunctionExpression) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.FunctionExpression):
             return False
-        return (
-            self.visit(node.function, other=other.function)
-            and self.visit_sequence(node.indices, other.indices)
-            and self.visit_sequence(node.template_types, other.template_types)
-            and self.visit_sequence(node.args, other.args)
-        )
+        else:
+            self._stack.push(other.function)
+            is_function_equal = self.visit(node.function)
+            self._stack.push(other.indices)
+            is_indices_equal = self.visit_sequence(node.indices)
+            self._stack.push(other.template_types)
+            is_template_types_equal = self.visit_sequence(node.template_types)
+            self._stack.push(other.args)
+            is_args_equal = self.visit_sequence(node.args)
+            return (
+                is_function_equal
+                and is_indices_equal
+                and is_template_types_equal
+                and is_args_equal
+            )
 
     def visit_array_access_expression(
-        self, node: ast_node.ArrayAccessExpression, other: ast_node.Expression
+        self, node: ast_node.ArrayAccessExpression
     ) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.ArrayAccessExpression):
             return False
-        return self.visit(
-            node.array_expression, other=other.array_expression
-        ) and self.visit_sequence(node.indices, other.indices)
+        else:
+            self._stack.push(other.array_expression)
+            is_array_expression_equal = self.visit(node.array_expression)
+            self._stack.push(other.indices)
+            is_indices_equal = self.visit_sequence(node.indices)
+            return is_array_expression_equal and is_indices_equal
 
-    def visit_tuple_expression(
-        self, node: ast_node.TupleExpression, other: ast_node.Expression
-    ) -> bool:
+    def visit_tuple_expression(self, node: ast_node.TupleExpression) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.TupleExpression):
             return False
-        return self.visit_sequence(node.expressions, other.expressions)
+        else:
+            self._stack.push(other.expressions)
+            return self.visit_sequence(node.expressions)
 
     def visit_tuple_access_expression(
-        self, node: ast_node.TupleAccessExpression, other: ast_node.Expression
+        self, node: ast_node.TupleAccessExpression
     ) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.TupleAccessExpression):
             return False
-        return self.visit(
-            node.tuple_expression, other=other.tuple_expression
-        ) and self.visit(node.element_index, other=other.element_index)
+        else:
+            self._stack.push(other.tuple_expression)
+            is_tuple_expression_equal = self.visit(node.tuple_expression)
+            self._stack.push(other.element_index)
+            is_element_index_equal = self.visit(node.element_index)
+            return is_tuple_expression_equal and is_element_index_equal
 
-    def visit_identifier_expression(
-        self, node: ast_node.IdentifierExpression, other: ast_node.Expression
-    ) -> bool:
+    def visit_identifier_expression(self, node: ast_node.IdentifierExpression) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.IdentifierExpression):
             return False
-        return node.identifier == other.identifier
+        else:
+            return node.identifier == other.identifier
 
-    def visit_int_literal(
-        self, node: ast_node.IntLiteral, other: ast_node.Expression
-    ) -> bool:
+    def visit_int_literal(self, node: ast_node.IntLiteral) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.IntLiteral):
             return False
-        return node.value == other.value
+        else:
+            return node.value == other.value
 
-    def visit_float_literal(
-        self, node: ast_node.FloatLiteral, other: ast_node.Expression
-    ) -> bool:
+    def visit_float_literal(self, node: ast_node.FloatLiteral) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.FloatLiteral):
             return False
-        return node.value == other.value
+        else:
+            return node.value == other.value
 
-    def visit_complex_literal(
-        self, node: ast_node.ComplexLiteral, other: ast_node.Expression
-    ) -> bool:
+    def visit_complex_literal(self, node: ast_node.ComplexLiteral) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, ast_node.ComplexLiteral):
             return False
-        return node.value == other.value
+        else:
+            return node.value == other.value
 
-    def visit_primitive_data_type(self, node: PrimitiveDataType, other: Any) -> bool:
+    def visit_primitive_data_type(self, node: PrimitiveDataType) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, PrimitiveDataType):
             return False
-        return node.core_data_type == other.core_data_type
+        else:
+            return node.core_data_type == other.core_data_type
 
-    def visit_template_data_type(self, node: TemplateDataType, other: Any) -> bool:
+    def visit_template_data_type(self, node: TemplateDataType) -> bool:
+        other = self._stack.pop()
         if not isinstance(other, TemplateDataType):
             return False
-        return node.template_type == other.template_type
+        else:
+            return node.template_type == other.template_type
 
 
 def _is_expressions_exactly_equal(
     expr1: ast_node.Expression, expr2: ast_node.Expression
 ) -> bool:
-    return ExpressionExactEqualityGetter()(expr1, expr2)
+    return ExpressionExactEqualityGetter(expr2)(expr1)
 
 
 def _assert_expressions_exactly_equal(
