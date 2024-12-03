@@ -1,10 +1,10 @@
+"""Tests the visitor pattern for the FhY AST."""
+
 from collections.abc import Callable
 from typing import TypeVar
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fhy.ir.type import CoreDataType, PrimitiveDataType
-from fhy.ir.type import NumericalType as IRNumericalType
 from fhy.lang.ast import (
     ComplexLiteral,
     ExpressionStatement,
@@ -13,10 +13,11 @@ from fhy.lang.ast import (
     TupleExpression,
     visitor,
 )
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 from fhy.lang.ast.visitor import BasePass, Visitor
+from fhy_core import CoreDataType, NumericalType, PrimitiveDataType
 
-BP = TypeVar("BP", bound=BasePass)
+_BP = TypeVar("_BP", bound=BasePass)
 
 
 @patch.object(Visitor, "default")
@@ -47,45 +48,45 @@ def test_visitor_default_method():
 
 
 def test_visitor_transform_expression_statement():
-    """Verify the Transformer class transforms an ExpressionStatement node correctly."""
+    """Test the transformer class transforms an expression statement node correctly."""
     transformer = visitor.Transformer()
     expression_statement_node = ExpressionStatement(
         span=None, left=None, right=IntLiteral(span=None, value=1)
     )
-    result = transformer.visit_ExpressionStatement(expression_statement_node)
+    result = transformer.visit_expression_statement(expression_statement_node)
     assert isinstance(result, ExpressionStatement)
+    assert isinstance(result.right, IntLiteral)
     assert result.right.value == 1
-    assert id(expression_statement_node) != id(result), "Expected Shallow Copy"
-    assert id(expression_statement_node.right) != id(
-        result.right
-    ), "Expected Shallow Copy"
+    assert id(expression_statement_node) != id(result)
+    assert id(expression_statement_node.right) != id(result.right)
 
 
 def test_visitor_transform_tuple_expression():
-    """Verifys the Transformer class transforms a TupleExpression node correctly."""
+    """Test the transformer class transforms a tuple expression node correctly."""
     transformer = visitor.Transformer()
     tuple_expression_node = TupleExpression(
         span=None, expressions=[IntLiteral(span=None, value=1)]
     )
-    result = transformer.visit_TupleExpression(tuple_expression_node)
+    result = transformer.visit_tuple_expression(tuple_expression_node)
     assert isinstance(result, TupleExpression)
+    assert isinstance(result.expressions[0], IntLiteral)
     assert result.expressions[0].value == 1
 
-    assert id(tuple_expression_node) != id(result), "Expected Shallow Copy"
-    assert id(tuple_expression_node.expressions[0]) != id(
-        result.expressions[0]
-    ), "Expected Shallow Copy"
+    assert id(tuple_expression_node) != id(result)
+    assert id(tuple_expression_node.expressions[0]) != id(result.expressions[0])
 
 
 def test_visitor_transform_tuple_access_expression():
-    """Verifys Transformer class transforms a TupleAccessExpression node correctly."""
+    """Test the transformer class transforms a tuple access expression
+    node correctly.
+    """
     transformer = visitor.Transformer()
     tuple_access_expression_node = TupleAccessExpression(
         span=None,
         tuple_expression=IntLiteral(span=None, value=1),
         element_index=IntLiteral(span=None, value=0),
     )
-    result = transformer.visit_TupleAccessExpression(tuple_access_expression_node)
+    result = transformer.visit_tuple_access_expression(tuple_access_expression_node)
     assert isinstance(result, TupleAccessExpression)
     assert result.element_index.value == 0
 
@@ -99,30 +100,28 @@ def test_visitor_transform_tuple_access_expression():
 
 
 def test_visitor_transform_complex_literal():
-    """Verifys the Transformer class transforms a ComplexLiteral node correctly."""
+    """Test the transformer class transforms a complex literal node correctly."""
     transformer = visitor.Transformer()
     value = complex(1025, 4097)
     complex_literal_node = ComplexLiteral(span=None, value=value)
-    result = transformer.visit_ComplexLiteral(complex_literal_node)
+    result = transformer.visit_complex_literal(complex_literal_node)
     assert isinstance(result, ComplexLiteral)
     assert result.value == value
 
-    assert id(complex_literal_node) != id(result), "Expected Shallow copy."
-
-    # NOTE: The value will be identical, since this is a shallow copy
-    assert id(complex_literal_node.value) == id(result.value), "Expected Shallow copy."
+    assert id(complex_literal_node) != id(result)
+    assert id(complex_literal_node.value) == id(result.value)
 
 
 def test_visitor_transform_type():
-    """Verifys the Transformer class transforms a Type node correctly."""
+    """Test the transformer class transforms a type node correctly."""
     transformer = visitor.Transformer()
     primitive_data_type = CoreDataType.FLOAT32
-    numerical_type_node = IRNumericalType(
+    numerical_type_node = NumericalType(
         data_type=PrimitiveDataType(core_data_type=primitive_data_type),
         shape=[],
     )
-    result = transformer.visit_Type(numerical_type_node)
-    assert isinstance(result, IRNumericalType)
+    result = transformer.visit_type(numerical_type_node)
+    assert isinstance(result, NumericalType)
 
 
 def mock_transform(x):
@@ -130,7 +129,7 @@ def mock_transform(x):
 
 
 def default_assert(
-    instance: BP, method: MagicMock, node: ASTObject, transform=mock_transform
+    instance: _BP, method: MagicMock, node: ASTStructure, transform=mock_transform
 ):
     # We check `__call__`, generic `visit`, and mocked `method` directly.
     for call in (instance, instance.visit, method):
@@ -140,12 +139,12 @@ def default_assert(
 
 
 def visit_generic(
-    name: str, obj: BP, _test=default_assert, transform=mock_transform
-) -> Callable[[ASTObject], BP]:
+    name: str, obj: _BP, _test=default_assert, transform=mock_transform
+) -> Callable[[ASTStructure], _BP]:
     """Dynamic Construction of a mock patched base pass."""
 
     @patch.object(obj, name)
-    def inner(node, mock_method) -> BP:
+    def inner(node, mock_method) -> _BP:
         instance = obj()
         method = getattr(instance, name)
 
@@ -163,37 +162,37 @@ def visit_generic(
 
 fixtures = [
     # Types
-    ("index_type", "visit_IndexType"),
-    ("tuple_type", "visit_TupleType"),
-    ("qualified", "visit_QualifiedType"),
-    ("arg1", "visit_Argument"),
+    ("index_type", "visit_index_type"),
+    ("tuple_type", "visit_tuple_type"),
+    ("qualified", "visit_qualified_type"),
+    ("arg1", "visit_argument"),
     # Expressions
-    ("unary", "visit_UnaryExpression"),
-    ("binary", "visit_BinaryExpression"),
-    ("ternary", "visit_TernaryExpression"),
-    ("tuple_access", "visit_TupleAccessExpression"),
-    ("function_call", "visit_FunctionExpression"),
-    ("array_access", "visit_ArrayAccessExpression"),
-    ("tuple_express", "visit_TupleExpression"),
-    ("id_express", "visit_IdentifierExpression"),
+    ("unary", "visit_unary_expression"),
+    ("binary", "visit_binary_expression"),
+    ("ternary", "visit_ternary_expression"),
+    ("tuple_access", "visit_tuple_access_expression"),
+    ("function_call", "visit_function_expression"),
+    ("array_access", "visit_array_access_expression"),
+    ("tuple_express", "visit_tuple_expression"),
+    ("id_express", "visit_identifier_expression"),
     # Statements
-    ("declaration", "visit_DeclarationStatement"),
-    ("express_state", "visit_ExpressionStatement"),
-    ("iteration_state", "visit_ForAllStatement"),
-    ("select_state", "visit_SelectionStatement"),
-    ("return_state", "visit_ReturnStatement"),
-    ("import_node", "visit_Import"),
+    ("declaration", "visit_declaration_statement"),
+    ("express_state", "visit_expression_statement"),
+    ("iteration_state", "visit_for_all_statement"),
+    ("select_state", "visit_selection_statement"),
+    ("return_state", "visit_return_statement"),
+    ("import_node", "visit_import"),
     # Functions
-    ("operation", "visit_Operation"),
-    ("procedure", "visit_Procedure"),
-    ("module", "visit_Module"),
+    ("operation", "visit_operation"),
+    ("procedure", "visit_procedure"),
+    ("module", "visit_module"),
 ]
 
 
 @pytest.mark.parametrize(["cls_name"], [(Visitor,), (visitor.Transformer,)])
 @pytest.mark.parametrize(["fixture_name", "method_name"], fixtures)
 def test_visit_ast_node_fixtures(
-    fixture_name: str, method_name: str, cls_name: BP, request: pytest.FixtureRequest
+    fixture_name: str, method_name: str, cls_name: _BP, request: pytest.FixtureRequest
 ):
     """Test core functionality of the visitor base pass pattern: dispatching.
 
@@ -204,27 +203,26 @@ def test_visit_ast_node_fixtures(
 
     """
     _obj, node = request.getfixturevalue(fixture_name)
-    mocker: Callable[[ASTObject], BP] = visit_generic(
+    mocker: Callable[[ASTStructure], _BP] = visit_generic(
         method_name, cls_name, default_assert
     )
-    instance: BP = mocker(node)
+    instance: _BP = mocker(node)
 
 
 def test_module_node(module):
     """Test correct nodes are visited from a Module node."""
     obj, node = module
 
-    def mock_assert(instance: BP, method: MagicMock, _node: ASTObject, t):
+    def mock_assert(instance: _BP, method: MagicMock, _node: ASTStructure, t):
         instance.visit(_node)
         method.assert_called_once_with(t(_node))
 
     for s, transform in (
         ("visit_sequence", lambda x: x.statements),
-        ("visit_Operation", lambda x: x.statements[0]),
-        ("visit_Procedure", lambda x: x.statements[1]),
-        # ("visit_Span", lambda x: x.span),  # visitor pattern is not visiting span
+        ("visit_operation", lambda x: x.statements[0]),
+        ("visit_procedure", lambda x: x.statements[1]),
     ):
-        mocker: Callable[[ASTObject], BP] = visit_generic(
+        mocker: Callable[[ASTStructure], _BP] = visit_generic(
             s, Visitor, mock_assert, transform
         )
         mocker(node)

@@ -40,9 +40,7 @@ Statement ASTNodes:
 
 from dataclasses import dataclass, field
 
-from fhy_core import Identifier
-
-from fhy.ir import TemplateDataType
+from fhy_core import Identifier, TemplateDataType
 
 from .base import ASTNode
 from .core import Function, Statement

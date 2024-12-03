@@ -33,10 +33,9 @@
 
 from typing import Any
 
-from fhy_core import Identifier
+from fhy_core import Identifier, SymbolTable
 
 # from fhy.lang.ast.node.core import Module as ASTModule
-from .table import SymbolTable
 
 
 class Program:

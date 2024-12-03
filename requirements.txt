@@ -1,3 +1,4 @@
-fhy-core
+fhy-core>=0.0.2
+frozendict
 networkx>=3.2.1
 typer-slim

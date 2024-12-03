@@ -45,14 +45,25 @@ from collections.abc import Sequence
 from typing import Any
 
 from antlr4 import ParserRuleContext  # type: ignore[import-untyped]
-from fhy_core import Identifier
+from fhy_core import (
+    CoreDataType,
+    DataType,
+    Identifier,
+    IndexType,
+    NumericalType,
+    PrimitiveDataType,
+    TemplateDataType,
+    TupleType,
+    Type,
+    TypeQualifier,
+)
 
-from fhy import ir
 from fhy.error import FhYASTBuildError, FhYSyntaxError
 from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS
 from fhy.lang import ast
 from fhy.lang.ast import Source, Span
-from fhy.lang.ast.alias import Expressions
+from fhy.lang.ast.alias import ASTExpressionStructure
+from fhy.lang.ast.passes import convert_ast_expression_to_core_expression
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
 
 
@@ -97,7 +108,7 @@ def _grab_identifier(name: str, scope: ChainMap[str, Identifier]) -> Identifier:
 
 
 def _initialize_builtin_types() -> dict[str, Identifier]:
-    return {t.value: Identifier(t.value) for t in ir.CoreDataType}
+    return {t.value: Identifier(t.value) for t in CoreDataType}
 
 
 class ParseTreeConverter(FhYVisitor):
@@ -232,7 +243,7 @@ class ParseTreeConverter(FhYVisitor):
     ) -> tuple[
         str,
         Identifier,
-        list[ir.TemplateDataType],
+        list[TemplateDataType],
         list[ast.Argument],
         list[ast.Argument],
         ast.QualifiedType | None,
@@ -255,11 +266,11 @@ class ParseTreeConverter(FhYVisitor):
 
         self._open_scope()
 
-        templates: list[ir.TemplateDataType] = []
+        templates: list[TemplateDataType] = []
         if ctx.function_template_types is not None:
             template_ctx: FhYParser.Identifier_listContext = ctx.identifier_list()
             initial = self.visitIdentifier_list(template_ctx)
-            templates.extend(ir.TemplateDataType(t) for t in initial)
+            templates.extend(TemplateDataType(t) for t in initial)
 
         # TODO: Implement Support for Function indices
         indices: list[ast.Argument] = []
@@ -402,8 +413,8 @@ class ParseTreeConverter(FhYVisitor):
     # =====================
     def visitExpression_list(
         self, ctx: FhYParser.Expression_listContext
-    ) -> Sequence[Expressions]:
-        expressions: list[Expressions] = []
+    ) -> Sequence[ast.Expression]:
+        expressions: list[ast.Expression] = []
         exes: Sequence[FhYParser.ExpressionContext] | None
         if (exes := ctx.expression()) is None:
             return expressions
@@ -532,7 +543,7 @@ class ParseTreeConverter(FhYVisitor):
                 function_expression_ctx
             )
 
-            template_types: list[ir.type.DataType] = []
+            template_types: list[DataType] = []
             if ctx.dtype_list() is not None:
                 template_types = self.visitDtype_list(ctx.dtype_list())
 
@@ -588,7 +599,9 @@ class ParseTreeConverter(FhYVisitor):
         id_express: FhYParser.Identifier_expressionContext | None
 
         if (tup := ctx.tuple_()) is not None:
-            expressions: Sequence[Expressions] = self.visitExpression_list(tup)
+            expressions: Sequence[ASTExpressionStructure] = self.visitExpression_list(
+                tup
+            )
 
             return ast.TupleExpression(
                 span=span,
@@ -663,9 +676,9 @@ class ParseTreeConverter(FhYVisitor):
     ) -> ast.QualifiedType:
         span: Span | None = self._get_span(ctx)
 
-        type_qualifier: ir.TypeQualifier | None = None
+        type_qualifier: TypeQualifier | None = None
         if (type_qualifier_ctx := ctx.IDENTIFIER()) is not None:
-            type_qualifier = ir.TypeQualifier(type_qualifier_ctx.getText())
+            type_qualifier = TypeQualifier(type_qualifier_ctx.getText())
 
         else:
             text: str = _source_position(span)
@@ -681,19 +694,18 @@ class ParseTreeConverter(FhYVisitor):
 
     def visitNumerical_type(
         self, ctx: FhYParser.Numerical_typeContext
-    ) -> ir.NumericalType:
-        data_type: ir.type.DataType = self.visitDtype(ctx.dtype())
-        shape: Sequence[Expressions] = ()
+    ) -> NumericalType:
+        data_type: DataType = self.visitDtype(ctx.dtype())
+        shape: Sequence[ast.Expression] = ()
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
 
-        # TODO: use the IR expressions when implemented
-        return ir.NumericalType(
+        return NumericalType(
             data_type=data_type,
-            shape=list(shape),  # type: ignore
+            shape=list(map(convert_ast_expression_to_core_expression, shape)),
         )
 
-    def visitDtype(self, ctx: FhYParser.DtypeContext) -> ir.type.DataType:
+    def visitDtype(self, ctx: FhYParser.DtypeContext) -> DataType:
         text: str = ctx.IDENTIFIER().getText()
         # res: list[Expressions] = []
         if ctx.expression_list() is not None:
@@ -703,28 +715,28 @@ class ParseTreeConverter(FhYVisitor):
             )
 
         try:
-            return ir.PrimitiveDataType(ir.CoreDataType(text))
+            return PrimitiveDataType(CoreDataType(text))
 
         except (KeyError, ValueError):
-            return ir.TemplateDataType(self._get_identifier(text))
+            return TemplateDataType(self._get_identifier(text))
 
-    def visitDtype_list(
-        self, ctx: FhYParser.Dtype_listContext
-    ) -> list[ir.type.DataType]:
-        dtypes: list[ir.type.DataType] = []
+    def visitDtype_list(self, ctx: FhYParser.Dtype_listContext) -> list[DataType]:
+        dtypes: list[DataType] = []
         for d in ctx.dtype():
             dtypes.append(self.visitDtype(d))
 
         return dtypes
 
-    def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> ir.IndexType:
+    def visitIndex_type(self, ctx: FhYParser.Index_typeContext) -> IndexType:
         low, high, stride = self.visitRange(ctx.range_())
 
         # TODO: use the IR expressions when implemented
-        return ir.IndexType(
-            lower_bound=low,  # type: ignore
-            upper_bound=high,  # type: ignore
-            stride=stride,  # type: ignore
+        return IndexType(
+            lower_bound=convert_ast_expression_to_core_expression(low),
+            upper_bound=convert_ast_expression_to_core_expression(high),
+            stride=convert_ast_expression_to_core_expression(stride)
+            if stride
+            else None,
         )
 
     def visitRange(
@@ -742,13 +754,13 @@ class ParseTreeConverter(FhYVisitor):
 
         return low, high, stride
 
-    def visitTuple_type(self, ctx: FhYParser.Tuple_typeContext) -> ir.type.TupleType:
-        types: list[ir.Type] = []
+    def visitTuple_type(self, ctx: FhYParser.Tuple_typeContext) -> TupleType:
+        types: list[Type] = []
         if (context := ctx.type_()) is not None:
             for t in context:
                 types.append(self.visitType(t))
 
-        return ir.type.TupleType(types=types)
+        return TupleType(types=types)
 
 
 def from_parse_tree(

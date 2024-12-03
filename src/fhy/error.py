@@ -29,78 +29,26 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Custom FhY exceptions and FhY exception registry.
+"""FhY errors."""
 
-All custom FhY exceptions can be viewed at 'Fhy.utils.errors.FHY_ERRORS'
-
-"""
-
-FHY_ERRORS: dict[type[Exception], str] = {}
+from fhy_core import register_error
 
 
-def register_fhy_error(error: type[Exception]) -> type[Exception]:
-    """Register custom FhY exceptions."""
-    FHY_ERRORS[error] = error.__doc__ or error.__name__
-
-    return error
-
-
-def _initialize_builtins() -> None:
-    """Initialize registration of builtin python exceptions."""
-    if len(FHY_ERRORS) == 0:
-        for _exc in [
-            AssertionError,
-            AttributeError,
-            FileExistsError,
-            FileNotFoundError,
-            IndexError,
-            KeyError,
-            RuntimeError,
-            SyntaxError,
-            TypeError,
-            ValueError,
-        ]:
-            register_fhy_error(_exc)
-
-
-_initialize_builtins()
-
-
-@register_fhy_error
-class UsageError(Exception):
-    """User induced error."""
-
-
-@register_fhy_error
-class FhYASTBuildError(RuntimeError):
-    """Failed to build FhY AST nodes from source."""
-
-
-@register_fhy_error
+@register_error
 class FhYSyntaxError(SyntaxError):
-    """Syntax error in FhY source code."""
+    """Raised when a syntax error in a FhY program is detected."""
 
 
-@register_fhy_error
-class FhYSemanticsError(Exception):
-    """Error in FhY program semantics."""
+@register_error
+class FhYASTBuildError(Exception):
+    """Raised when an error occurs during the construction of the AST."""
 
 
-@register_fhy_error
+@register_error
 class FhYImportError(ImportError):
-    """Problematic import statement detected from FhY source code."""
+    """Raised when an error occurs during the import of a FhY module."""
 
 
-@register_fhy_error
-class FhYTypeError(TypeError):
-    """Type error in FhY program."""
-
-
-@register_fhy_error
-class UnregisteredASTNode(KeyError):
-    """ASTNode information has not been registered with FhY."""
-
-
-@register_fhy_error
-class FieldAttributeError(Exception):
-    """Attempted to assign a value to an unsupported attribute of the object."""
+@register_error
+class FhYSemanticsError(Exception):
+    """Raised when a semantics error in a FhY program is detected."""

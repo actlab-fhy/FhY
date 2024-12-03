@@ -31,6 +31,7 @@
 
 """Visitor passes to validate and analyze AST semantics."""
 
+from .ast_to_core_expression_converter import convert_ast_expression_to_core_expression
 from .identifier_collector import collect_identifiers
 from .identifier_replacer import replace_identifiers
 from .imported_identifier_collector import collect_imported_identifiers

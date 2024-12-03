@@ -39,39 +39,39 @@ Classes:
 
 """
 
-from fhy_core import Identifier
+from collections.abc import Sequence
 
-from fhy import ir
+from fhy_core import (
+    Identifier,
+    IndexType,
+    NumericalType,
+    PrimitiveDataType,
+    TemplateDataType,
+    TupleType,
+    pformat_expression,
+)
+
 from fhy.lang import ast
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 from fhy.lang.ast.visitor import BasePass
 
 
 class ASTPrettyFormatter(BasePass):
-    """Deconstructs an AST node back into FhY language text using a visitor pattern.
+    """Formats an AST node back into pseudo-FhY language source."""
 
-    Args:
-        indent_char (str): character(s) used to indent the output text
-        show_id (bool): Include assigned identifier ID in output text if true
-
-    Raises:
-        RuntimeError: When class is improperly used and the indent becomes negative.
-
-    """
-
-    show_id: bool
+    _show_id: bool
     _indent_char: str
     _current_indent: int
 
     def __init__(self, indent_char: str, show_id: bool) -> None:
         super().__init__()
-        self.show_id = show_id
+        self._show_id = show_id
         self._indent_char = indent_char
         self._current_indent = 0
 
     @property
-    def _spacer(self):
-        """Current indentation spacer."""
+    def _indentation(self):
+        """Current indentations."""
         return self._indent_char * self._current_indent
 
     def _increment_indent(self) -> None:
@@ -83,15 +83,15 @@ class ASTPrettyFormatter(BasePass):
         self._current_indent -= 1
 
     def _format_statements(self, statements: list[str]) -> str:
-        return "\n".join(f"{self._spacer}{line}" for line in statements)
+        return "\n".join(f"{self._indentation}{line}" for line in statements)
 
-    def visit_Module(self, module: ast.Module) -> str:
+    def visit_module(self, module: ast.Module) -> str:
         return "\n".join(self.visit(statement) for statement in module.statements)
 
-    def visit_Import(self, node: ast.Import) -> str:
+    def visit_import(self, node: ast.Import) -> str:
         return "import " + self.visit(node.name) + ";"
 
-    def visit_Operation(self, operation: ast.Operation) -> str:
+    def visit_operation(self, operation: ast.Operation) -> str:
         self._increment_indent()
         pprinted_statements = self._format_statements(
             [self.visit(statement) for statement in operation.body]
@@ -109,7 +109,7 @@ class ASTPrettyFormatter(BasePass):
             + "\n}"
         )
 
-    def visit_Procedure(self, procedure: ast.Procedure) -> str:
+    def visit_procedure(self, procedure: ast.Procedure) -> str:
         self._increment_indent()
         pprinted_statements = self._format_statements(
             [self.visit(statement) for statement in procedure.body]
@@ -123,10 +123,10 @@ class ASTPrettyFormatter(BasePass):
             f"proc {name}<{templates}>({args}) " + "{\n" + pprinted_statements + "\n}"
         )
 
-    def visit_Argument(self, argument: ast.Argument) -> str:
+    def visit_argument(self, argument: ast.Argument) -> str:
         return f"{self.visit(argument.qualified_type)} {self.visit(argument.name)}"
 
-    def visit_DeclarationStatement(
+    def visit_declaration_statement(
         self, declaration_statement: ast.DeclarationStatement
     ) -> str:
         left_type = self.visit(declaration_statement.variable_type)
@@ -139,7 +139,7 @@ class ASTPrettyFormatter(BasePass):
 
         return left + right
 
-    def visit_ExpressionStatement(
+    def visit_expression_statement(
         self, expression_statement: ast.ExpressionStatement
     ) -> str:
         if expression_statement.left is not None:
@@ -149,7 +149,7 @@ class ASTPrettyFormatter(BasePass):
 
         return left + self.visit(expression_statement.right) + ";"
 
-    def visit_SelectionStatement(
+    def visit_selection_statement(
         self, selection_statement: ast.SelectionStatement
     ) -> str:
         self._increment_indent()
@@ -162,14 +162,14 @@ class ASTPrettyFormatter(BasePass):
         self._decrement_indent()
         condition = self.visit(selection_statement.condition)
 
-        text = f"if {condition} " + "{\n" + true_body + f"\n{self._spacer}" + "}"
+        text = f"if {condition} " + "{\n" + true_body + f"\n{self._indentation}" + "}"
 
         if len(false_body) > 0:
-            text += " else {\n" + false_body + f"\n{self._spacer}" + "}"
+            text += " else {\n" + false_body + f"\n{self._indentation}" + "}"
 
         return text
 
-    def visit_ForAllStatement(self, for_all_statement: ast.ForAllStatement) -> str:
+    def visit_for_all_statement(self, for_all_statement: ast.ForAllStatement) -> str:
         self._increment_indent()
         pprinted_body = self._format_statements(
             [self.visit(statement) for statement in for_all_statement.body]
@@ -177,31 +177,39 @@ class ASTPrettyFormatter(BasePass):
         self._decrement_indent()
         index = self.visit(for_all_statement.index)
 
-        return f"forall ({index}) " + "{\n" + pprinted_body + f"\n{self._spacer}" + "}"
+        return (
+            f"forall ({index}) "
+            + "{\n"
+            + pprinted_body
+            + f"\n{self._indentation}"
+            + "}"
+        )
 
-    def visit_ReturnStatement(self, return_statement: ast.ReturnStatement) -> str:
+    def visit_return_statement(self, return_statement: ast.ReturnStatement) -> str:
         return f"return {self.visit(return_statement.expression)};"
 
-    def visit_UnaryExpression(self, unary_expression: ast.UnaryExpression) -> str:
+    def visit_unary_expression(self, unary_expression: ast.UnaryExpression) -> str:
         return (
             f"{unary_expression.operation.value}"
             f"({self.visit(unary_expression.expression)})"
         )
 
-    def visit_BinaryExpression(self, binary_expression: ast.BinaryExpression) -> str:
+    def visit_binary_expression(self, binary_expression: ast.BinaryExpression) -> str:
         left = self.visit(binary_expression.left)
         right = self.visit(binary_expression.right)
 
         return f"({left} {binary_expression.operation.value} {right})"
 
-    def visit_TernaryExpression(self, ternary_expression: ast.TernaryExpression) -> str:
+    def visit_ternary_expression(
+        self, ternary_expression: ast.TernaryExpression
+    ) -> str:
         condition = self.visit(ternary_expression.condition)
         _true = self.visit(ternary_expression.true)
         _false = self.visit(ternary_expression.false)
 
         return f"({condition} ? {_true} : {_false})"
 
-    def visit_FunctionExpression(
+    def visit_function_expression(
         self, function_expression: ast.FunctionExpression
     ) -> str:
         template_types = ", ".join(
@@ -214,22 +222,22 @@ class ASTPrettyFormatter(BasePass):
 
         return f"{func}<{template_types}>[{indices}]({args})"
 
-    def _build_base_tuple(self, nodes: list[ASTObject]) -> str:
+    def _build_base_tuple(self, nodes: Sequence[ASTStructure]) -> str:
         a: str = "( " + ", ".join([self.visit(i) for i in nodes])
         a += ", )" if len(nodes) == 1 else " )"
 
         return a
 
-    def visit_TupleExpression(self, node: ast.TupleExpression) -> str:
+    def visit_tuple_expression(self, node: ast.TupleExpression) -> str:
         return self._build_base_tuple(node.expressions)
 
-    def visit_TupleAccessExpression(self, node: ast.TupleAccessExpression) -> str:
+    def visit_tuple_access_expression(self, node: ast.TupleAccessExpression) -> str:
         _tuple: str = self.visit(node.tuple_expression)
-        element: str = self.visit_IntLiteral(node.element_index)
+        element: str = self.visit_int_literal(node.element_index)
 
         return f"{_tuple}.{element}"
 
-    def visit_ArrayAccessExpression(
+    def visit_array_access_expression(
         self, array_access_expression: ast.ArrayAccessExpression
     ) -> str:
         index = ", ".join(
@@ -237,56 +245,66 @@ class ASTPrettyFormatter(BasePass):
         )
         return f"{self.visit(array_access_expression.array_expression)}[{index}]"
 
-    def visit_IdentifierExpression(
+    def visit_identifier_expression(
         self, identifier_expression: ast.IdentifierExpression
     ) -> str:
         return self.visit(identifier_expression.identifier)
 
-    def visit_IntLiteral(self, int_literal: ast.IntLiteral) -> str:
+    def visit_int_literal(self, int_literal: ast.IntLiteral) -> str:
         return str(int_literal.value)
 
-    def visit_FloatLiteral(self, float_literal: ast.FloatLiteral) -> str:
+    def visit_float_literal(self, float_literal: ast.FloatLiteral) -> str:
         return str(float_literal.value)
 
-    def visit_ComplexLiteral(self, complex_literal: ast.ComplexLiteral) -> str:
+    def visit_complex_literal(self, complex_literal: ast.ComplexLiteral) -> str:
         return str(complex_literal.value)
 
-    def visit_QualifiedType(self, qualified_type: ast.QualifiedType) -> str:
+    def visit_qualified_type(self, qualified_type: ast.QualifiedType) -> str:
         return (
             f"{qualified_type.type_qualifier.value} "
             f"{self.visit(qualified_type.base_type)}"
         )
 
-    def visit_NumericalType(self, numerical_type: ir.NumericalType) -> str:
+    def visit_numerical_type(self, numerical_type: NumericalType) -> str:
         if len(numerical_type.shape) == 0:
             shape = ""
         else:
-            shape = f"[{', '.join(self.visit(dim) for dim in numerical_type.shape)}]"
+            shape = ", ".join(
+                pformat_expression(dim, show_id=self._show_id)
+                for dim in numerical_type.shape
+            )
+            shape = f"[{shape}]"
 
         return f"{self.visit(numerical_type.data_type)}{shape}"
 
-    def visit_PrimitiveDataType(self, node: ir.PrimitiveDataType) -> str:
+    def visit_primitive_data_type(self, node: PrimitiveDataType) -> str:
         return str(node.core_data_type.value)
 
-    def visit_TemplateDataType(self, node: ir.TemplateDataType) -> str:
-        return self.visit_Identifier(node.template_type)
+    def visit_template_data_type(self, node: TemplateDataType) -> str:
+        return self.visit_identifier(node.template_type)
 
-    def visit_IndexType(self, index_type: ir.IndexType) -> str:
-        index_range = f"{self.visit(index_type.lower_bound)}:"
-        index_range += f"{self.visit(index_type.upper_bound)}:"
+    def visit_index_type(self, index_type: IndexType) -> str:
+        index_range = (
+            f"{pformat_expression(index_type.lower_bound, show_id=self._show_id)}:"
+        )
+        index_range += (
+            f"{pformat_expression(index_type.upper_bound, show_id=self._show_id)}:"
+        )
 
         if index_type.stride is not None:
-            index_range += f"{self.visit(index_type.stride)}"
+            index_range += (
+                f"{pformat_expression(index_type.stride, show_id=self._show_id)}"
+            )
         else:
             index_range += "1"
 
         return f"index[{index_range}]"
 
-    def visit_TupleType(self, tuple_type: ir.TupleType) -> str:
+    def visit_tuple_type(self, tuple_type: TupleType) -> str:
         return "tuple " + self._build_base_tuple(tuple_type._types)
 
-    def visit_Identifier(self, identifier: Identifier) -> str:
-        if self.show_id:
+    def visit_identifier(self, identifier: Identifier) -> str:
+        if self._show_id:
             return f"({identifier.name_hint}::{identifier.id})"
         else:
             return identifier.name_hint
