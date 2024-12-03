@@ -39,6 +39,8 @@ Classes:
 
 """
 
+from collections.abc import Sequence
+
 from fhy_core import (
     Identifier,
     IndexType,
@@ -50,7 +52,7 @@ from fhy_core import (
 )
 
 from fhy.lang import ast
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 from fhy.lang.ast.visitor import BasePass
 
 
@@ -220,7 +222,7 @@ class ASTPrettyFormatter(BasePass):
 
         return f"{func}<{template_types}>[{indices}]({args})"
 
-    def _build_base_tuple(self, nodes: list[ASTObject]) -> str:
+    def _build_base_tuple(self, nodes: Sequence[ASTStructure]) -> str:
         a: str = "( " + ", ".join([self.visit(i) for i in nodes])
         a += ", )" if len(nodes) == 1 else " )"
 

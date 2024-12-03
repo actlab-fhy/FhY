@@ -62,7 +62,7 @@ from fhy.error import FhYASTBuildError, FhYSyntaxError
 from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS
 from fhy.lang import ast
 from fhy.lang.ast import Source, Span
-from fhy.lang.ast.alias import Expressions
+from fhy.lang.ast.alias import ASTExpressionStructure
 from fhy.lang.ast.passes import convert_ast_expression_to_core_expression
 from fhy.lang.parser import FhYParser, FhYVisitor  # type: ignore[import-untyped]
 
@@ -413,8 +413,8 @@ class ParseTreeConverter(FhYVisitor):
     # =====================
     def visitExpression_list(
         self, ctx: FhYParser.Expression_listContext
-    ) -> Sequence[Expressions]:
-        expressions: list[Expressions] = []
+    ) -> Sequence[ast.Expression]:
+        expressions: list[ast.Expression] = []
         exes: Sequence[FhYParser.ExpressionContext] | None
         if (exes := ctx.expression()) is None:
             return expressions
@@ -599,7 +599,9 @@ class ParseTreeConverter(FhYVisitor):
         id_express: FhYParser.Identifier_expressionContext | None
 
         if (tup := ctx.tuple_()) is not None:
-            expressions: Sequence[Expressions] = self.visitExpression_list(tup)
+            expressions: Sequence[ASTExpressionStructure] = self.visitExpression_list(
+                tup
+            )
 
             return ast.TupleExpression(
                 span=span,
@@ -694,7 +696,7 @@ class ParseTreeConverter(FhYVisitor):
         self, ctx: FhYParser.Numerical_typeContext
     ) -> NumericalType:
         data_type: DataType = self.visitDtype(ctx.dtype())
-        shape: Sequence[Expressions] = ()
+        shape: Sequence[ast.Expression] = ()
         if (shape_ctx := ctx.expression_list()) is not None:
             shape = self.visitExpression_list(shape_ctx)
 

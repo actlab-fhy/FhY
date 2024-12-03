@@ -34,7 +34,7 @@
 from fhy_core import Identifier
 
 from fhy.lang.ast import node as ast
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 from fhy.lang.ast.visitor import Visitor
 
 
@@ -56,7 +56,7 @@ class ImportedIdentifierCollector(Visitor):
         super().visit_import(node)
 
 
-def collect_imported_identifiers(node: ASTObject) -> set[Identifier]:
+def collect_imported_identifiers(node: ASTStructure) -> set[Identifier]:
     """Collect all identifiers from import statements from a given node.
 
     Args:

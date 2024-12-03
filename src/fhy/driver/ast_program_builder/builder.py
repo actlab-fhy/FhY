@@ -46,6 +46,7 @@ from fhy_core import Identifier, SymbolTable, SymbolTableFrame
 from fhy.error import FhYImportError
 from fhy.ir.program import Program as IRProgram
 from fhy.lang import collect_imported_identifiers
+from fhy.lang.ast import node as ast_node
 from fhy.lang.ast.passes import build_symbol_table, replace_identifiers
 
 from ..compilation_options import CompilationOptions
@@ -318,6 +319,8 @@ class ASTProgramBuilder:
 
             self.log.debug("Completed Resolving Imports: %s", _rel_path)
             _ast = replace_identifiers(source.ast, id_map)
+            if not isinstance(_ast, ast_node.Module):
+                raise RuntimeError('Expected "Module" node from "replace_identifiers".')
             resolved_sources.append(replace(source, ast=_ast))
 
         # Cycle Detection

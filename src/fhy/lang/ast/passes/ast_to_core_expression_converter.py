@@ -96,7 +96,7 @@ class ASTToCoreExpressionConverter(BasePass):
     def visit_unary_expression(self, node: ASTUnaryExpression) -> CoreUnaryExpression:
         return CoreUnaryExpression(
             self._AST_TO_CORE_UNARY_OPERATIONS[node.operation],
-            self.visit(node.operand),
+            self.visit(node.expression),
         )
 
     def visit_binary_expression(
@@ -124,7 +124,9 @@ class ASTToCoreExpressionConverter(BasePass):
     def visit_complex_literal(
         self, node: ASTComplexLiteralExpression
     ) -> CoreLiteralExpression:
-        return CoreLiteralExpression(node.value)
+        raise NotImplementedError(
+            "Complex literals are not yet supported for core expressions."
+        )
 
 
 def convert_ast_expression_to_core_expression(

@@ -65,7 +65,7 @@ from fhy_core import (
 )
 from frozendict import frozendict
 
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 
 from .node import (
     Argument,
@@ -99,76 +99,72 @@ from .span import Source, Span
 class BasePass(ABC):
     """Abstract visitor pattern AST nodes and structures."""
 
-    _VISITOR_METHODS: ClassVar[frozendict[type, Callable[[ASTObject], Any]]] = (
-        frozendict(
-            {
-                Module: "visit_module",
-                Import: "visit_import",
-                Operation: "visit_operation",
-                Procedure: "visit_procedure",
-                Argument: "visit_argument",
-                DeclarationStatement: "visit_declaration_statement",
-                ExpressionStatement: "visit_expression_statement",
-                SelectionStatement: "visit_selection_statement",
-                ForAllStatement: "visit_for_all_statement",
-                ReturnStatement: "visit_return_statement",
-                UnaryExpression: "visit_unary_expression",
-                BinaryExpression: "visit_binary_expression",
-                TernaryExpression: "visit_ternary_expression",
-                FunctionExpression: "visit_function_expression",
-                ArrayAccessExpression: "visit_array_access_expression",
-                TupleExpression: "visit_tuple_expression",
-                TupleAccessExpression: "visit_tuple_access_expression",
-                IdentifierExpression: "visit_identifier_expression",
-                IntLiteral: "visit_int_literal",
-                FloatLiteral: "visit_float_literal",
-                ComplexLiteral: "visit_complex_literal",
-                QualifiedType: "visit_qualified_type",
-                CoreBinaryExpression: "visit_core_binary_expression",
-                CoreUnaryExpression: "visit_core_unary_expression",
-                CoreLiteralExpression: "visit_core_literal_expression",
-                CoreIdentifierExpression: "visit_core_identifier_expression",
-                NumericalType: "visit_numerical_type",
-                IndexType: "visit_index_type",
-                TupleType: "visit_tuple_type",
-                PrimitiveDataType: "visit_primitive_data_type",
-                TemplateDataType: "visit_template_data_type",
-                TypeQualifier: "visit_type_qualifier",
-                CoreDataType: "visit_core_data_type",
-                Identifier: "visit_identifier",
-                Source: "visit_source",
-                Span: "visit_span",
-            }
-        )
+    _VISITOR_METHODS: ClassVar[frozendict[type[ASTStructure], str]] = frozendict(
+        {
+            Module: "visit_module",
+            Import: "visit_import",
+            Operation: "visit_operation",
+            Procedure: "visit_procedure",
+            Argument: "visit_argument",
+            DeclarationStatement: "visit_declaration_statement",
+            ExpressionStatement: "visit_expression_statement",
+            SelectionStatement: "visit_selection_statement",
+            ForAllStatement: "visit_for_all_statement",
+            ReturnStatement: "visit_return_statement",
+            UnaryExpression: "visit_unary_expression",
+            BinaryExpression: "visit_binary_expression",
+            TernaryExpression: "visit_ternary_expression",
+            FunctionExpression: "visit_function_expression",
+            ArrayAccessExpression: "visit_array_access_expression",
+            TupleExpression: "visit_tuple_expression",
+            TupleAccessExpression: "visit_tuple_access_expression",
+            IdentifierExpression: "visit_identifier_expression",
+            IntLiteral: "visit_int_literal",
+            FloatLiteral: "visit_float_literal",
+            ComplexLiteral: "visit_complex_literal",
+            QualifiedType: "visit_qualified_type",
+            CoreBinaryExpression: "visit_core_binary_expression",
+            CoreUnaryExpression: "visit_core_unary_expression",
+            CoreLiteralExpression: "visit_core_literal_expression",
+            CoreIdentifierExpression: "visit_core_identifier_expression",
+            NumericalType: "visit_numerical_type",
+            IndexType: "visit_index_type",
+            TupleType: "visit_tuple_type",
+            PrimitiveDataType: "visit_primitive_data_type",
+            TemplateDataType: "visit_template_data_type",
+            TypeQualifier: "visit_type_qualifier",
+            CoreDataType: "visit_core_data_type",
+            Identifier: "visit_identifier",
+            Source: "visit_source",
+            Span: "visit_span",
+        }
     )
 
-    def __call__(self, node: Any, **kwargs: Any) -> Any:
-        return self.visit(node, **kwargs)
+    def __call__(self, node: Any) -> Any:
+        return self.visit(node)
 
-    def visit(self, node: Any, **kwargs: Any) -> Any:
+    def visit(self, node: Any) -> Any:
         """Visit a node or structure based on its type.
 
         Args:
             node: AST node or structure to visit.
-            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             Result of visiting the node.
 
         """
-        method_name: str = self._VISITOR_METHODS.get(type(node), None)
+        method_name: str | None = self._VISITOR_METHODS.get(type(node), None)
         if method_name is None:
-            return self.default(node, **kwargs)
+            return self.default(node)
         else:
-            method: Callable[[ASTObject], Any] = getattr(self, method_name)
-            return method(node, **kwargs)
+            method: Callable[[ASTStructure], Any] = getattr(self, method_name)
+            return method(node)
 
-    def default(self, node: Any, **kwargs: Any) -> Any:
+    def default(self, node: Any) -> Any:
         """Visit a node that is not supported.
 
         Args:
             node: AST node or structure to visit.
-            **kwargs: Arbitrary keyword arguments.
 
         Returns:
             Result of visiting the node.
@@ -195,7 +191,7 @@ def _check_ast_node_type(
 class Visitor(BasePass):
     """AST node visitor."""
 
-    def visit(self, node: ASTObject | Sequence[ASTObject]) -> None:
+    def visit(self, node: ASTStructure | Sequence[ASTStructure]) -> None:
         if isinstance(node, list):
             self.visit_sequence(node)
         else:
@@ -532,7 +528,7 @@ class Visitor(BasePass):
 
         """
 
-    def visit_sequence(self, nodes: Iterable[ASTObject]) -> None:
+    def visit_sequence(self, nodes: Iterable[ASTStructure]) -> None:
         """Visit a list of nodes or structures.
 
         Args:
@@ -1093,7 +1089,9 @@ class Transformer(BasePass):
 
         return CoreIdentifierExpression(identifier=new_identifier)
 
-    def visit_core_literal_expression(self, node: CoreLiteralExpression) -> None:
+    def visit_core_literal_expression(
+        self, node: CoreLiteralExpression
+    ) -> CoreLiteralExpression:
         """Transform a core literal expression.
 
         Args:

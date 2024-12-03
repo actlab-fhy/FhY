@@ -41,7 +41,7 @@ Classes:
 
 from fhy_core import Identifier
 
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 from fhy.lang.ast.visitor import Visitor
 
 
@@ -62,7 +62,7 @@ class IdentifierCollector(Visitor):
         self._identifiers.add(identifier)
 
 
-def collect_identifiers(node: ASTObject) -> set[Identifier]:
+def collect_identifiers(node: ASTStructure) -> set[Identifier]:
     """Return a set of identifier objects from a given AST node object."""
     collector = IdentifierCollector()
     collector(node)

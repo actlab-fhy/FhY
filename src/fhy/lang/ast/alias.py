@@ -31,8 +31,6 @@
 
 """Define type aliases, or generic types describing core FhY language constructs."""
 
-from typing import Generic, TypeVar
-
 from fhy_core import (
     CoreDataType,
     DataType,
@@ -44,20 +42,18 @@ from fhy_core import (
 )
 from fhy_core import Expression as CoreExpression
 
-from fhy.lang.ast.node import ASTNode, Expression, Function, Statement
+from fhy.lang.ast.node import ASTNode
+from fhy.lang.ast.node import Expression as ASTExpression
 from fhy.lang.ast.span import Source, Span
 
-ASTTypeNodes = ASTNode | Type
-Nodes = TypeVar("Nodes", bound=ASTTypeNodes)
+ASTExpressionStructure = CoreExpression | ASTExpression
 
-Expressions = CoreExpression | Expression
-ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
-
-CoreASTNodes = Statement | Function | Expression
-Core = TypeVar("Core", bound=CoreASTNodes)
-
-OtherTypes = (
-    Identifier
+_Non_AST_Node_Structures = (
+    Span
+    | Source
+    | Identifier
+    | CoreExpression
+    | Type
     | DataType
     | TypeQualifier
     | PrimitiveDataType
@@ -65,11 +61,4 @@ OtherTypes = (
     | CoreDataType
 )
 
-Spans = Span | Source
-
-_ASTObject = ASTTypeNodes | Expressions | CoreASTNodes | OtherTypes | Spans
-ASTObject = TypeVar("ASTObject", bound=_ASTObject)
-
-
-class ASTNodes(Generic[ASTObject]):
-    """Bound generic AST node."""
+ASTStructure = ASTNode | ASTExpressionStructure | _Non_AST_Node_Structures
