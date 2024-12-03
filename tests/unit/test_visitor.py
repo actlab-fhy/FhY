@@ -13,7 +13,7 @@ from fhy.lang.ast import (
     TupleExpression,
     visitor,
 )
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 from fhy.lang.ast.visitor import BasePass, Visitor
 from fhy_core import CoreDataType, NumericalType, PrimitiveDataType
 
@@ -129,7 +129,7 @@ def mock_transform(x):
 
 
 def default_assert(
-    instance: _BP, method: MagicMock, node: ASTObject, transform=mock_transform
+    instance: _BP, method: MagicMock, node: ASTStructure, transform=mock_transform
 ):
     # We check `__call__`, generic `visit`, and mocked `method` directly.
     for call in (instance, instance.visit, method):
@@ -140,7 +140,7 @@ def default_assert(
 
 def visit_generic(
     name: str, obj: _BP, _test=default_assert, transform=mock_transform
-) -> Callable[[ASTObject], _BP]:
+) -> Callable[[ASTStructure], _BP]:
     """Dynamic Construction of a mock patched base pass."""
 
     @patch.object(obj, name)
@@ -203,7 +203,7 @@ def test_visit_ast_node_fixtures(
 
     """
     _obj, node = request.getfixturevalue(fixture_name)
-    mocker: Callable[[ASTObject], _BP] = visit_generic(
+    mocker: Callable[[ASTStructure], _BP] = visit_generic(
         method_name, cls_name, default_assert
     )
     instance: _BP = mocker(node)
@@ -213,7 +213,7 @@ def test_module_node(module):
     """Test correct nodes are visited from a Module node."""
     obj, node = module
 
-    def mock_assert(instance: _BP, method: MagicMock, _node: ASTObject, t):
+    def mock_assert(instance: _BP, method: MagicMock, _node: ASTStructure, t):
         instance.visit(_node)
         method.assert_called_once_with(t(_node))
 
@@ -222,7 +222,7 @@ def test_module_node(module):
         ("visit_operation", lambda x: x.statements[0]),
         ("visit_procedure", lambda x: x.statements[1]),
     ):
-        mocker: Callable[[ASTObject], _BP] = visit_generic(
+        mocker: Callable[[ASTStructure], _BP] = visit_generic(
             s, Visitor, mock_assert, transform
         )
         mocker(node)
