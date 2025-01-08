@@ -33,8 +33,7 @@
 
 from dataclasses import dataclass
 
-from fhy.ir.type import Type as IRType
-from fhy.ir.type import TypeQualifier as IRTypeQualifier
+from fhy_core import Type, TypeQualifier
 
 from .base import ASTNode
 
@@ -44,17 +43,17 @@ class QualifiedType(ASTNode):
     """Qualified type AST node.
 
     Args:
-        base_type (IRType): Type of the qualified type.
-        type_qualifier (IRTypeQualifier): Qualifier of the type.
+        base_type (Type): Type of the qualified type.
+        type_qualifier (TypeQualifier): Qualifier of the type.
 
     Attributes:
-        base_type (IRType): Type of the qualified type.
-        type_qualifier (IRTypeQualifier): Qualifier of the type.
+        base_type (Type): Type of the qualified type.
+        type_qualifier (TypeQualifier): Qualifier of the type.
 
     """
 
-    base_type: IRType
-    type_qualifier: IRTypeQualifier
+    base_type: Type
+    type_qualifier: TypeQualifier
 
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()

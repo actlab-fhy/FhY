@@ -31,9 +31,10 @@
 
 """AST visitor pass to collect import identifiers."""
 
-from fhy.ir.identifier import Identifier
+from fhy_core import Identifier
+
 from fhy.lang.ast import node as ast
-from fhy.lang.ast.alias import ASTObject
+from fhy.lang.ast.alias import ASTStructure
 from fhy.lang.ast.visitor import Visitor
 
 
@@ -50,12 +51,12 @@ class ImportedIdentifierCollector(Visitor):
     def identifiers(self) -> set[Identifier]:
         return self._identifiers
 
-    def visit_Import(self, node: ast.Import) -> None:
+    def visit_import(self, node: ast.Import) -> None:
         self._identifiers.add(node.name)
-        super().visit_Import(node)
+        super().visit_import(node)
 
 
-def collect_imported_identifiers(node: ASTObject) -> set[Identifier]:
+def collect_imported_identifiers(node: ASTStructure) -> set[Identifier]:
     """Collect all identifiers from import statements from a given node.
 
     Args:

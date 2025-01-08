@@ -41,21 +41,28 @@ Classes:
 
 from typing import Any
 
-from fhy.error import FhYSemanticsError
-from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS, BUILTINS_NAMESPACE_NAME
-from fhy.ir.identifier import Identifier
-from fhy.ir.table import (
+from fhy_core import (
+    CoreDataType,
     FunctionKeyword,
     FunctionSymbolTableFrame,
+    Identifier,
     ImportSymbolTableFrame,
+    NumericalType,
+    PrimitiveDataType,
+    Stack,
     SymbolTable,
     SymbolTableFrame,
+    TypeQualifier,
     VariableSymbolTableFrame,
 )
-from fhy.ir.type import CoreDataType, NumericalType, PrimitiveDataType, TypeQualifier
+from fhy_core import (
+    IdentifierExpression as CoreIdentifierExpression,
+)
+
+from fhy.error import FhYSemanticsError
+from fhy.ir.builtins import BUILTIN_LANG_IDENTIFIERS, BUILTINS_NAMESPACE_NAME
 from fhy.lang.ast.node import core, expression, statement
 from fhy.lang.ast.visitor import Visitor
-from fhy.utils import Stack
 
 from .identifier_collector import collect_identifiers
 
@@ -128,7 +135,7 @@ class SymbolTableBuilder(Visitor):
             raise FhYSemanticsError(f"{msg}: {symbol.name_hint}")
 
     def _is_symbol_defined(self, symbol: Identifier) -> bool:
-        return self._symbol_table.is_symbol_defined(
+        return self._symbol_table.is_symbol_defined_in_namespace(
             self._namespace_stack.peek(), symbol
         )
 
@@ -144,9 +151,9 @@ class SymbolTableBuilder(Visitor):
             raise TypeError(f'Expected a "Module" node. Received: {type(node)}')
         return super().__call__(node, *args, **kwargs)
 
-    def visit_Module(self, node: core.Module) -> None:
+    def visit_module(self, node: core.Module) -> None:
         self._push_namespace(node.name)
-        super().visit_Module(node)
+        super().visit_module(node)
         self._pop_namespace()
 
         if len(self._namespace_stack) != 1:
@@ -155,13 +162,13 @@ class SymbolTableBuilder(Visitor):
             error_message += "module node."
             raise RuntimeError(error_message)
 
-    def visit_Import(self, node: statement.Import) -> None:
+    def visit_import(self, node: statement.Import) -> None:
         self._assert_symbol_not_defined(node.name)
         import_frame = ImportSymbolTableFrame(name=node.name)
         self._add_symbol(node.name, import_frame)
-        super().visit_Import(node)
+        super().visit_import(node)
 
-    def visit_Procedure(self, node: statement.Procedure) -> None:
+    def visit_procedure(self, node: statement.Procedure) -> None:
         self._assert_symbol_not_defined(node.name)
         proc_frame = FunctionSymbolTableFrame(
             name=node.name,
@@ -173,10 +180,10 @@ class SymbolTableBuilder(Visitor):
         )
         self._add_symbol(node.name, proc_frame)
         self._push_namespace(node.name)
-        super().visit_Procedure(node)
+        super().visit_procedure(node)
         self._pop_namespace()
 
-    def visit_Operation(self, node: statement.Operation) -> None:
+    def visit_operation(self, node: statement.Operation) -> None:
         self._assert_symbol_not_defined(node.name)
         op_frame = FunctionSymbolTableFrame(
             name=node.name,
@@ -189,10 +196,10 @@ class SymbolTableBuilder(Visitor):
         )
         self._add_symbol(node.name, op_frame)
         self._push_namespace(node.name)
-        super().visit_Operation(node)
+        super().visit_operation(node)
         self._pop_namespace()
 
-    def visit_Argument(self, node: statement.Argument) -> None:
+    def visit_argument(self, node: statement.Argument) -> None:
         arg_frame = VariableSymbolTableFrame(
             name=node.name,
             type=node.qualified_type.base_type,
@@ -214,9 +221,9 @@ class SymbolTableBuilder(Visitor):
                     )
                     self._add_symbol(dimension, var_frame)
 
-        super().visit_Argument(node)
+        super().visit_argument(node)
 
-    def visit_DeclarationStatement(self, node: statement.DeclarationStatement) -> None:
+    def visit_declaration_statement(self, node: statement.DeclarationStatement) -> None:
         self._assert_symbol_not_defined(node.variable_name)
         var_frame = VariableSymbolTableFrame(
             name=node.variable_name,
@@ -224,11 +231,17 @@ class SymbolTableBuilder(Visitor):
             type_qualifier=node.variable_type.type_qualifier,
         )
         self._add_symbol(node.variable_name, var_frame)
-        super().visit_DeclarationStatement(node)
+        super().visit_declaration_statement(node)
 
-    def visit_IdentifierExpression(self, node: expression.IdentifierExpression) -> None:
+    def visit_identifier_expression(
+        self, node: expression.IdentifierExpression
+    ) -> None:
         self._assert_symbol_defined(node.identifier)
-        super().visit_IdentifierExpression(node)
+        super().visit_identifier_expression(node)
+
+    def visit_core_identifier_expression(self, node: CoreIdentifierExpression) -> None:
+        self._assert_symbol_defined(node.identifier)
+        return super().visit_core_identifier_expression(node)
 
 
 def build_symbol_table(node: core.Module) -> SymbolTable:

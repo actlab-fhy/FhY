@@ -35,7 +35,7 @@ We currently support serializing to json formats.
 
 """
 
-from fhy.utils.enumeration import StrEnum
+from fhy_core import StrEnum
 
 
 class SerializationOptions(StrEnum):

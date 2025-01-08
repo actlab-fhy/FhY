@@ -29,8 +29,4 @@
 # WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 
-"""Common FhY Utilities, and Miscellaneous Fixings."""
-
-from .lattice import Lattice
-from .poset import PartiallyOrderedSet
-from .stack import Stack
+"""FhY utilities."""

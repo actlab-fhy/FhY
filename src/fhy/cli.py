@@ -41,6 +41,7 @@ from typing import Annotated, Optional, TypeVar
 
 import typer
 import typer.core
+from fhy_core import IntEnum
 
 from fhy import __version__
 from fhy.driver import CompilationOptions, Workspace, compile_fhy
@@ -50,7 +51,6 @@ from fhy.lang.ast.pprint import pformat_ast
 from fhy.lang.ast.serialization import SerializationOptions
 from fhy.lang.ast.serialization.to_json import dump
 from fhy.logger import add_file_handler, get_logger
-from fhy.utils.enumeration import IntEnum
 
 T = TypeVar("T")
 

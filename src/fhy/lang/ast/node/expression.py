@@ -56,9 +56,7 @@ Primitive Expressions:
 from abc import ABC
 from dataclasses import dataclass, field
 
-from fhy.ir.identifier import Identifier as IRIdentifier
-from fhy.ir.type import DataType as IRDataType
-from fhy.utils.enumeration import StrEnum
+from fhy_core import DataType, Identifier, StrEnum
 
 from .core import Expression
 
@@ -148,7 +146,7 @@ class BinaryOperation(StrEnum):
     LESS_THAN = "<"
     LESS_THAN_OR_EQUAL = "<="
     GREATER_THAN = ">"
-    GREATHER_THAN_OR_EQUAL = ">="
+    GREATER_THAN_OR_EQUAL = ">="
     EQUAL_TO = "=="
     NOT_EQUAL_TO = "!="
     BITWISE_AND = "&"
@@ -252,14 +250,14 @@ class FunctionExpression(Expression):
 
     Attributes:
         function (Expression): Expression defining the function to call.
-        template_types (List[IRDataType]): Types for template arguments.
+        template_types (List[DataType]): Types for template arguments.
         indices (List[Expression]): Reduced indices for a reduction operation.
         args (List[Expression]): Provided arguments to function call.
 
     """
 
     function: Expression
-    template_types: list[IRDataType] = field(default_factory=list)
+    template_types: list[DataType] = field(default_factory=list)
     indices: list[Expression] = field(default_factory=list)
     args: list[Expression] = field(default_factory=list)
 
@@ -321,14 +319,14 @@ class IdentifierExpression(Expression):
     """Wrapper node for a variable is used in an expression.
 
     Args:
-        identifier (IRIdentifier): Identifier of the variable.
+        identifier (Identifier): Identifier of the variable.
 
     Attributes:
-        identifier (IRIdentifier): Identifier of the variable.
+        identifier (Identifier): Identifier of the variable.
 
     """
 
-    identifier: IRIdentifier
+    identifier: Identifier
 
     def get_visit_attrs(self) -> list[str]:
         attrs = super().get_visit_attrs()
@@ -344,15 +342,7 @@ class Literal(Expression, ABC):
 
 @dataclass(frozen=True, kw_only=True)
 class IntLiteral(Literal):
-    """Expression node for integer literals.
-
-    Args:
-        value (int): Integer value.
-
-    Attributes:
-        value (int): Integer value.
-
-    """
+    """Expression node for integer literals."""
 
     value: int
 
@@ -364,15 +354,7 @@ class IntLiteral(Literal):
 
 @dataclass(frozen=True, kw_only=True)
 class FloatLiteral(Literal):
-    """Expression node for floating point literals.
-
-    Args:
-        value (float): Floating point value.
-
-    Attributes:
-        value (float): Floating point value.
-
-    """
+    """Expression node for floating point literals."""
 
     value: float
 
@@ -385,15 +367,7 @@ class FloatLiteral(Literal):
 
 @dataclass(frozen=True, kw_only=True)
 class ComplexLiteral(Literal):
-    """Expression node for complex literals.
-
-    Args:
-        value (complex): Complex value.
-
-    Attributes:
-        value (complex): Complex value.
-
-    """
+    """Expression node for complex literals."""
 
     value: complex
 

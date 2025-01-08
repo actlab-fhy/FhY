@@ -1,8 +1,8 @@
 """Unit Test Symbol Table Builder Module."""
 
-from fhy import ir
 from fhy.lang.ast import Module, Procedure
 from fhy.lang.ast.passes import build_symbol_table
+from fhy_core import Identifier
 
 
 def test_empty_program():
@@ -23,7 +23,7 @@ def test_empty_program():
 
 def test_empty_procedure():
     """Tests empty procedure body containing procedure name in symbol table."""
-    function_name = ir.Identifier("main")
+    function_name = Identifier("main")
     program_ast = Module(
         statements=Procedure(
             name=function_name,

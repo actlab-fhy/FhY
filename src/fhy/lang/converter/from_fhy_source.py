@@ -43,7 +43,7 @@ from antlr4.error.ErrorListener import (  # type: ignore[import-untyped]
     ErrorListener,
 )
 
-from fhy import error
+from fhy.error import FhYSyntaxError
 from fhy.lang import ast
 from fhy.lang.parser import FhYLexer, FhYParser
 
@@ -79,7 +79,7 @@ class ThrowingErrorListener(ErrorListener):
 
         self.log.error(message)
 
-        raise error.FhYSyntaxError(message) from e
+        raise FhYSyntaxError(message) from e
 
     def reportAmbiguity(
         self,

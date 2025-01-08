@@ -31,51 +31,34 @@
 
 """Define type aliases, or generic types describing core FhY language constructs."""
 
-from typing import Generic, TypeVar
+from fhy_core import (
+    CoreDataType,
+    DataType,
+    Identifier,
+    PrimitiveDataType,
+    TemplateDataType,
+    Type,
+    TypeQualifier,
+)
+from fhy_core import Expression as CoreExpression
 
-from fhy.ir.expression import Expression as IRExpression
-from fhy.ir.identifier import Identifier as IRIdentifier
-from fhy.ir.type import CoreDataType as IRCoreDataType
-from fhy.ir.type import (
-    DataType as IRDataType,
-)
-from fhy.ir.type import (
-    PrimitiveDataType as IRPrimitiveDataType,
-)
-from fhy.ir.type import TemplateDataType as IRTemplateDataType
-from fhy.ir.type import (
-    Type as IRType,
-)
-from fhy.ir.type import (
-    TypeQualifier as IRTypeQualifier,
-)
-from fhy.lang.ast.node import base, core
+from fhy.lang.ast.node import ASTNode
+from fhy.lang.ast.node import Expression as ASTExpression
 from fhy.lang.ast.span import Source, Span
 
-# Define Commonly Used Aliases
-ASTTypeNodes = base.ASTNode | IRType
-Nodes = TypeVar("Nodes", bound=ASTTypeNodes)
+ASTExpressionStructure = CoreExpression | ASTExpression
 
-Expressions = IRExpression | core.Expression
-ExpressionNodes = TypeVar("ExpressionNodes", bound=Expressions)
-
-CoreASTNodes = core.Statement | core.Function | core.Expression
-Core = TypeVar("Core", bound=CoreASTNodes)
-
-OtherTypes = (
-    IRIdentifier
-    | IRDataType
-    | IRTypeQualifier
-    | IRPrimitiveDataType
-    | IRTemplateDataType
-    | IRCoreDataType
+_Non_AST_Node_Structures = (
+    Span
+    | Source
+    | Identifier
+    | CoreExpression
+    | Type
+    | DataType
+    | TypeQualifier
+    | PrimitiveDataType
+    | TemplateDataType
+    | CoreDataType
 )
 
-Spans = Span | Source
-
-_ASTObject = ASTTypeNodes | Expressions | CoreASTNodes | OtherTypes | Spans
-ASTObject = TypeVar("ASTObject", bound=_ASTObject)
-
-
-class ASTNodes(Generic[ASTObject]):
-    """Bound generic AST node."""
+ASTStructure = ASTNode | ASTExpressionStructure | _Non_AST_Node_Structures
