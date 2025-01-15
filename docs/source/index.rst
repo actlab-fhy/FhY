@@ -7,7 +7,7 @@ Welcome to *FhY*
 .. TODO: Make this an extension rather than manual HTML
 .. raw:: html
 
-   <div class="row">
+   <div class="row horz-card-row">
       <div class="col-xs-12 col-md-4">
          <div class="card">
             <div class="card-header">

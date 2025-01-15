@@ -7,3 +7,13 @@ html[data-theme="dark"] {
     --pst-color-primary: white;
     --pst-color-background: black;
 }
+
+.horz-card-row {
+    .card {
+        margin-bottom: 10px;
+
+        @media screen and (min-width: 768px) {
+            margin-bottom: 0px;
+        }
+    }
+}
