@@ -1,22 +1,29 @@
-=================================
-Installing *FhY*
-=================================
+=============
+Installation
+=============
 
-******
-Conda
-******
+
+Prerequisites
+==============
+
+*FhY* requires at least Python 3.11.
+Instructions for installing Python can be found `here <https://www.python.org/downloads/>`_.
+
+
+Install with Conda
+===================
 
 *FhY* is not available through conda at this time.
 
-**************
-Pip from PyPI
-**************
+
+Install with pip from PyPI
+===========================
 
 *FhY* is not available through PyPI at this time.
 
-****************
-Pip from Source
-****************
+
+Install with pip from Source
+=============================
 
 To install from source, first clone the repository:
 
