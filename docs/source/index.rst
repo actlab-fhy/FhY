@@ -1,8 +1,8 @@
 .. title:: Welcome to FhY
 
 .. toctree::
+   :hidden:
    :maxdepth: 1
-   :caption: Contents:
 
-   install
-   design_blog/index
+   User Guide <user_guide/index>
+   Design Blog <design_blog/index>
