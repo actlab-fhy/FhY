@@ -46,6 +46,7 @@ html_js_files = []
 html_context = {
     "default_mode": "light"
 }
+html_title = "FhY Documentation"
 html_theme_options = {
     "logo": {
         "text": "FhY",
