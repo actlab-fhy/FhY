@@ -33,6 +33,8 @@
 
 from collections.abc import Iterator
 from typing import Iterable
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
 from pygments.lexer import RegexLexer, bygroups, default, include, words
 from pygments.token import (
     _TokenType,
@@ -274,6 +276,12 @@ class FhYLexer(RegexLexer):
     }
 
 
+def _setup_context(app, pagename, templatename, context, doctree):
+    """Setup context for the HTML page."""
+    context["pygments_highlight_fhy"] = lambda code: highlight(code, FhYLexer(), HtmlFormatter())
+
+
 def setup(app):
-    """Setup Code Lexer."""
+    """Setup code lexer."""
     app.add_lexer("FhY", FhYLexer)
+    app.connect("html-page-context", _setup_context)
