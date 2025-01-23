@@ -22,21 +22,21 @@
         <div class="col-xs-12">
             <div class="card">
                 <div class="card-body">
-                <div class="d-flex align-items-start">
-                    <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                    {% for example in fhy_examples %}
-                        {% set button_display_style = "active" if loop.first else "" %}
-                        {% set button_selected = "true" if loop.first else "false" %}
-                        <button class="nav-link {{ button_display_style }}" id="v-pills-{{ example.id }}-tab" data-bs-toggle="pill" data-bs-target="#v-pills-{{ example.id }}" type="button" role="tab" aria-controls="v-pills-{{ example.id }}" aria-selected="{{ button_selected }}">{{ example.name }}</button>
-                    {% endfor %}
+                    <div class="d-flex flex-column flex-md-row align-items-start">
+                        <div class="nav flex-md-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            {% for example in fhy_examples %}
+                                {% set button_display_style = "active" if loop.first else "" %}
+                                {% set button_selected = "true" if loop.first else "false" %}
+                                <button class="nav-link {{ button_display_style }}" id="v-pills-{{ example.id }}-tab" data-bs-toggle="pill" data-bs-target="#v-pills-{{ example.id }}" type="button" role="tab" aria-controls="v-pills-{{ example.id }}" aria-selected="{{ button_selected }}">{{ example.name }}</button>
+                            {% endfor %}
+                        </div>
+                        <div class="tab-content" id="v-pills-tabContent">
+                            {% for example in fhy_examples %}
+                                {% set tab_display_style = "show active" if loop.first else "" %}
+                                <div class="tab-pane fade {{ tab_display_style }}" id="v-pills-{{ example.id }}" role="tabpanel" aria-labelledby="v-pills-{{ example.id }}-tab">{{ pygments_highlight_fhy(example.code) }}</div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <div class="tab-content" id="v-pills-tabContent">
-                    {% for example in fhy_examples %}
-                        {% set tab_display_style = "show active" if loop.first else "" %}
-                        <div class="tab-pane fade {{ tab_display_style }}" id="v-pills-{{ example.id }}" role="tabpanel" aria-labelledby="v-pills-{{ example.id }}-tab">{{ pygments_highlight_fhy(example.code) }}</div>
-                    {% endfor %}
-                    </div>
-                </div>
                 </div>
             </div>
         </div>
@@ -44,7 +44,8 @@
 {% endmacro %}
 
 {% block body %}
-    <h1>Welcome to <em>FhY</em></h1>
+    <h1 style="margin-bottom: 2px">Welcome to <em>FhY</em></h1>
+    <p>Unlocking the Power of Cross-Domain Multi-Acceleration<p>
     <p><em>FhY</em> is a cross-domain language with mathematical foundations that moves beyond the current paradigm of domain-specific languages to enable cross-domain multi-acceleration.</p>
 
     {{ render_fhy_highlight_card_collection([
@@ -55,104 +56,61 @@
 
     {{ render_fhy_code_selector([
         {
+            "id": "add",
+            "name": "Element-Wise Addition",
+            "code": '''
+proc add<T>(input T[N] A, T[N] B, output T[N] C) {
+    index[1:N] i;
+    C[i] = A[i] + B[i];
+}
+            '''
+        },
+        {
             "id": "matmul",
             "name": "Matrix Multiplication",
             "code": '''
-proc matmul<T>(input T[M, K] A, input T[K, N] B, output T[M, N] C) {
-    temp index[1:M] i;
-    temp index[1:N] j;
-    temp index[1:K] k;
+proc matmul<T>(input T[M, K] A, T[K, N] B, output T[M, N] C) {
+    index[1:M] i, index[1:N] j, index[1:K] k;
     C[i, j] = sum[k](A[i, k] * B[k, j]);
 }
             '''
         },
         {
-            "id": "mpc",
-            "name": "Model Predictive Control",
-            "code" : '''
-proc mvmul(
-    input float32[M, N] A,
-    input float32[N] B,
-    output float32[M] C
-) {
-    temp index[1:M] i;
-    temp index[1:N] j;
-    C[i] = sum[j](A[i, j] * B[j]);
+            "id": "conv2d",
+            "name": "2D Convolution",
+            "code": '''
+op pad<T>(
+    input T [N, C, H, W] X, param int64 PADDING_X, int64 PADDING_Y
+) -> T[N, C, H + 2 * PADDING_Y, W + 2 * PADDING_X] {
+    T[N, C, H + 2 * PADDING_Y, W + 2 * PADDING_X] X_padded;
+
+    index[1:N] n, index[1:C] c, index[1:H] h, index[1:W] w;
+    index[1:PADDING_X] padding_x_lower, index[W + 1:W + PADDING_X] padding_x_upper;
+    index[1:PADDING_Y] padding_y_lower, index[H + 1:H + PADDING_Y] padding_y_upper;
+
+    X_padded[n, c, h + PADDING_Y, w + PADDING_X] = X[n, c, h, w];
+    X_padded[n, c, padding_y_lower, padding_x_lower] = 0.0;
+    X_padded[n, c, padding_y_upper, padding_x_upper] = 0.0;
+
+    return X_padded;
 }
 
-proc process_pos(
-    input float32[3] pos,
-    output float32[3] processed_pos
+proc conv<T>(
+    param int64 STRIDES_X, int64 STRIDES_Y, int64 PADDING_X, int64 PADDING_Y,
+    input T[N, IC, IH, IW] X, param T[OC, IC, KH, KW] W,
+    output T[
+        N,
+        OC,
+        (IH + 2 * PADDING_Y - KH) // STRIDES_Y + 1,
+        (IW + 2 * PADDING_X - KW) // STRIDES_X + 1
+    ] Y
 ) {
-    temp index[1:3] i;
-    processed_pos[i] = pos[i] * 2.0;
-}
+    index[1:N] n, index[1:IC] ic, index[1:OC] oc, index[1:KH] kh, index[1:KW] kw;
+    index[1:(IH + 2 * PADDING_Y - KH) // STRIDES_Y + 1:STRIDES_Y] oh;
+    index[1:(IW + 2 * PADDING_X - KW) // STRIDES_X + 1:STRIDES_X] ow;
 
-proc predict_trajectory(
-    input float32[A] pos,
-    input float32[B] ctrl_mdl,
-    param float32[C, A] P,
-    param float32[C, B] H,
-    output float32[C] pred
-) {
-    temp index[1:C] i;
-    temp float32[C] pred_comp_1;
-    temp float32[C] pred_comp_2;
-    mvmul(P, pos, pred_comp_1);
-    mvmul(H, ctrl_mdl, pred_comp_2);
-    pred[i] = pred_comp_1[i] + pred_comp_2[i];
-}
-
-proc update_ctrl_model(
-    input float32[B] ctrl_prev,
-    input float32[B] g,
-    output float32[B] ctrl_mdl,
-    output float32[S] ctrl_sgnl,
-    param int32 h
-) {
-    temp index[1:B - 1] i;
-    temp index[1:S] j;
-    ctrl_sgnl[j] = ctrl_prev[h * j];
-    ctrl_mdl[(h - 1) * j] = 0.0;
-    ctrl_mdl[i] = ctrl_prev[(i + 1) * h] - g[(i + 1) * h];
-}
-
-proc compute_ctrl_grad(
-    input float32[C] pos_pred,
-    input float32[B] ctrl_mdl,
-    input float32[C] pos_ref,
-    param float32[B, C] HQ_g,
-    param float32[B, B] R_g,
-    output float32[B] g
-) {
-    temp index[1:B] i;
-    temp index[1:C] j;
-    temp float32[B] P_g;
-    temp float32[B] H_g;
-    temp float32[C] err;
-    err[j] = pos_ref[j] - pos_pred[j];
-    mvmul(HQ_g, err, P_g);
-    mvmul(R_g, ctrl_mdl, H_g);
-    g[i] = P_g[i] + H_g[i];
-}
-
-proc main(
-    input float32[3] pos,
-    state float32[20] ctrl_mdl,
-    param float32[30] pos_ref,
-    param float32[30, 3] P,
-    param float32[20, 30] HQ_g,
-    param float32[30, 20] H,
-    param float32[20, 20] R_g,
-    output float32[2] ctrl_sgnl
-) {
-    temp float32[30] pos_pred;
-    temp float32[20] g;
-    temp float32[3] processed_pos;
-    process_pos(pos, processed_pos);
-    predict_trajectory(processed_pos, ctrl_mdl, P, H, pos_pred);
-    compute_ctrl_grad(pos_pred, ctrl_mdl, pos_ref, HQ_g, R_g, g);
-    update_ctrl_model(ctrl_mdl, g, ctrl_mdl, ctrl_sgnl, 10);
+    T[N, IC, IH + 2 * PADDING_Y, IW + 2 * PADDING_X] X_padded = pad<T>(X, PADDING_X, PADDING_Y);
+    Y[n, oc, oh, ow] = sum[ic, kh, kw](X_padded[n, ic, oh + kh, ow + kw] * W[oc, ic, kh, kw]);
 }
             '''
         }
