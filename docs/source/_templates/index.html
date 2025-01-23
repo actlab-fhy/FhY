@@ -80,7 +80,7 @@ proc matmul<T>(input T[M, K] A, T[K, N] B, output T[M, N] C) {
             "name": "2D Convolution",
             "code": '''
 op pad<T>(
-    input T [N, C, H, W] X, param int64 PADDING_X, int64 PADDING_Y
+    input T[N, C, H, W] X, param int64 PADDING_X, int64 PADDING_Y
 ) -> T[N, C, H + 2 * PADDING_Y, W + 2 * PADDING_X] {
     T[N, C, H + 2 * PADDING_Y, W + 2 * PADDING_X] X_padded;
 
