@@ -6,9 +6,21 @@
             margin-bottom: 0px;
         }
     }
+
+    padding-bottom: 0px;
+
+    @media screen and (min-width: 768px) {
+        padding-bottom: 10px;
+    }
 }
 
 .navigable-tab-widget {
+
+    .tab-content {
+        flex-grow: 1;
+        overflow-x: auto;
+    }
+
     pre {
         height: 20em;
         overflow-y: auto;
